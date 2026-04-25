@@ -469,10 +469,19 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1 -VerifyOnly
 ```
 
+自检命令：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Test-GitHooksSetup.ps1
+```
+
 说明：
 
 - 仓库内 hook 脚本位于 `.githooks/`
+- `.githooks/_shared.sh` 持有共享输出与基础 shell helper，避免各 hook 入口重复维护
 - 这一步会把本地仓库的 `core.hooksPath` 指向 `.githooks`
+- `Enable-GitHooks.ps1` 会同时校验必需 hook 文件是否齐全，并打印当前仓库状态
+- `Test-GitHooksSetup.ps1` 适合在重装环境或排查本地 hook 失效时做快速自检
 - 如果不做这一步，`pre-commit`、`commit-msg` 与 `pre-push` 检查不会生效
 - `pre-push` 会校验待推送 commit；如果本机已安装 `gh` 且当前分支已有打开中的 PR，还会额外校验 PR 标题与描述是否满足模板要求
 

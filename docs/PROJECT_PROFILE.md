@@ -34,6 +34,9 @@
 - 运行测试：`dotnet test OpenVideoToolbox.sln`
 - 运行 CLI：`dotnet run --project ./src/OpenVideoToolbox.Cli/OpenVideoToolbox.Cli.csproj -- <command>`
 - 运行 Desktop 占位入口：`dotnet run --project ./src/OpenVideoToolbox.Desktop/OpenVideoToolbox.Desktop.csproj`
+- 启用仓库级 Git hooks：`powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1`
+- 校验仓库级 Git hooks：`powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1 -VerifyOnly`
+- 自检 Git hooks 完整性：`powershell -ExecutionPolicy Bypass -File .\scripts\Test-GitHooksSetup.ps1`
 
 ## CLI 已确认命令面
 
