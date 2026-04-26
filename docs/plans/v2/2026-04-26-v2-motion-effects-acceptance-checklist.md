@@ -296,3 +296,27 @@ Get-Content -Raw (Join-Path $root "motion.preview.json")
 3. `validate-plan` 与 `render --preview` 对合法 motion plan 给出矛盾结论
 4. preview 中 effect 被静默跳过
 5. 验收过程中发现范围已开始滑向角色动画、关键帧平台或第二套动画系统
+
+## 当前验收结论
+
+本清单已于 `2026-04-26` 按上述步骤执行一次，当前结果为：
+
+- Step 1：通过
+- Step 2：通过
+- Step 4：通过
+- Step 6：通过
+- Step 7：通过
+
+关键结果：
+
+- `effects list` 已确认包含 `move / orbit / zoompan`
+- `effects describe move` 已确认 `templateMode = "executor"`
+- 合法 motion plan 已确认可通过 `validate-plan`
+- 非法 easing plan 已确认返回 `timeline.effect.parameter.enum.invalid`
+- `render --preview` 已确认包含 motion executor 生成的 filter graph
+
+结论：
+
+```text
+V2 motion effects: accepted
+```

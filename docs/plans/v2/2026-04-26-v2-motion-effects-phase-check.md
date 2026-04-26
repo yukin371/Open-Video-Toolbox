@@ -157,6 +157,31 @@ dotnet test OpenVideoToolbox.sln
 - 总计：381 通过
 - `dotnet build OpenVideoToolbox.sln`：通过
 
+本阶段已于 `2026-04-26` 按独立验收清单继续完成一次人工阶段验收，当前结果为：
+
+- `effects list`
+  - 已确认可发现：
+    - `move`
+    - `orbit`
+    - `zoompan`
+- `effects describe move`
+  - 已确认 `templateMode = "executor"`
+  - 已确认参数 schema 包含：
+    - `fromX`
+    - `fromY`
+    - `toX`
+    - `toY`
+    - `durationSeconds`
+    - `easing`
+- 合法 motion plan 的 `validate-plan`
+  - 已确认 `payload.isValid = true`
+- 非法 easing plan 的 `validate-plan`
+  - 已确认返回：
+    - `timeline.effect.parameter.enum.invalid`
+- 合法 motion plan 的 `render --preview`
+  - 已确认返回 `schemaVersion = 2`
+  - 已确认 filter graph 包含 motion executor 生成片段
+
 ## 手动验收入口
 
 如需做人工阶段验收，最小入口建议为：
@@ -191,15 +216,16 @@ dotnet test OpenVideoToolbox.sln
 
 ## 当前结论
 
-`V2 motion effects` 当前判断为：**首期 implementation 与 phase-check 已完成，当前状态可视为 `ready_for_acceptance`**
+`V2 motion effects` 当前判断为：**首期 implementation、phase-check 与人工阶段验收已完成**
 
 更准确地说：
 
 - `move / orbit / zoompan` 已不是纯文档设计
 - 当前仓库已具备受限、可回归、可脚本消费的最小 motion effects 闭环
 - 当前仍守住了“不做 Live2D / 不做角色动画器 / 不做关键帧工作台”的边界
+- 当前阶段状态可更新为：`accepted`
 
-因此下一步不应继续无边界追加 effect 类型或动画主题；更合理的动作是进入人工阶段验收，并在验收后决定：
+因此下一步不应继续无边界追加 effect 类型或动画主题；更合理的动作是回到 stop-point，并在后续只按新明确卡片决定是否：
 
 1. 接受当前 stop-point
 2. 留在该主题补最小缺口

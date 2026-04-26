@@ -281,6 +281,6 @@
 
 ```text
 阶段：V2 motion effects
-当前状态：phase_check_ready
-建议动作：进入人工阶段验收；如验收通过，回到 stop-point，而不是继续横向扩 motion scope
+当前状态：accepted
+建议动作：回到 stop-point；如后续继续，必须按新明确卡片推进，而不是继续横向扩 motion scope
 ```
