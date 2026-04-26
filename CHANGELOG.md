@@ -56,15 +56,29 @@ Breaking changes **must**:
 ## [Unreleased]
 
 ### Added
-- CLI media toolbox with 21 commands for probe, render, cut, concat, audio analysis, transcription, template workflows, and plugin support
-- Unified command envelope (`{ command, preview, payload }`) for all 21 commands
-- `--json-out` support for all commands
-- Structured failure envelope on all error paths (no usage text fallback)
-- Template platform with 4 built-in categories (short-form, commentary, explainer, montage)
-- Template plugin system via `--plugin-dir` with static manifest discovery
-- `doctor` dependency pre-check for ffmpeg/ffprobe/whisper-cli/demucs
-- Contract snapshot tests with golden files for breaking change detection
-- Plugin developer guide and example plugin
-- External dependency installation guide
-- CI (GitHub Actions): build + test + ffmpeg smoke
-- Release workflow: tag-triggered cross-platform single-file publish (win-x64, linux-x64, osx-x64)
+- Stable `CLI + Core` media toolbox surface for:
+  - `doctor`
+  - `probe` / `plan` / `run`
+  - `cut` / `concat` / `extract-audio`
+  - `audio-analyze` / `audio-gain` / `audio-normalize`
+  - `templates` / `init-plan` / `scaffold-template` / `validate-plan` / `render`
+  - `inspect-plan` / `replace-plan-material` / `attach-plan-material` / `bind-voice-track`
+  - `scaffold-template-batch` / `render-batch`
+  - `mix-audio --preview` / `mix-audio`
+- Unified command envelope (`{ command, preview, payload }`) and `--json-out` support for the shipped CLI surface
+- Structured failure envelope on error paths instead of usage text fallback
+- Static template plugin discovery via `--plugin-dir`
+- `doctor` dependency pre-check for required and optional external tools
+- Contract snapshot tests and real-smoke coverage for release-critical workflows
+- Cross-platform single-file release workflow for:
+  - `win-x64`
+  - `linux-x64`
+  - `osx-x64`
+
+### Notes
+- The current release-readiness baseline is still based on the public `v0.1.0` release and a planned `v1.0.0` support surface; this `Unreleased` section should be read as release-note preparation, not as proof that `1.0.0` has already shipped.
+- The intended formal support surface for the next major release is `CLI + Core`; `Desktop` is not part of that support surface.
+- `init-narrated-plan`, `effects`, `export --format edl`, and ongoing `schemaVersion = 2` capabilities may ship alongside the product, but are currently treated as attached / limited capabilities rather than the core `v1.0` promise.
+- `transcribe` and `separate-audio` depend on optional external tools and should not be interpreted as default-environment guarantees.
+- A valid draft plan is not always directly renderable output; bare `init-plan` / `scaffold-template` may produce a valid draft with no clips until the plan is manually edited or seeded from transcript / beats.
+- `subtitles.mode = sidecar` currently means copying a same-name `.srt` next to the rendered output, not burning subtitles into the video.
