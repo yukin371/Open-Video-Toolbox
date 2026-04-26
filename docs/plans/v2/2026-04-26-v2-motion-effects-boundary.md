@@ -275,6 +275,6 @@
 
 ```text
 阶段：V2 motion effects
-当前状态：spec_done
-建议动作：仍保持 stop-point；如后续真要做，下一张只能开 motion effects plan，范围仍限于 move / orbit / zoompan
+当前状态：plan_done
+建议动作：仍保持 stop-point；如后续真要做，下一张只能开 motion effects implementation，范围仍限于 move / orbit / zoompan
 ```

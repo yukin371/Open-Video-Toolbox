@@ -112,6 +112,90 @@ public sealed class FfmpegTimelineRenderCommandBuilderTests
         Assert.Contains("color=c=black:s=1280x720:r=24", commandPlan.Arguments);
     }
 
+    [Fact]
+    public void Build_RendersMoveEffectForOverlayClip()
+    {
+        var builder = new FfmpegTimelineRenderCommandBuilder();
+        var request = new EditPlanRenderRequest
+        {
+            Plan = CreateMotionOverlayPlan(
+                "move",
+                new Dictionary<string, System.Text.Json.JsonElement>
+                {
+                    ["fromX"] = System.Text.Json.JsonSerializer.SerializeToElement("0"),
+                    ["fromY"] = System.Text.Json.JsonSerializer.SerializeToElement("0"),
+                    ["toX"] = System.Text.Json.JsonSerializer.SerializeToElement("960"),
+                    ["toY"] = System.Text.Json.JsonSerializer.SerializeToElement("540"),
+                    ["durationSeconds"] = System.Text.Json.JsonSerializer.SerializeToElement(5.0),
+                    ["easing"] = System.Text.Json.JsonSerializer.SerializeToElement("ease_out")
+                })   
+        };
+
+        var commandPlan = builder.Build(request);
+        var filterGraph = commandPlan.Arguments.Single(argument => argument.Contains("overlay=x='", StringComparison.Ordinal));
+
+        Assert.Contains("color=c=black@0.0:s=1920x1080:r=30:d=5", filterGraph, StringComparison.Ordinal);
+        Assert.Contains("overlay=x='((0)+(((960)-(0))*((1-pow(1-min(max(t/5,0),1),2)))))'", filterGraph, StringComparison.Ordinal);
+        Assert.Contains("format=rgba", filterGraph, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Build_RendersOrbitEffectForOverlayClip()
+    {
+        var builder = new FfmpegTimelineRenderCommandBuilder();
+        var request = new EditPlanRenderRequest
+        {
+            Plan = CreateMotionOverlayPlan(
+                "orbit",
+                new Dictionary<string, System.Text.Json.JsonElement>
+                {
+                    ["centerX"] = System.Text.Json.JsonSerializer.SerializeToElement("960"),
+                    ["centerY"] = System.Text.Json.JsonSerializer.SerializeToElement("540"),
+                    ["radiusX"] = System.Text.Json.JsonSerializer.SerializeToElement(120.0),
+                    ["radiusY"] = System.Text.Json.JsonSerializer.SerializeToElement(60.0),
+                    ["startAngleDeg"] = System.Text.Json.JsonSerializer.SerializeToElement(0.0),
+                    ["endAngleDeg"] = System.Text.Json.JsonSerializer.SerializeToElement(180.0),
+                    ["durationSeconds"] = System.Text.Json.JsonSerializer.SerializeToElement(5.0)
+                })
+        };
+
+        var commandPlan = builder.Build(request);
+        var filterGraph = commandPlan.Arguments.Single(argument => argument.Contains("cos(", StringComparison.Ordinal));
+
+        Assert.Contains("color=c=black@0.0:s=1920x1080:r=30:d=5", filterGraph, StringComparison.Ordinal);
+        Assert.Contains("cos(((((0)+(((180)-(0))*(min(max(t/5,0),1)))))*PI/180))", filterGraph, StringComparison.Ordinal);
+        Assert.Contains("sin(((((0)+(((180)-(0))*(min(max(t/5,0),1)))))*PI/180))", filterGraph, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Build_RendersZoomPanEffectForStillImageClip()
+    {
+        var builder = new FfmpegTimelineRenderCommandBuilder();
+        var request = new EditPlanRenderRequest
+        {
+            Plan = CreateSingleImageMotionPlan(
+                "zoompan",
+                new Dictionary<string, System.Text.Json.JsonElement>
+                {
+                    ["fromScale"] = System.Text.Json.JsonSerializer.SerializeToElement(1.0),
+                    ["toScale"] = System.Text.Json.JsonSerializer.SerializeToElement(1.2),
+                    ["fromX"] = System.Text.Json.JsonSerializer.SerializeToElement("0"),
+                    ["fromY"] = System.Text.Json.JsonSerializer.SerializeToElement("0"),
+                    ["toX"] = System.Text.Json.JsonSerializer.SerializeToElement("120"),
+                    ["toY"] = System.Text.Json.JsonSerializer.SerializeToElement("60"),
+                    ["durationSeconds"] = System.Text.Json.JsonSerializer.SerializeToElement(4.0),
+                    ["easing"] = System.Text.Json.JsonSerializer.SerializeToElement("ease_in_out")
+                })
+        };
+
+        var commandPlan = builder.Build(request);
+        var filterGraph = commandPlan.Arguments.Single(argument => argument.Contains("scale=w='max(1,trunc(iw*(", StringComparison.Ordinal));
+
+        Assert.Contains("scale=w='max(1,trunc(iw*(((1)+(((1.2)-(1))*", filterGraph, StringComparison.Ordinal);
+        Assert.Contains("overlay=x='((0)+(((120)-(0))*(if(lt(min(max(t/4,0),1),0.5)", filterGraph, StringComparison.Ordinal);
+        Assert.Contains("color=c=black@0.0:s=1920x1080:r=30:d=4", filterGraph, StringComparison.Ordinal);
+    }
+
     private static EditPlan CreateTimelinePlan()
     {
         return new EditPlan
@@ -420,6 +504,131 @@ public sealed class FfmpegTimelineRenderCommandBuilderTests
             Output = new EditOutputPlan
             {
                 Path = Path.GetFullPath("timeline-placeholder.mp4"),
+                Container = "mp4"
+            }
+        };
+    }
+
+    private static EditPlan CreateMotionOverlayPlan(
+        string effectType,
+        Dictionary<string, System.Text.Json.JsonElement> extensions)
+    {
+        return new EditPlan
+        {
+            SchemaVersion = SchemaVersions.V2,
+            Source = new EditPlanSource
+            {
+                InputPath = Path.GetFullPath("input.mp4")
+            },
+            Timeline = new EditPlanTimeline
+            {
+                Duration = TimeSpan.FromSeconds(5),
+                Resolution = new TimelineResolution
+                {
+                    W = 1920,
+                    H = 1080
+                },
+                FrameRate = 30,
+                Tracks =
+                [
+                    new TimelineTrack
+                    {
+                        Id = "main",
+                        Kind = TrackKind.Video,
+                        Clips =
+                        [
+                            new TimelineClip
+                            {
+                                Id = "clip-001",
+                                Start = TimeSpan.Zero,
+                                InPoint = TimeSpan.Zero,
+                                OutPoint = TimeSpan.FromSeconds(5)
+                            }
+                        ]
+                    },
+                    new TimelineTrack
+                    {
+                        Id = "overlay",
+                        Kind = TrackKind.Video,
+                        Clips =
+                        [
+                            new TimelineClip
+                            {
+                                Id = "overlay-001",
+                                Src = Path.GetFullPath("logo.png"),
+                                Start = TimeSpan.Zero,
+                                Duration = TimeSpan.FromSeconds(5),
+                                Effects =
+                                [
+                                    new TimelineEffect
+                                    {
+                                        Type = effectType,
+                                        Extensions = extensions
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            Output = new EditOutputPlan
+            {
+                Path = Path.GetFullPath("timeline-motion-overlay.mp4"),
+                Container = "mp4"
+            }
+        };
+    }
+
+    private static EditPlan CreateSingleImageMotionPlan(
+        string effectType,
+        Dictionary<string, System.Text.Json.JsonElement> extensions)
+    {
+        return new EditPlan
+        {
+            SchemaVersion = SchemaVersions.V2,
+            Source = new EditPlanSource
+            {
+                InputPath = Path.GetFullPath("unused-input.mp4")
+            },
+            Timeline = new EditPlanTimeline
+            {
+                Duration = TimeSpan.FromSeconds(4),
+                Resolution = new TimelineResolution
+                {
+                    W = 1920,
+                    H = 1080
+                },
+                FrameRate = 30,
+                Tracks =
+                [
+                    new TimelineTrack
+                    {
+                        Id = "still",
+                        Kind = TrackKind.Video,
+                        Clips =
+                        [
+                            new TimelineClip
+                            {
+                                Id = "still-001",
+                                Src = Path.GetFullPath("poster.png"),
+                                Start = TimeSpan.Zero,
+                                Duration = TimeSpan.FromSeconds(4),
+                                Effects =
+                                [
+                                    new TimelineEffect
+                                    {
+                                        Type = effectType,
+                                        Extensions = extensions
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            Output = new EditOutputPlan
+            {
+                Path = Path.GetFullPath("timeline-motion-still.mp4"),
                 Container = "mp4"
             }
         };

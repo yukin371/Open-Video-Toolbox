@@ -1,6 +1,6 @@
 # OpenVideoToolbox.Core.Execution
 
-> 最后更新：2026-04-24
+> 最后更新：2026-04-26
 
 ## 职责
 
@@ -47,9 +47,10 @@
 - `export` 的 v1/v2 兼容规则必须集中在本模块，不能在 CLI 维护第二套包装或主轨选择逻辑
 - v2 timeline render builder 必须与 v1 render builder 并存，直到显式完成 parity / deprecation 决策，不能隐式替换现有 v1 路径
 - render preview / runner 对 v1/v2 的 builder 分发必须留在本模块，不能把 timeline 分支判断回流到 CLI
-- 当前 v2 render baseline 只保证 timeline builder、preview/execute dispatch 和基础 template effect filter graph；复杂 executor effect 仍不得伪装成“已正式支持”
+- 当前 v2 render baseline 已保证 timeline builder、preview/execute dispatch、基础 template effect filter graph，以及首个 executor-backed motion effects：`move` / `orbit` / `zoompan`；超出首期边界的复杂 executor effect 仍不得伪装成“已正式支持”
 - v2 timeline 的 still-image 输入循环、帧率接线和 built-in layout/filter effect 映射必须集中在本模块，不能回流到 CLI 或模板 builder
 - v2 timeline 的 placeholder video 必须由本模块直接映射到运行时 FFmpeg 输入；首版只允许 `color` placeholder，不能回退成 CLI 预生成临时视频文件
+- 首个 motion executor path 必须保持在受限单对象范围：当前只支持 clip 级 video visual、显式 `clip.src`、非 placeholder 的执行路径，不得顺手扩成关键帧系统、角色 rig 或多对象联动动画器
 - `export L1` 当前只承诺粗粒度 `EDL` cut list，不得在未完成设计收口前把 XML / fcpxml / effect 映射一起混入
 - preview 语义必须复用和执行阶段相同的 `CommandPlan`、`ProducedPaths` 与 side effect 规则，不能在 CLI 维护平行逻辑
 - `DefaultProcessRunner` 必须保留标准输出、标准错误、超时和取消上下文

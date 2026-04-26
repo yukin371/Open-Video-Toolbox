@@ -120,4 +120,78 @@ public sealed partial class CommandArtifactsIntegrationTests
             }
         }
     }
+
+    [Fact]
+    public async Task RenderPreview_ReturnsExecutionPreviewForMotionEffectTimeline()
+    {
+        var outputDirectory = Path.Combine(Path.GetTempPath(), $"ovt-render-preview-motion-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(outputDirectory);
+        var planPath = Path.Combine(outputDirectory, "edit.motion.json");
+
+        await File.WriteAllTextAsync(
+            planPath,
+            """
+            {
+              "schemaVersion": 2,
+              "source": { "inputPath": "unused-input.mp4" },
+              "timeline": {
+                "duration": "00:00:04",
+                "resolution": { "w": 1920, "h": 1080 },
+                "frameRate": 30,
+                "tracks": [
+                  {
+                    "id": "still",
+                    "kind": "video",
+                    "clips": [
+                      {
+                        "id": "poster-001",
+                        "src": "poster.png",
+                        "start": "00:00:00",
+                        "duration": "00:00:04",
+                        "effects": [
+                          {
+                            "type": "move",
+                            "fromX": "0",
+                            "fromY": "0",
+                            "toX": "120",
+                            "toY": "60",
+                            "durationSeconds": 4.0,
+                            "easing": "ease_in_out"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "output": { "path": "final-motion.mp4", "container": "mp4" }
+            }
+            """);
+
+        try
+        {
+            var result = await RunCliAsync("render", "--plan", planPath, "--preview");
+
+            Assert.Equal(0, result.ExitCode);
+
+            var payload = JsonNode.Parse(result.StdOut)!.AsObject();
+            var envelope = payload["payload"]!.AsObject();
+            var commandPlan = envelope["executionPreview"]!["commandPlan"]!.AsObject();
+            var arguments = commandPlan["arguments"]!.AsArray().Select(node => node!.GetValue<string>()).ToArray();
+            var filterGraph = arguments.Single(argument => argument.Contains("overlay=x='", StringComparison.Ordinal));
+
+            Assert.Contains(arguments, argument => argument == "-loop");
+            Assert.Contains(arguments, argument => argument == "1");
+            Assert.Contains("color=c=black@0.0:s=1920x1080:r=30:d=4", filterGraph, StringComparison.Ordinal);
+            Assert.Contains("overlay=x='((0)+(((120)-(0))*", filterGraph, StringComparison.Ordinal);
+            Assert.Contains("format=rgba", filterGraph, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+        }
+    }
 }

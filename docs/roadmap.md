@@ -30,10 +30,10 @@
 ## 当前版本目标
 
 - 交付可供外部 AI 代理稳定调用的 CLI 媒体工具箱，包含跨平台 single-file 发布能力。
-- 当前状态（2026-04-26）：H1→H2+T1→T2→P1→E1 已全部完成，CLI 契约已冻结，插件开发者体验已落地，发布流程已就绪；`E2-G1` 首轮已执行，当前结果为继续留在 `E2`、不启动 `D1`；`V2-P5` 已通过人工阶段验收，`V2-P6 narrated-slides` 已完成当前受控增量并回到 stop-point；简易 `motion effects` 已完成边界卡与 spec，但当前仍停在 `spec_done`，尚未进入 plan / implementation。
+- 当前状态（2026-04-26）：H1→H2+T1→T2→P1→E1 已全部完成，CLI 契约已冻结，插件开发者体验已落地，发布流程已就绪；`E2-G1` 首轮已执行，当前结果为继续留在 `E2`、不启动 `D1`；`V2-P5` 已通过人工阶段验收，`V2-P6 narrated-slides` 已完成当前受控增量并回到 stop-point；简易 `motion effects` 首期 implementation 已完成，当前范围固定为 `move / orbit / zoompan`，并保持在受限 executor path。
 - 下一步：`E2` 仍是正式交付主线；并行孵化线中的 `V2-P6 narrated-slides` 当前已补齐完整验收包与 stop-point 建议，`${var}` foundation、`bgm.slot.required = false`、`timeline placeholder video` 与 `sections[].visual.slot.required = false` 都已落地；当前更合理的动作是不再继续扩 narrated-slides scope，而是保留当前成果、回到 `E2` 主线，后续如需重开 narrated 线，应以新的明确卡片进入，而不是直接跳到 section 删除、batch 或图表后端；`D1` 最早在 `2026-05-22` 后再次重判。
 - 下一步：`E2` 仍是正式交付主线；当前 `E2-A1 ~ A4` 的阶段检查已补齐，`E2-F2 ~ F4` 与 `E2-G1` 也已有现成阶段结论，仓库内更合理的动作是不再横向扩张 `E2`，而是保留当前成果、等待新的明确 `E2` 卡或 **2026-05-22** 后的下一次 `D1` 重判；并行孵化线中的 `V2-P6 narrated-slides` 也已补齐完整验收包与 stop-point 建议，当前不应继续做无边界追加；如确需重开 narrated，只允许以新的明确卡片推进。当前已按该规则显式重开 `V2-P6-C15 数据驱动 batch narrated`，范围仅限 `Cli` batch wrapper。
-- 下一步：简易 `motion effects` 当前不进入 `E2` 主线，也不直接并入 `V2-P6 narrated-slides`；边界卡与 spec 已完成，如后续确需推进，下一张只允许开 `motion effects plan`，随后才是 `implementation -> phase-check`；第一期范围仍只允许 `move / orbit / zoompan`，不扩成 `Live2D`、角色动画器或关键帧工作台。
+- 下一步：简易 `motion effects` 当前不进入 `E2` 主线，也不直接并入 `V2-P6 narrated-slides`；边界卡、spec、plan 与第一期 implementation 已完成，如后续确需推进，下一张只允许开 `motion effects phase-check`；第一期范围仍只允许 `move / orbit / zoompan`，不扩成 `Live2D`、角色动画器或关键帧工作台。
 - 长期演化路线：`docs/plans/2026-04-21-long-term-evolution-roadmap.md`
 
 ## 整体开发流程
@@ -66,7 +66,7 @@
   - 仍然是当前正式支持运行路径
 - `v2`
   - 当前已有正式孵化实现线，但仍必须按 `docs/plans/v2/2026-04-24-v1-v2-boundary-and-phased-delivery-plan.md` 中定义的 `V2-P*` 阶段推进
-  - 当前活跃子项仍以 `V2-P6 narrated-slides` 的 stop-point 收口为准；简易 `motion effects` 已完成边界卡与 spec，但尚不是活跃实施项
+  - 当前活跃子项仍以 `V2-P6 narrated-slides` 的 stop-point 收口为准；简易 `motion effects` 已完成 implementation，后续如继续只允许进入 `phase-check`，不应继续横向扩 scope
 
 ### v1 的两个结束节点
 
@@ -186,6 +186,11 @@
     - 内置模板型 effect filter 生成
     - 基础 transition / overlay / amix
     - preview / execute dispatch
+    - 首个 executor-backed motion effects 已落地：
+      - `move`
+      - `orbit`
+      - `zoompan`
+      - 当前仅支持 clip 级 video visual、显式 `clip.src`、非 placeholder 的第一期受限路径
   - `V2-P4` 阶段检查已补到 `docs/plans/v2/2026-04-24-v2-p4-phase-check.md`
   - `V2-P4` 回归清单已补到 `docs/plans/v2/2026-04-24-v2-p4-acceptance-checklist.md`
   - `template.planModel` 已落地，作为 v1 / v2 模板生成路径的显式 owner 字段

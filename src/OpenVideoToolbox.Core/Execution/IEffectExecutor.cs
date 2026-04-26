@@ -14,12 +14,16 @@ namespace OpenVideoToolbox.Core.Execution;
 public interface IEffectExecutor
 {
     /// <summary>
-    /// Generate an ordered array of FFmpeg filter fragments for this effect,
-    /// given the runtime parameters and rendering context.
+    /// Append one or more FFmpeg filter statements for this effect, transforming
+    /// the stream identified by <paramref name="inputLabel"/> into
+    /// <paramref name="outputLabel"/>.
     /// </summary>
-    string[] GenerateFilterChain(
+    void AppendFilterGraph(
         IReadOnlyDictionary<string, JsonElement> parameters,
-        EffectRenderContext context);
+        EffectRenderContext context,
+        string inputLabel,
+        string outputLabel,
+        ICollection<string> filters);
 }
 
 /// <summary>

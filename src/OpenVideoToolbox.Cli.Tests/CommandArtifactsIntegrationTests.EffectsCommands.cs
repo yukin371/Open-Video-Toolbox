@@ -19,8 +19,11 @@ public sealed partial class CommandArtifactsIntegrationTests
         Assert.Equal("effects", envelope["command"]!.GetValue<string>());
         Assert.Equal("list", payload["mode"]!.GetValue<string>());
         Assert.True(payload["count"]!.GetValue<int>() >= 10);
+        Assert.Contains(effects, effect => effect!["type"]!.GetValue<string>() == "move");
+        Assert.Contains(effects, effect => effect!["type"]!.GetValue<string>() == "orbit");
         Assert.Contains(effects, effect => effect!["type"]!.GetValue<string>() == "fade");
         Assert.Contains(effects, effect => effect!["type"]!.GetValue<string>() == "auto_ducking");
+        Assert.Contains(effects, effect => effect!["type"]!.GetValue<string>() == "zoompan");
     }
 
     [Fact]
@@ -58,5 +61,24 @@ public sealed partial class CommandArtifactsIntegrationTests
         Assert.Equal("built-in", effect["source"]!.GetValue<string>());
         Assert.Equal("float", effect["parameters"]!["duration"]!["type"]!.GetValue<string>());
         Assert.Equal("fade=t=in:d={duration}:alpha=1", effect["ffmpegTemplates"]!["transitions"]!["in"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Effects_Describe_ReturnsExecutorBackedMotionEffect()
+    {
+        var result = await RunCliAsync("effects", "describe", "move");
+
+        Assert.Equal(0, result.ExitCode);
+
+        var envelope = JsonNode.Parse(result.StdOut)!.AsObject();
+        var payload = envelope["payload"]!.AsObject();
+        var effect = payload["effect"]!.AsObject();
+
+        Assert.Equal("move", effect["type"]!.GetValue<string>());
+        Assert.Equal("executor", effect["templateMode"]!.GetValue<string>());
+        Assert.Equal("animation", effect["category"]!.GetValue<string>());
+        Assert.Equal("string", effect["parameters"]!["fromX"]!["type"]!.GetValue<string>());
+        Assert.Equal("float", effect["parameters"]!["durationSeconds"]!["type"]!.GetValue<string>());
+        Assert.Equal("linear", effect["parameters"]!["easing"]!["defaultValue"]!.GetValue<string>());
     }
 }

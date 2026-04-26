@@ -1,6 +1,6 @@
 # 命令速查
 
-最后更新：2026-04-25
+最后更新：2026-04-26
 
 ## 文档定位
 
@@ -91,7 +91,8 @@ effects [list [--category <id>] | describe <type> | <type>] [--json-out <path>]
 
 - 列出当前内置 v2 effect 描述符
 - 查看单个 effect 的参数 schema、模板模式与 FFmpeg 模板骨架
-- 当前只覆盖 built-in effect discovery，不负责插件 effect 加载或 render 执行
+- 当前 built-in motion effects 首版已打通 `discover -> validate -> render` 闭环，范围固定为 `move / orbit / zoompan`
+- 当前仍不负责插件 effect 加载
 
 ### `doctor`
 
@@ -441,10 +442,15 @@ render --plan <path> [--output <path>] [--preview [true|false]] [--json-out <pat
 - 当前 v2 范围：
   - 支持基础 timeline preview / execute dispatch
   - 支持内置模板型 effect 的 filter graph 构建
+  - 支持首个 executor-backed motion effects：
+    - `move`
+    - `orbit`
+    - `zoompan`
+    - 当前仅限 clip 级 video visual、显式 `clip.src`、非 placeholder 的第一期受限路径
   - 支持基础 transition / overlay / amix
 - 当前不负责：
   - 插件 effect 加载
-  - 复杂 executor effect 的正式执行保证
+  - 超出 `move / orbit / zoompan` 首期边界的复杂 executor effect 正式执行保证
 
 ### `render-batch`
 

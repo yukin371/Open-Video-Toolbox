@@ -403,6 +403,7 @@ V2-P6 数据驱动批量 / resolve-assets / 图表能力
 | `2026-04-25-narrated-slides-video-spec.md` | `V2-P6` | 已完成当前受控增量并回到 stop-point；后续只允许按新明确卡片重开 |
 | `2026-04-26-v2-motion-effects-boundary.md` | `V2-P5` 之后的候选窄卡 | 仅完成边界定义；当前不立项、不并入 `E2` 主线，也不并入 `V2-P6 narrated-slides` |
 | `2026-04-26-v2-motion-effects-spec.md` | `V2-P5` 之后的候选窄卡 | 第一期 effect 规格已冻结；当前仍未进入 plan / implementation |
+| `2026-04-26-v2-motion-effects-plan.md` | `V2-P5` 之后的候选窄卡 | 第一期实现顺序、文件落点与测试面已冻结；当前仍未进入 implementation |
 
 ## motion effects 候选顺序
 
@@ -422,7 +423,8 @@ V2-P6 数据驱动批量 / resolve-assets / 图表能力
    - 已完成：`2026-04-26-v2-motion-effects-spec.md`
    - 结果：第一期 effect 名单、参数方向、非目标和停止线已冻结
 3. `motion effects plan`
-   - 目标：拆解 owner、实现顺序、测试面、文档同步点
+   - 已完成：`2026-04-26-v2-motion-effects-plan.md`
+   - 结果：owner、实现顺序、测试面、文档同步点与回滚路径已冻结
 4. `motion effects implementation`
    - 目标：只实现第一期最小 effect，并补齐 preview / validator / command snapshot 测试
 5. `motion effects phase-check`

@@ -14,7 +14,10 @@ public sealed class BuiltInEffectCatalogTests
         Assert.Equal(effects.OrderBy(effect => effect.Type, StringComparer.OrdinalIgnoreCase).Select(effect => effect.Type), effects.Select(effect => effect.Type));
         Assert.Contains(effects, effect => effect.Type == "fade" && effect.Category == EffectCategory.Transition);
         Assert.Contains(effects, effect => effect.Type == "auto_ducking" && effect.Category == EffectCategory.Audio);
+        Assert.Contains(effects, effect => effect.Type == "move" && effect.Category == EffectCategory.Animation);
+        Assert.Contains(effects, effect => effect.Type == "orbit" && effect.Category == EffectCategory.Animation);
         Assert.Contains(effects, effect => effect.Type == "progress_bar" && effect.Category == EffectCategory.Layout);
+        Assert.Contains(effects, effect => effect.Type == "zoompan" && effect.Category == EffectCategory.Animation);
     }
 
     [Fact]
@@ -35,12 +38,17 @@ public sealed class BuiltInEffectCatalogTests
 
         var fade = registry.Get("fade");
         var autoDucking = registry.Get("auto_ducking");
+        var move = registry.Get("move");
 
         Assert.NotNull(fade);
         Assert.NotNull(autoDucking);
+        Assert.NotNull(move);
         Assert.NotNull(fade!.FfmpegTemplates);
         Assert.NotNull(fade.FfmpegTemplates!.Transitions);
         Assert.Null(autoDucking!.FfmpegTemplates);
+        Assert.Null(move!.FfmpegTemplates);
         Assert.True(autoDucking.Parameters.Items.ContainsKey("reference"));
+        Assert.True(move.Parameters.Items.ContainsKey("durationSeconds"));
+        Assert.Contains("linear", move.Parameters.Items["easing"].EnumValues);
     }
 }

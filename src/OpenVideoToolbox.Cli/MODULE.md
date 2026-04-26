@@ -1,6 +1,6 @@
 # OpenVideoToolbox.Cli
 
-> 最后更新：2026-04-24
+> 最后更新：2026-04-26
 
 ## 职责
 
@@ -87,6 +87,7 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 - `separate-audio` 只负责分离参数解析、输出目录落盘和结构化摘要；传 `--json-out` 时只负责把同一份 command envelope 落盘；当分离阶段失败时，也应继续输出统一 command envelope 与错误消息，而不是退回纯 usage；不持有 `demucs` 目录映射或命令拼接规则
 - `subtitle` 只负责加载 `transcript.json`、选择输出格式、落盘 sidecar 文件，并把渲染委托给 `Core.Subtitles`；传 `--json-out` 时只负责把同一份结构化结果 envelope 落盘，不维护第二套输出结构
 - `validate-plan` 负责加载 `edit.json`、解析相对路径、调用 `Core.Editing.EditPlanValidator` 并输出结构化校验结果；传 `--plugin-dir` 时只负责提供插件模板目录上下文，不复制 `Core.Editing` 的来源校验规则
+- `validate-plan`、`inspect-plan` 以及 `replace-plan-material` / `attach-plan-material` / `bind-voice-track` 的后置校验都必须复用同一份 built-in effect registry，不能让 mutation 路径和显式 `validate-plan` 对 motion effects 给出不同结论
 - `effects` 只负责 effect list / describe 的命令入口、过滤条件与 envelope 输出；effect 参数 schema、template mode 与 built-in catalog 仍由 `Core.Editing` 持有
 - `inspect-plan`、`replace-plan-material`、`replace-plan-material-batch`、`attach-plan-material`、`attach-plan-material-batch`、`bind-voice-track` 负责加载 `edit.json`、解析 CLI 选择器与路径写回策略、调用 `Core.Editing` 的既有 plan 语义，并输出稳定结构化结果；它们不拥有第二套 plan 模型，也不承担通用 JSON patch
 - `inspect-plan` 的 `signals[]` 总状态字段必须原样透传 `Core.Editing` 的稳定取值，不能在 CLI 层重写另一套“建议动作”语义
@@ -105,6 +106,7 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 
 - 新增 CLI 选项时，容易把默认值、路径规则或命令拼接塞回入口层
 - `effects` 的返回字段必须直接由 `Core.Editing` 描述符派生，不能在 CLI 里偷偷扩出另一套 effect 配置模型
+- motion effects 的 discover / inspect / validate / mutation follow-up validation 必须共用同一套 built-in registry，不能出现 `effects describe`、`validate-plan` 和 post-mutation validation 三套不一致结果
 - supporting signal guidance 必须透传 `Core.Editing` 的模板定义，不能在 `commands.json`、`guide.json`、帮助脚本里各写一份不同版本
 - supporting signal 的 command / consumption / script 注释必须从同一套模板示例输出派生，不能在 `guide.json`、`commands.json`、`commands.*` 各自改写
 - 对字幕 / signal 模板，`commands.json` / `commands.*` 还必须把 attach 后的 `inspect-plan --check-files`、`validate-plan --check-files` 闭环一起带出来，不能只停在 signal 文件生成

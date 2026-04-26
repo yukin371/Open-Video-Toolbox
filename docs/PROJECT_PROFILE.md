@@ -90,7 +90,7 @@
 - `bind-voice-track` 已实现，用于把外部配音、TTS 或 voice conversion 结果按默认 `voice-main` / `voice` 约定接回 plan；底层仍复用 `audioTracks` attach/upsert 语义，不引入第二套模型。
 - `bind-voice-track-batch` 已实现，用于从 manifest 批量读取多条配音接回任务，统一解析相对路径、复用单项 voice bind 流程，并在 manifest 同目录固定写出 `summary.json` 与 `results/<id>.json`。
 - `validate-plan` 已实现，用于在真正执行前校验外部 AI 或人工修改后的 `edit.json` 是否仍满足当前 schema v1，或当前 `schemaVersion = 2` 的 timeline 基础语义约束；当 plan 来自插件模板时，可通过 `--plugin-dir` 把插件模板目录显式接回校验链。
-- `effects` 已实现，用于发现当前内置 v2 effect 描述符，并输出单 effect 的参数 schema、模板模式与 FFmpeg 模板骨架；当前不负责插件 effect 加载，也不代表 render 已进入 effect 执行阶段。
+- `effects` 已实现，用于发现当前内置 v2 effect 描述符，并输出单 effect 的参数 schema、模板模式与 FFmpeg 模板骨架；当前 built-in motion effects 首版已打通 `discover -> validate -> render preview / execute` 闭环，范围固定为 `move / orbit / zoompan`；仍不负责插件 effect 加载，也不扩成角色动画器或关键帧工作台。
 - `mix-audio --preview` 与 `render --preview` 已实现，用于在真实执行前输出稳定的 `executionPreview`；传 `--json-out` 时会把统一 envelope 原样写到文件。
 - `mix-audio` / `render` 的 preview 与执行 envelope 现会额外透出 `templateSource`，直接复用 plan 中已有的 `template.source` 元数据，便于后续执行阶段继续审计插件来源。
 - 当 `mix-audio` / `render` 已成功加载 plan、但在 preview 构建或执行阶段失败时，无论是抛错还是底层执行返回 failed status，CLI 现都会输出结构化 failure envelope，继续保留 `templateSource`、局部操作上下文、可用时的 `executionPreview` / `execution` 与错误消息，并返回非零退出码，而不退回纯 usage 文本。
@@ -127,7 +127,7 @@
 - 可选的重依赖 real smoke 现已同时接入 `src/OpenVideoToolbox.Core.Tests/RealMediaSmokeTests.cs` 与 `src/OpenVideoToolbox.Cli.Tests/CliRealMediaSmokeTests.cs`；默认环境缺依赖时会自动跳过。
 - 推荐先跑 `doctor` 确认依赖解析状态，再跑上述 real smoke；否则很容易把环境缺失误判成命令实现故障。
 - 契约冻结与模板稳定收口后，当前阶段已推进到：`H1 -> H2+T1 -> T2 -> P1 -> E1` 完成；下一候选阶段为 `D1` 或 `E2`。
-- 当前测试基线：`OpenVideoToolbox.Core.Tests` 172，`OpenVideoToolbox.Cli.Tests` 186，总计 358。
+- 当前测试基线：`OpenVideoToolbox.Core.Tests` 186，`OpenVideoToolbox.Cli.Tests` 195，总计 381。
 - 发布链现状：`src/OpenVideoToolbox.Cli/OpenVideoToolbox.Cli.csproj` 已明确程序集名 `ovt` 与版本 `0.1.0`，`.github/workflows/release.yml` 已支持 tag 触发的跨平台 single-file 发布。
 - Windows 常用环境变量：
   - `OVT_WHISPER_CLI_PATH`
