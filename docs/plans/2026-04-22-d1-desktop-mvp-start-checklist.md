@@ -18,7 +18,7 @@
 原因不是 CLI 或模板链路未完成，而是最关键的启动门槛之一尚未满足：
 
 - `edit.json schema v1` 仍未证明进入低频变更窗口。
-- 按当前文档口径，最早也要到 **2026-05-22** 之后，且期间没有 breaking change，才能满足“连续 1 个月无 breaking change”的判断条件。
+- 按当前收敛后的文档口径，最早也要到 **2026-05-12** 之后，且期间没有新的 breaking change 迹象，才适合再次正式判断是否启动 `D1`。
 
 补充：
 
@@ -31,7 +31,7 @@
 
 | 检查项 | 门槛来源 | 当前判断 | 证据 | 备注 |
 |--------|----------|----------|------|------|
-| `edit.json schema v1` 进入低频变更阶段 | `ARCHITECTURE_GUARDRAILS` / 长期路线 | `未满足` | 截至 2026-04-24 仍未形成连续 1 个月观察窗口 | 最早观察完成日：`2026-05-22` |
+| `edit.json schema v1` 进入低频变更阶段 | `ARCHITECTURE_GUARDRAILS` / 长期路线 | `未满足` | 截至 2026-04-24 仍未形成足够稳定的观察窗口 | 最早观察完成日：`2026-05-12` |
 | 模板工作流稳定 | `ARCHITECTURE_GUARDRAILS` / 长期路线 | `基本满足` | `templates -> init-plan / scaffold-template -> validate-plan -> render` 已在当前阶段文档中认定完成 | 后续仍应避免重新改写契约 |
 | 外部 AI 已能通过 CLI 完成多数基础剪辑任务 | `ARCHITECTURE_GUARDRAILS` / 长期路线 | `满足` | roadmap 已认定 CLI 契约冻结、模板链路稳定、插件边界与发布链完成 | 当前不缺 CLI 主能力 |
 | Desktop 明确定位为交互壳 | `ARCHITECTURE_GUARDRAILS` / 长期路线 | `满足` | 现有文档已明确禁止 Desktop 成为新业务 owner | 启动后仍需用 `MODULE.md` 锁边界 |
@@ -41,7 +41,7 @@
 ### B1. `edit.json schema v1` 低频变更窗口未完成
 
 - 这是当前唯一明确的硬阻塞。
-- 如果在 **2026-04-22 到 2026-05-22** 之间继续发生 breaking change，就应顺延 D1 启动时间。
+- 如果在 **2026-04-22 到 2026-05-12** 之间继续发生 breaking change，就应顺延 D1 启动时间。
 - 观察口径建议固定为：
   - 顶层字段语义不变
   - 模板工作流相关 schema 不变
@@ -86,7 +86,7 @@
 只有当以下四项都为 `是` 时，才把 `D1` 从“候选阶段”改成“正式启动”：
 
 ```text
-1. 从 2026-04-22 起连续 1 个月无 `edit.json schema v1` breaking change？
+1. 从 2026-04-22 起到下一次重判日之间无新的 `edit.json schema v1` breaking change？
 2. 当前仍确认 Desktop 比 E2 更优先？
 3. Desktop 的角色仍被限定为交互壳，而不是新业务 owner？
 4. Desktop 的首轮闭环是否已被压缩到最小可交付范围？
