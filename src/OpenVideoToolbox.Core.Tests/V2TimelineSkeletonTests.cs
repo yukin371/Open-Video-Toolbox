@@ -403,6 +403,78 @@ public sealed class V2TimelineSkeletonTests
     }
 
     [Fact]
+    public void Validate_ReturnsValidForStillImageVideoClipWithDurationOnly()
+    {
+        var validator = new EditPlanValidator();
+        var basePlan = CreateSchemaV2Plan();
+        var baseTimeline = Assert.IsType<EditPlanTimeline>(basePlan.Timeline);
+        var baseTrack = baseTimeline.Tracks[0];
+        var plan = basePlan with
+        {
+            Timeline = baseTimeline with
+            {
+                Tracks =
+                [
+                    baseTrack with
+                    {
+                        Clips =
+                        [
+                            baseTrack.Clips[0] with
+                            {
+                                Src = "poster.png",
+                                InPoint = null,
+                                OutPoint = null,
+                                Duration = TimeSpan.FromSeconds(4)
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var result = validator.Validate(plan);
+
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Issues);
+    }
+
+    [Fact]
+    public void Validate_ReturnsErrorForNonStillImageVideoClipWithDurationOnly()
+    {
+        var validator = new EditPlanValidator();
+        var basePlan = CreateSchemaV2Plan();
+        var baseTimeline = Assert.IsType<EditPlanTimeline>(basePlan.Timeline);
+        var baseTrack = baseTimeline.Tracks[0];
+        var plan = basePlan with
+        {
+            Timeline = baseTimeline with
+            {
+                Tracks =
+                [
+                    baseTrack with
+                    {
+                        Clips =
+                        [
+                            baseTrack.Clips[0] with
+                            {
+                                Src = "overlay.mp4",
+                                InPoint = null,
+                                OutPoint = null,
+                                Duration = TimeSpan.FromSeconds(4)
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var result = validator.Validate(plan);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, issue => issue.Code == "timeline.clip.video.range.required");
+    }
+
+    [Fact]
     public void Validate_ReturnsErrorsForInvalidMotionEffectParameters()
     {
         var validator = new EditPlanValidator();

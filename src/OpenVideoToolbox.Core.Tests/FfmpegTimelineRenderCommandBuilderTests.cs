@@ -196,6 +196,21 @@ public sealed class FfmpegTimelineRenderCommandBuilderTests
         Assert.Contains("color=c=black@0.0:s=1920x1080:r=30:d=4", filterGraph, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Build_ThrowsForRegisteredExecutorEffectWithoutImplementation()
+    {
+        var builder = new FfmpegTimelineRenderCommandBuilder();
+        var request = new EditPlanRenderRequest
+        {
+            Plan = CreateExecutorBackedEffectPlanWithoutImplementation()
+        };
+
+        var error = Assert.Throws<ArgumentException>(() => builder.Build(request));
+
+        Assert.Contains("executor-backed", error.Message, StringComparison.Ordinal);
+        Assert.Contains("text_overlay", error.Message, StringComparison.Ordinal);
+    }
+
     private static EditPlan CreateTimelinePlan()
     {
         return new EditPlan
@@ -629,6 +644,62 @@ public sealed class FfmpegTimelineRenderCommandBuilderTests
             Output = new EditOutputPlan
             {
                 Path = Path.GetFullPath("timeline-motion-still.mp4"),
+                Container = "mp4"
+            }
+        };
+    }
+
+    private static EditPlan CreateExecutorBackedEffectPlanWithoutImplementation()
+    {
+        return new EditPlan
+        {
+            SchemaVersion = SchemaVersions.V2,
+            Source = new EditPlanSource
+            {
+                InputPath = Path.GetFullPath("unused-input.mp4")
+            },
+            Timeline = new EditPlanTimeline
+            {
+                Duration = TimeSpan.FromSeconds(4),
+                Resolution = new TimelineResolution
+                {
+                    W = 1920,
+                    H = 1080
+                },
+                FrameRate = 30,
+                Tracks =
+                [
+                    new TimelineTrack
+                    {
+                        Id = "still",
+                        Kind = TrackKind.Video,
+                        Clips =
+                        [
+                            new TimelineClip
+                            {
+                                Id = "still-001",
+                                Src = Path.GetFullPath("poster.png"),
+                                Start = TimeSpan.Zero,
+                                Duration = TimeSpan.FromSeconds(4),
+                                Effects =
+                                [
+                                    new TimelineEffect
+                                    {
+                                        Type = "text_overlay",
+                                        Extensions = new Dictionary<string, System.Text.Json.JsonElement>
+                                        {
+                                            ["text"] = System.Text.Json.JsonSerializer.SerializeToElement("hello")
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            Output = new EditOutputPlan
+            {
+                Path = Path.GetFullPath("timeline-missing-executor.mp4"),
                 Container = "mp4"
             }
         };

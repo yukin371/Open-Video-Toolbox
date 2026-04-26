@@ -35,13 +35,8 @@
    - `schemaVersion = 2`
    - `video` clip
    - 显式 `src`
-   - 显式 `in/out`
+   - `duration` 或 `in/out`
    - clip 级 `move`
-
-说明：
-
-- 当前 render path 已支持 still-image motion 的 executor 路径
-- 但当前 validator 的合法样例应沿用 `src + in/out` 这一形状，不以 `duration-only` 作为首期验收口径
 
 建议在仓库根目录执行以下命令。
 

@@ -32,17 +32,6 @@ public sealed record FilterBuildError
 public sealed class FfmpegTimelineRenderCommandBuilder
 {
     private static readonly Regex PlaceholderRegex = new(@"\{(?<name>[A-Za-z0-9_]+)\}", RegexOptions.Compiled);
-    private static readonly HashSet<string> StillImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".webp",
-        ".bmp",
-        ".tif",
-        ".tiff"
-    };
-
     private readonly EffectRegistry _effectRegistry;
     private readonly IReadOnlyDictionary<string, IEffectExecutor> _effectExecutors;
 
@@ -410,6 +399,13 @@ public sealed class FfmpegTimelineRenderCommandBuilder
                     filters);
                 currentLabel = nextLabel;
                 appliedCount++;
+                continue;
+            }
+
+            if (definition is not null && definition.FfmpegTemplates is null)
+            {
+                throw new ArgumentException(
+                    $"Timeline effect '{effect.Type}' is registered as executor-backed, but no executor is registered in the timeline render builder.");
             }
         }
 
@@ -548,7 +544,7 @@ public sealed class FfmpegTimelineRenderCommandBuilder
                     inputs.Add(existing);
                 }
 
-                if (track.Kind == TrackKind.Video && existing.Path is { } path && IsStillImagePath(path))
+                if (track.Kind == TrackKind.Video && existing.Path is { } path && TimelineVisualAssetRules.IsStillImagePath(path))
                 {
                     existing.LoopStillImage = true;
                     existing.FrameRate ??= timeline.FrameRate;
@@ -773,12 +769,6 @@ public sealed class FfmpegTimelineRenderCommandBuilder
             .Replace("]", "\\]", StringComparison.Ordinal)
             .Replace(",", "\\,", StringComparison.Ordinal)
             .Replace(";", "\\;", StringComparison.Ordinal);
-    }
-
-    private static bool IsStillImagePath(string path)
-    {
-        var extension = Path.GetExtension(path);
-        return !string.IsNullOrWhiteSpace(extension) && StillImageExtensions.Contains(extension);
     }
 
     private static void AppendPlaceholderInputArguments(

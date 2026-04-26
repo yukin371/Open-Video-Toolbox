@@ -447,10 +447,13 @@ public sealed class EditPlanValidator
                     }
                     else if (clip.InPoint is null || clip.OutPoint is null)
                     {
-                        issues.Add(Error(
-                            clipPath,
-                            "timeline.clip.video.range.required",
-                            "Video timeline clips must specify both in and out."));
+                        if (!TimelineVisualAssetRules.AllowsDurationOnlyVideoClip(clip))
+                        {
+                            issues.Add(Error(
+                                clipPath,
+                                "timeline.clip.video.range.required",
+                                "Video timeline clips must specify both in and out, unless they are explicit still-image clips with duration."));
+                        }
                     }
                     else if (clip.OutPoint <= clip.InPoint)
                     {
@@ -1010,7 +1013,7 @@ internal static class EditPlanValidationIssueMetadata
             "timeline.clip.id.duplicate" => "Rename duplicated timeline clip ids so each clip id is unique across the whole timeline.",
             "timeline.clip.start.invalid" => "Set timeline clip start to zero or a positive value.",
             "timeline.clip.duration.invalid" => "Set timeline clip duration to a value greater than zero, or omit it.",
-            "timeline.clip.video.range.required" => "Video timeline clips must provide both in and out.",
+            "timeline.clip.video.range.required" => "Video timeline clips must provide both in and out, unless they are explicit still-image clips with duration.",
             "timeline.clip.video.range.invalid" => "Adjust timeline clip out so it is greater than clip in.",
             "timeline.transition.duration.invalid" => "Set transition duration to a value greater than zero.",
             "timeline.transition.duration.exceedsClip" => "Reduce transition duration so it does not exceed the clip duration.",
