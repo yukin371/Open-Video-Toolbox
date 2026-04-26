@@ -273,8 +273,14 @@
 
 ## 当前判定
 
+后续补记：
+
+- 首期 `implementation` 已落地：`docs/plans/v2/2026-04-26-v2-motion-effects-implementation.md`
+- 首期 `phase-check` 已落地：`docs/plans/v2/2026-04-26-v2-motion-effects-phase-check.md`
+- 这不改变本卡原始边界判断：后续如继续，仍必须把范围限制在 `move / orbit / zoompan`，不能滑向 `Live2D` 或角色动画系统
+
 ```text
 阶段：V2 motion effects
-当前状态：plan_done
-建议动作：仍保持 stop-point；如后续真要做，下一张只能开 motion effects implementation，范围仍限于 move / orbit / zoompan
+当前状态：phase_check_ready
+建议动作：进入人工阶段验收；如验收通过，回到 stop-point，而不是继续横向扩 motion scope
 ```

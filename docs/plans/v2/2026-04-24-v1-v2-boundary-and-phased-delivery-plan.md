@@ -401,13 +401,15 @@ V2-P6 数据驱动批量 / resolve-assets / 图表能力
 | `2026-04-24-ai-intelligent-workflows-design.md` | `V2-P1` / `V2-P6` | validate / auto-cut 可拆，resolve-assets 延后 |
 | `2026-04-24-batch-production-design.md` | `V2-P6` | 当前整包延后 |
 | `2026-04-25-narrated-slides-video-spec.md` | `V2-P6` | 已完成当前受控增量并回到 stop-point；后续只允许按新明确卡片重开 |
-| `2026-04-26-v2-motion-effects-boundary.md` | `V2-P5` 之后的候选窄卡 | 仅完成边界定义；当前不立项、不并入 `E2` 主线，也不并入 `V2-P6 narrated-slides` |
-| `2026-04-26-v2-motion-effects-spec.md` | `V2-P5` 之后的候选窄卡 | 第一期 effect 规格已冻结；当前仍未进入 plan / implementation |
-| `2026-04-26-v2-motion-effects-plan.md` | `V2-P5` 之后的候选窄卡 | 第一期实现顺序、文件落点与测试面已冻结；当前仍未进入 implementation |
+| `2026-04-26-v2-motion-effects-boundary.md` | `V2-P5` 之后的候选窄卡 | 边界定义仍有效；当前不并入 `E2` 主线，也不并入 `V2-P6 narrated-slides` |
+| `2026-04-26-v2-motion-effects-spec.md` | `V2-P5` 之后的候选窄卡 | 第一期 effect 规格已冻结，范围固定为 `move / orbit / zoompan` |
+| `2026-04-26-v2-motion-effects-plan.md` | `V2-P5` 之后的候选窄卡 | 第一期实现顺序、文件落点与测试面已冻结 |
+| `2026-04-26-v2-motion-effects-implementation.md` | `V2-P5` 之后的候选窄卡 | 第一期最小闭环已落地到 `Core.Editing` / `Core.Execution` / `Cli` |
+| `2026-04-26-v2-motion-effects-phase-check.md` | `V2-P5` 之后的候选窄卡 | 第一轮阶段检查已完成，当前状态为 `ready_for_acceptance` |
 
 ## motion effects 候选顺序
 
-`motion effects` 当前只是一条已定义边界、未立项的候选子线。
+`motion effects` 当前是一条已完成首期实现与阶段检查、但仍未并入正式主线的候选子线。
 
 它的默认约束是：
 
@@ -426,9 +428,11 @@ V2-P6 数据驱动批量 / resolve-assets / 图表能力
    - 已完成：`2026-04-26-v2-motion-effects-plan.md`
    - 结果：owner、实现顺序、测试面、文档同步点与回滚路径已冻结
 4. `motion effects implementation`
-   - 目标：只实现第一期最小 effect，并补齐 preview / validator / command snapshot 测试
+   - 已完成：`2026-04-26-v2-motion-effects-implementation.md`
+   - 结果：第一期最小 effect 已实现，并补齐 preview / validator / command snapshot 测试
 5. `motion effects phase-check`
-   - 目标：确认没有把 scope 拉向角色动画、图形后端或第二套模板平台
+   - 已完成：`2026-04-26-v2-motion-effects-phase-check.md`
+   - 结果：已确认本轮没有把 scope 拉向角色动画、图形后端或第二套模板平台；当前状态为 `ready_for_acceptance`
 
 第一期 effect 范围默认只允许：
 
