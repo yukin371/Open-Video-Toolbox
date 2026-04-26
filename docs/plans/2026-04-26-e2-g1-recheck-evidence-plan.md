@@ -105,16 +105,6 @@
 
 建议在 **2026-05-12** 或之后按以下顺序执行：
 
-## 待补齐表格
-
-| 条目 | 当前是否已齐 | 待补内容 | 来源文档 / 产物 | 负责人 | 目标日期 | 备注 |
-| --- | --- | --- | --- | --- | --- | --- |
-| `schema v1` 观察窗口结论 | 否 | 填写从 `2026-04-22` 到重判日前是否出现新的 breaking change | Core snapshot 护栏、相关提交记录、`docs/plans/2026-04-26-e2-schema-v1-stability-guardrail-phase-check.md` | 待定 | 2026-05-12 | 这是唯一硬门槛 |
-| CLI / workflow 稳定性抽查结论 | 否 | 记录是否仍需重做人工抽查，以及抽查结果 | `docs/plans/2026-04-24-e2-feature-delivery-staged-plan.md`、`docs/plans/2026-04-24-e2-f4-phase-check.md` | 待定 | 2026-05-12 | 没有新主线改动时应尽量复用既有结论 |
-| Desktop 交互壳边界复核 | 否 | 确认没有新文档或新实现让 Desktop 成为业务 owner | `docs/ARCHITECTURE_GUARDRAILS.md`、`docs/plans/2026-04-22-d1-desktop-mvp-start-checklist.md` | 待定 | 2026-05-12 | 主要是规则复核，不是功能设计 |
-| Desktop 价值判断 | 否 | 写明“为什么现在做 Desktop 比继续做 E2 更值得” | `docs/roadmap.md`、重判当日判断说明 | 待定 | 2026-05-12 | 需要明确理由，不能写成“差不多可以做了” |
-| D1 首轮最小范围确认 | 否 | 复核第一轮是否仍只承诺最小闭环 | `docs/plans/2026-04-22-d1-desktop-mvp-start-checklist.md` | 待定 | 2026-05-12 | 防止把 D2 范围提前混入 |
-
 1. 先看自动化护栏
    - `schema v1` 稳定窗口相关测试是否仍通过
    - 观察窗口内是否已出现新的 breaking change 记录
@@ -124,6 +114,16 @@
 3. 最后单独判断是否值得启动 `D1`
    - 不是问“能不能做”
    - 而是问“现在做是否比继续留在 E2 更值”
+
+## 待补齐表格
+
+| 条目 | 当前是否已齐 | 待补内容 | 来源文档 / 产物 | 负责人 | 目标日期 | 备注 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `schema v1` 观察窗口结论 | 否 | 填写从 `2026-04-22` 到重判日前是否出现新的 breaking change；补最终结论 | Core snapshot 护栏、相关提交记录、`docs/plans/2026-04-26-e2-schema-v1-stability-guardrail-phase-check.md` | 仓库维护者 | 2026-05-12 | 这是唯一硬门槛 |
+| CLI / workflow 稳定性抽查结论 | 部分已齐 | 记录是否仍需重做人工抽查，以及抽查结果；若无新增主线改动，应显式写明“沿用既有阶段结论” | `docs/plans/2026-04-24-e2-feature-delivery-staged-plan.md`、`docs/plans/2026-04-24-e2-f4-phase-check.md` | 仓库维护者 | 2026-05-12 | 没有新主线改动时应尽量复用既有结论 |
+| Desktop 交互壳边界复核 | 是（待重判日复核） | 确认没有新文档或新实现让 Desktop 成为业务 owner；若无变化，直接记录“维持成立” | `docs/ARCHITECTURE_GUARDRAILS.md`、`docs/plans/2026-04-22-d1-desktop-mvp-start-checklist.md` | 仓库维护者 | 2026-05-12 | 主要是规则复核，不是功能设计 |
+| Desktop 价值判断 | 否 | 写明“为什么现在做 Desktop 比继续做 E2 更值得”；若理由不足，应明确落回结果 A | `docs/roadmap.md`、重判当日判断说明 | 仓库维护者 | 2026-05-12 | 不能写成“差不多可以做了” |
+| D1 首轮最小范围确认 | 是（待重判日复核） | 复核第一轮是否仍只承诺最小闭环；若范围膨胀，直接视为不满足 | `docs/plans/2026-04-22-d1-desktop-mvp-start-checklist.md` | 仓库维护者 | 2026-05-12 | 防止把 D2 范围提前混入 |
 
 ## 重判结果分流
 
