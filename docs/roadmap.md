@@ -1,6 +1,6 @@
 # Roadmap
 
-最后更新：2026-04-25
+最后更新：2026-04-26
 
 本文件只保留当前版本目标、实施顺序与活跃工作面，不记录完整历史流水账。
 
@@ -30,9 +30,10 @@
 ## 当前版本目标
 
 - 交付可供外部 AI 代理稳定调用的 CLI 媒体工具箱，包含跨平台 single-file 发布能力。
-- 当前状态（2026-04-25）：H1→H2+T1→T2→P1→E1 已全部完成，CLI 契约已冻结，插件开发者体验已落地，发布流程已就绪；`E2-G1` 首轮已执行，当前结果为继续留在 `E2`、不启动 `D1`；`V2-P5` 已通过人工阶段验收，`V2-P6 narrated-slides` 的首轮 `C1 ~ C5` 已获人工接受，并已继续推进单视频 `${var}` 基线。
+- 当前状态（2026-04-26）：H1→H2+T1→T2→P1→E1 已全部完成，CLI 契约已冻结，插件开发者体验已落地，发布流程已就绪；`E2-G1` 首轮已执行，当前结果为继续留在 `E2`、不启动 `D1`；`V2-P5` 已通过人工阶段验收，`V2-P6 narrated-slides` 已完成当前受控增量并回到 stop-point；简易 `motion effects` 已完成边界卡与 spec，但当前仍停在 `spec_done`，尚未进入 plan / implementation。
 - 下一步：`E2` 仍是正式交付主线；并行孵化线中的 `V2-P6 narrated-slides` 当前已补齐完整验收包与 stop-point 建议，`${var}` foundation、`bgm.slot.required = false`、`timeline placeholder video` 与 `sections[].visual.slot.required = false` 都已落地；当前更合理的动作是不再继续扩 narrated-slides scope，而是保留当前成果、回到 `E2` 主线，后续如需重开 narrated 线，应以新的明确卡片进入，而不是直接跳到 section 删除、batch 或图表后端；`D1` 最早在 `2026-05-22` 后再次重判。
 - 下一步：`E2` 仍是正式交付主线；当前 `E2-A1 ~ A4` 的阶段检查已补齐，`E2-F2 ~ F4` 与 `E2-G1` 也已有现成阶段结论，仓库内更合理的动作是不再横向扩张 `E2`，而是保留当前成果、等待新的明确 `E2` 卡或 **2026-05-22** 后的下一次 `D1` 重判；并行孵化线中的 `V2-P6 narrated-slides` 也已补齐完整验收包与 stop-point 建议，当前不应继续做无边界追加；如确需重开 narrated，只允许以新的明确卡片推进。当前已按该规则显式重开 `V2-P6-C15 数据驱动 batch narrated`，范围仅限 `Cli` batch wrapper。
+- 下一步：简易 `motion effects` 当前不进入 `E2` 主线，也不直接并入 `V2-P6 narrated-slides`；边界卡与 spec 已完成，如后续确需推进，下一张只允许开 `motion effects plan`，随后才是 `implementation -> phase-check`；第一期范围仍只允许 `move / orbit / zoompan`，不扩成 `Live2D`、角色动画器或关键帧工作台。
 - 长期演化路线：`docs/plans/2026-04-21-long-term-evolution-roadmap.md`
 
 ## 整体开发流程
@@ -65,7 +66,7 @@
   - 仍然是当前正式支持运行路径
 - `v2`
   - 当前已有正式孵化实现线，但仍必须按 `docs/plans/v2/2026-04-24-v1-v2-boundary-and-phased-delivery-plan.md` 中定义的 `V2-P*` 阶段推进
-  - 当前活跃子项为：`V2-P6 narrated-slides`
+  - 当前活跃子项仍以 `V2-P6 narrated-slides` 的 stop-point 收口为准；简易 `motion effects` 已完成边界卡与 spec，但尚不是活跃实施项
 
 ### v1 的两个结束节点
 
