@@ -39,6 +39,7 @@
 - 下一步：`docs/plans/2026-04-26-e2-g1-recheck-evidence-plan.md` 已补齐当前范围，验收入口见 `docs/plans/2026-04-26-e2-g1-recheck-evidence-phase-check.md`；当前不应继续把同一张卡膨胀成 Desktop 实施稿，更合理的动作是保留这份执行包，等待 **2026-05-12** 或之后按卡执行下一次 `E2-G1 / D1` 重判。
 - 下一步：`docs/plans/2026-04-26-d1-desktop-value-judgement-template.md` 已新增为 `E2-G1 / D1` 重判配套模板；它只负责回答“Desktop 是否比继续留在 E2 更值得”，不等于启动 `D1`。
 - 下一步：`docs/plans/2026-04-26-v1-0-release-precheck-and-boundary.md` 已新增为 `v1.0` 发布边界整理卡；当前更合理的动作是先按卡收敛正式承诺能力、验证方式与阻塞缺陷口径，再决定何时真的进入 `1.0.0`。
+- 下一步：`docs/plans/2026-04-26-remotion-integration-boundary.md` 已新增为 Remotion 集成边界卡；当前结论已收敛为“放弃接入，回到自身特色主线”，不进入 PoC、不进入 companion repo，也不改当前 `CLI + Core` 主边界。
 - 长期演化路线：`docs/plans/2026-04-21-long-term-evolution-roadmap.md`
 
 ## 整体开发流程
