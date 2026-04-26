@@ -138,6 +138,17 @@
 - D1 首轮最小范围：
   当前成立但待复核。现有文档已把首轮范围固定为“导入素材 → 选择模板 → 编辑少量参数 → 执行 → 查看结果与日志”的无时间线最小闭环；重判日只需确认这条边界没有被提前拉宽。
 
+## 当前预验证（2026-04-26）
+
+- `schema v1` 自动化护栏：
+  `dotnet test .\src\OpenVideoToolbox.Core.Tests\OpenVideoToolbox.Core.Tests.csproj --filter "FullyQualifiedName~EditPlanSerializationTests|FullyQualifiedName~EditPlanValidatorTests"` 已通过，当前结果为 `12 passed`。
+- solution 构建状态：
+  `dotnet build .\OpenVideoToolbox.sln` 已在本轮收敛期间通过，可作为当前仓库仍处于一致状态的直接证据。
+- Desktop 目录漂移检查：
+  从 `2026-04-22` 起检查 `src/OpenVideoToolbox.Desktop` 的提交变更，当前仅看到 `src/OpenVideoToolbox.Desktop/MODULE.md`，未见新的 Desktop 生产代码文件变更。
+- 现阶段解释：
+  上述预验证只能证明“截至 2026-04-26 当前没有明显的边界漂移或护栏失效信号”；它不能替代 `2026-05-12` 当天对观察窗口结论与 Desktop 价值判断的最终填写。
+
 ## 重判日最少补写内容
 
 - 补 `schema v1` 观察窗口最终结论
