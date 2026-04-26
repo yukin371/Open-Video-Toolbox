@@ -171,6 +171,10 @@ dotnet test OpenVideoToolbox.sln
 4. `validate-plan --plan <motion-edit.json>`
    - 预期：合法 plan 通过；非法 easing / 缺参 / placeholder 场景能报结构化 issue
 
+当前独立验收清单见：
+
+- `docs/plans/v2/2026-04-26-v2-motion-effects-acceptance-checklist.md`
+
 通过标准：
 
 - 三个 built-in motion effect 都可被发现
