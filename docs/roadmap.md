@@ -40,6 +40,7 @@
 - 下一步：`docs/plans/2026-04-26-d1-desktop-value-judgement-template.md` 已新增为 `E2-G1 / D1` 重判配套模板；它只负责回答“Desktop 是否比继续留在 E2 更值得”，不等于启动 `D1`。
 - 下一步：`docs/plans/2026-04-26-v1-0-release-precheck-and-boundary.md` 已新增为 `v1.0` 发布边界整理卡；当前更合理的动作是先按卡收敛正式承诺能力、验证方式与阻塞缺陷口径，再决定何时真的进入 `1.0.0`。
 - 下一步：`docs/plans/2026-04-26-e2-v1-release-note-finalization.md` 已新增为 `E2` 主线窄卡；当前更合理的动作是把 `v1.0` 边界结论同步到 `CHANGELOG.md` 与 release note 口径，而不是继续新增功能或继续堆边界卡。
+- 下一步：`docs/plans/2026-04-26-v1-0-go-no-go-signoff-draft.md` 已新增并补齐当前 release-view smoke 记录；当前更合理的动作是不再重开新的 `E2` 功能卡，而是由 maintainer 复核 `v1.0.0` tag / GitHub Release 资产 / release note 是否与签发稿一致，再决定是否正式签发。
 - 下一步：`docs/plans/2026-04-26-remotion-integration-boundary.md` 已新增为 Remotion 集成边界卡；当前结论已收敛为“放弃接入，回到自身特色主线”，不进入 PoC、不进入 companion repo，也不改当前 `CLI + Core` 主边界。
 - 长期演化路线：`docs/plans/2026-04-21-long-term-evolution-roadmap.md`
 
