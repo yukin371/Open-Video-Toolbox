@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "inputPath": "input.mp4"
+  },
+  "template": null,
+  "clips": [
+    {
+      "id": "clip-001",
+      "in": "00:00:00",
+      "out": "00:00:01",
+      "label": null
+    }
+  ],
+  "audioTracks": [],
+  "artifacts": [],
+  "transcript": null,
+  "beats": null,
+  "subtitles": null,
+  "timeline": null,
+  "output": {
+    "path": "output.mp4",
+    "container": "mp4"
+  }
+}

@@ -51,6 +51,16 @@ public sealed class EditPlanSerializationTests
             $"Schema v1 snapshot mismatch.{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
     }
 
+    [Fact]
+    public void EditPlan_Serializes_MinimalSchemaV1Shape_ToStableSnapshot()
+    {
+        var actual = JsonNode.Parse(JsonSerializer.Serialize(CreateMinimalSchemaV1Plan(), OpenVideoToolboxJson.Shared));
+        var expected = LoadSnapshot("edit-plan-schema-v1-minimal.json");
+
+        Assert.True(JsonNode.DeepEquals(expected, actual),
+            $"Minimal schema v1 snapshot mismatch.{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
+    }
+
     private static EditPlan CreateSchemaV1Plan()
     {
         return new EditPlan
@@ -128,6 +138,31 @@ public sealed class EditPlanSerializationTests
             Extensions = new Dictionary<string, JsonElement>
             {
                 ["x-toolbox"] = JsonDocument.Parse("{\"beats\":\"beats.json\"}").RootElement.Clone()
+            }
+        };
+    }
+
+    private static EditPlan CreateMinimalSchemaV1Plan()
+    {
+        return new EditPlan
+        {
+            Source = new EditPlanSource
+            {
+                InputPath = "input.mp4"
+            },
+            Clips =
+            [
+                new EditClip
+                {
+                    Id = "clip-001",
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = TimeSpan.FromSeconds(1)
+                }
+            ],
+            Output = new EditOutputPlan
+            {
+                Path = "output.mp4",
+                Container = "mp4"
             }
         };
     }

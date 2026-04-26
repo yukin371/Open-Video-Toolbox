@@ -15,9 +15,12 @@ These files are not a dumping ground for every plan variant or every generated a
 
 ## Current Coverage
 
-The current snapshot set intentionally covers only the canonical `schemaVersion = 1` plan sample used by `EditPlanSerializationTests`.
+The current snapshot set intentionally covers:
 
-This sample exists to lock the externally visible serialization shape of the stable v1 plan model, not to exhaustively enumerate all legal plan combinations.
+- a canonical full `schemaVersion = 1` plan sample
+- a canonical minimal `schemaVersion = 1` plan sample
+
+These samples exist to lock the externally visible serialization shape of the stable v1 plan model, not to exhaustively enumerate all legal plan combinations.
 
 ## When To Add A New Snapshot
 

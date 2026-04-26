@@ -19,7 +19,7 @@
 
 ## 范围
 
-- 为 canonical 的 `schemaVersion = 1` plan 样本补稳定序列化黄金文件
+- 为 canonical 的 `schemaVersion = 1` 完整 / 最小 plan 样本补稳定序列化黄金文件
 - 在 `OpenVideoToolbox.Core.Tests` 增加对应快照回归测试
 - 为 `OpenVideoToolbox.Core.Tests/snapshots/` 补目录级维护规则
 - 保持现有 round-trip 测试，避免只测文本不测模型回读
@@ -40,7 +40,7 @@
 
 只有同时满足以下条件，才算这张卡完成：
 
-1. canonical `schemaVersion = 1` plan 已有稳定黄金样本
+1. canonical `schemaVersion = 1` 完整 / 最小 plan 已有稳定黄金样本
 2. 任意字段名或序列化 shape 漂移会在 Core 测试中显式失败
 3. 现有 round-trip 校验仍保留，保证不是只有文本快照而没有模型回读
 4. Core snapshot 目录已有就地维护规则，避免后续用“直接改 golden file”掩盖回归
