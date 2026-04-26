@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using OpenVideoToolbox.Core.Editing;
 using OpenVideoToolbox.Core.Serialization;
 using Xunit;
@@ -7,10 +8,52 @@ namespace OpenVideoToolbox.Core.Tests;
 
 public sealed class EditPlanSerializationTests
 {
+    private static readonly string SnapshotsDir = Path.GetFullPath(Path.Combine(
+        Path.GetDirectoryName(typeof(EditPlanSerializationTests).Assembly.Location)!,
+        "..", "..", "..", "..", "..",
+        "src", "OpenVideoToolbox.Core.Tests", "snapshots"));
+
     [Fact]
     public void EditPlan_RoundTrips_WithSchemaV1Shape()
     {
-        var plan = new EditPlan
+        var plan = CreateSchemaV1Plan();
+
+        var json = JsonSerializer.Serialize(plan, OpenVideoToolboxJson.Shared);
+        var restored = JsonSerializer.Deserialize<EditPlan>(json, OpenVideoToolboxJson.Shared);
+
+        Assert.Contains("\"schemaVersion\": 1", json);
+        Assert.Contains("\"template\":", json);
+        Assert.Contains("\"in\":", json);
+        Assert.Contains("\"out\":", json);
+        Assert.NotNull(restored);
+        Assert.Equal("input.mp4", restored!.Source.InputPath);
+        Assert.Equal("shorts-captioned", restored.Template!.Id);
+        Assert.Equal(EditTemplateSourceKinds.Plugin, restored.Template.Source!.Kind);
+        Assert.Equal("community-pack", restored.Template.Source.PluginId);
+        Assert.Equal("2.1.0", restored.Template.Source.PluginVersion);
+        Assert.Equal("hard-cut", restored.Template.Parameters["hookStyle"]);
+        Assert.Equal(TimeSpan.FromSeconds(12.5), restored.Clips[0].InPoint);
+        Assert.Equal(AudioTrackRole.Bgm, restored.AudioTracks[0].Role);
+        Assert.Equal("subtitles", restored.Artifacts[0].SlotId);
+        Assert.Equal("transcript.json", restored.Transcript!.Path);
+        Assert.Equal("beats.json", restored.Beats!.Path);
+        Assert.Equal(SubtitleMode.Sidecar, restored.Subtitles!.Mode);
+        Assert.True(restored.Extensions?.ContainsKey("x-toolbox"));
+    }
+
+    [Fact]
+    public void EditPlan_Serializes_ToStableSchemaV1Snapshot()
+    {
+        var actual = JsonNode.Parse(JsonSerializer.Serialize(CreateSchemaV1Plan(), OpenVideoToolboxJson.Shared));
+        var expected = LoadSnapshot("edit-plan-schema-v1.json");
+
+        Assert.True(JsonNode.DeepEquals(expected, actual),
+            $"Schema v1 snapshot mismatch.{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
+    }
+
+    private static EditPlan CreateSchemaV1Plan()
+    {
+        return new EditPlan
         {
             Source = new EditPlanSource
             {
@@ -87,27 +130,11 @@ public sealed class EditPlanSerializationTests
                 ["x-toolbox"] = JsonDocument.Parse("{\"beats\":\"beats.json\"}").RootElement.Clone()
             }
         };
+    }
 
-        var json = JsonSerializer.Serialize(plan, OpenVideoToolboxJson.Shared);
-        var restored = JsonSerializer.Deserialize<EditPlan>(json, OpenVideoToolboxJson.Shared);
-
-        Assert.Contains("\"schemaVersion\": 1", json);
-        Assert.Contains("\"template\":", json);
-        Assert.Contains("\"in\":", json);
-        Assert.Contains("\"out\":", json);
-        Assert.NotNull(restored);
-        Assert.Equal("input.mp4", restored!.Source.InputPath);
-        Assert.Equal("shorts-captioned", restored.Template!.Id);
-        Assert.Equal(EditTemplateSourceKinds.Plugin, restored.Template.Source!.Kind);
-        Assert.Equal("community-pack", restored.Template.Source.PluginId);
-        Assert.Equal("2.1.0", restored.Template.Source.PluginVersion);
-        Assert.Equal("hard-cut", restored.Template.Parameters["hookStyle"]);
-        Assert.Equal(TimeSpan.FromSeconds(12.5), restored.Clips[0].InPoint);
-        Assert.Equal(AudioTrackRole.Bgm, restored.AudioTracks[0].Role);
-        Assert.Equal("subtitles", restored.Artifacts[0].SlotId);
-        Assert.Equal("transcript.json", restored.Transcript!.Path);
-        Assert.Equal("beats.json", restored.Beats!.Path);
-        Assert.Equal(SubtitleMode.Sidecar, restored.Subtitles!.Mode);
-        Assert.True(restored.Extensions?.ContainsKey("x-toolbox"));
+    private static JsonNode LoadSnapshot(string fileName)
+    {
+        var path = Path.Combine(SnapshotsDir, fileName);
+        return JsonNode.Parse(File.ReadAllText(path))!;
     }
 }

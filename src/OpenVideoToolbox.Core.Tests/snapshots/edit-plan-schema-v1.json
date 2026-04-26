@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "inputPath": "input.mp4"
+  },
+  "template": {
+    "id": "shorts-captioned",
+    "version": "1.0.0",
+    "source": {
+      "kind": "plugin",
+      "pluginId": "community-pack",
+      "pluginVersion": "2.1.0"
+    },
+    "parameters": {
+      "hookStyle": "hard-cut"
+    }
+  },
+  "clips": [
+    {
+      "id": "clip-001",
+      "in": "00:00:12.5000000",
+      "out": "00:00:27.5000000",
+      "label": "intro-hook"
+    }
+  ],
+  "audioTracks": [
+    {
+      "id": "bgm-01",
+      "role": "bgm",
+      "path": "bgm.wav",
+      "start": "00:00:00",
+      "gainDb": -8
+    }
+  ],
+  "artifacts": [
+    {
+      "slotId": "subtitles",
+      "kind": "subtitle",
+      "path": "subtitles.srt"
+    }
+  ],
+  "transcript": {
+    "path": "transcript.json",
+    "language": "en",
+    "segmentCount": 2
+  },
+  "beats": {
+    "path": "beats.json",
+    "estimatedBpm": 120
+  },
+  "subtitles": {
+    "path": "subtitles.srt",
+    "mode": "sidecar"
+  },
+  "timeline": null,
+  "output": {
+    "path": "final.mp4",
+    "container": "mp4"
+  },
+  "x-toolbox": {
+    "beats": "beats.json"
+  }
+}
