@@ -73,6 +73,94 @@
    - 结果 A：继续留在 `E2`
    - 结果 B：正式启动 `D1`
 
+## 重判证据表
+
+| 证据项 | 当前状态 | 证据来源 | 证据类型 | 重判日动作 | 满足标准 |
+| --- | --- | --- | --- | --- | --- |
+| `schema v1` 低频变更窗口 | 当前未满足，最早观察完成日为 **2026-05-22** | `docs/plans/2026-04-22-d1-desktop-mvp-start-checklist.md`、`docs/plans/2026-04-24-e2-g1-desktop-start-recheck.md`、`docs/plans/2026-04-26-e2-schema-v1-stability-guardrail-phase-check.md` | 自动化护栏 + 人工确认 | 检查观察窗口内是否出现新的 `schema v1` breaking change；复核护栏相关测试与文档结论未失效 | 从 `2026-04-22` 起连续 1 个月无 `schema v1` breaking change，且当前护栏仍成立 |
+| CLI / workflow 稳定性是否仍成立 | 当前基本满足 | `docs/plans/2026-04-24-e2-feature-delivery-staged-plan.md`、`docs/plans/2026-04-24-e2-f4-phase-check.md`、`docs/roadmap.md` | 既有阶段结论 + 人工抽查 | 复核当前没有新的主线改动推翻既有结论；必要时抽查 `templates -> init-plan / scaffold-template -> validate-plan -> render` 是否仍沿既有路径成立 | 没有新的证据表明 CLI 主工作流已失稳，也没有新的 owner 漂移 |
+| Desktop 是否仍被限定为交互壳 | 当前满足 | `docs/ARCHITECTURE_GUARDRAILS.md`、`docs/plans/2026-04-22-d1-desktop-mvp-start-checklist.md` | 文档规则 | 确认自上次重判后没有文档或代码把 Desktop 推成新业务 owner | Desktop 仍只被定义为消费稳定 Core/CLI 边界的交互壳 |
+| Desktop 是否比继续做 E2 更值得 | 当前未确认 | `docs/plans/2026-04-22-d1-desktop-mvp-start-checklist.md`、`docs/roadmap.md` | 人工判断 | 单独回答“现在做 Desktop 的收益，是否高于继续做 CLI / 生态收敛” | 有明确、可陈述的交互壳收益，而不是因为“差不多可以做了” |
+| D1 首轮范围是否仍足够小 | 当前有建议，但未正式承诺 | `docs/plans/2026-04-22-d1-desktop-mvp-start-checklist.md` | 人工判断 | 复核首轮闭环仍压缩为“导入素材 → 选模板 → 编辑少量参数 → 执行 → 看结果与日志” | 没有把时间线、批处理、设置持久化等 `D2` 范围偷带进来 |
+
+## 自动化证据与人工判断边界
+
+### 自动化证据
+
+- `schema v1` Core snapshot 护栏仍成立
+- canonical `schemaVersion = 1` 样本仍可反序列化并通过 validator
+- 当前 solution 仍可成功 build
+
+这些证据用于说明：当前仓库没有显式出现新的 `schema v1` 契约漂移信号。
+
+### 人工判断
+
+- Desktop 是否比继续留在 `E2` 更有收益
+- Desktop 首轮范围是否仍压缩到最小闭环
+- 当前 CLI / workflow 的稳定性是否需要重做大范围人工复核，还是只需抽查
+
+这些问题不能被测试自动回答，必须在重判时单独写出判断理由。
+
+## 重判日执行顺序
+
+建议在 **2026-05-22** 或之后按以下顺序执行：
+
+1. 先看自动化护栏
+   - `schema v1` 稳定窗口相关测试是否仍通过
+   - 观察窗口内是否已出现新的 breaking change 记录
+2. 再看既有阶段结论是否仍有效
+   - `E2-F4` 与当前 CLI 主工作流结论是否被新的改动推翻
+   - Desktop 交互壳边界是否仍未漂移
+3. 最后单独判断是否值得启动 `D1`
+   - 不是问“能不能做”
+   - 而是问“现在做是否比继续留在 E2 更值”
+
+## 重判结果分流
+
+### 结果 A：继续留在 E2
+
+适用条件：
+
+- `schema v1` 观察窗口仍未满足
+- 或 Desktop 价值判断仍不够明确
+- 或 D1 首轮范围已开始膨胀
+
+后续动作：
+
+1. 保持 `D1` 仍未正式启动
+2. 在 `docs/roadmap.md` 记录新的重判结论和下一次观察点
+3. 如仍需继续推进，只允许重开新的明确 `E2` 卡
+
+### 结果 B：正式启动 D1
+
+适用条件：
+
+- `schema v1` 观察窗口满足
+- Desktop 价值判断明确成立
+- Desktop 交互壳边界仍保持单一
+- 首轮闭环仍压缩到最小可交付范围
+
+后续动作：
+
+1. 在 `docs/roadmap.md` 把当前状态改为正式启动 `D1`
+2. 新建 `src/OpenVideoToolbox.Desktop/MODULE.md`
+3. 新建 `D1` 正式实施计划
+4. 明确第一轮只做无时间线的最小闭环
+
+## 重判日输出模板
+
+```text
+阶段：E2-G1
+执行日期：
+schema v1 观察窗口是否满足：
+CLI / workflow 稳定性是否仍成立：
+Desktop 是否仍被限定为交互壳：
+Desktop 是否比继续做 E2 更值得：
+D1 首轮范围是否仍压缩到最小闭环：
+最终结果：结果 A / 结果 B
+后续动作：
+```
+
 ## 完成标准
 
 只有同时满足以下条件，才算这张卡完成：
@@ -90,4 +178,3 @@
 - 重判证据包已经写清楚
 - 后续只需在到期日按卡执行
 - 在此之前不再继续横向扩张同类准备文档
-
