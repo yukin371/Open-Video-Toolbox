@@ -31,11 +31,11 @@
 
 - 交付可供外部 AI 代理稳定调用的 CLI 媒体工具箱，包含跨平台 single-file 发布能力。
 - 当前状态（2026-04-26）：H1→H2+T1→T2→P1→E1 已全部完成，CLI 契约已冻结，插件开发者体验已落地，发布流程已就绪；`E2-G1` 首轮已执行，当前结果为继续留在 `E2`、不启动 `D1`；`V2-P5` 已通过人工阶段验收，`V2-P6 narrated-slides` 已完成当前受控增量并回到 stop-point；简易 `motion effects` 首期 implementation、phase-check、独立 acceptance checklist 与人工阶段验收已完成，当前范围固定为 `move / orbit / zoompan`，并保持在受限 executor path，当前阶段状态为 `accepted`。
-- 当前主线补充（2026-04-26）：`E2` 没有继续重开新的功能扩张卡，当前只显式重开一张稳定性窄卡：`schema v1` 观察窗口自动化护栏。范围固定为 canonical `schemaVersion = 1` plan 的黄金样本回归保护，不新增 CLI 能力、不改模型语义，只为后续 `E2-G1` / `D1` 重判提供更直接的 breaking-change 证据。
+- 当前主线补充（2026-04-26）：`E2` 没有继续重开新的功能扩张卡；本轮显式重开的稳定性窄卡 `schema v1` 观察窗口自动化护栏已完成当前范围，并回到 stop-point。当前已补齐 canonical `schemaVersion = 1` 完整 / 最小 plan 的 Core snapshot、snapshot 语义校验与目录维护规则；它不新增 CLI 能力、不改模型语义，只为后续 `E2-G1` / `D1` 重判提供更直接的 breaking-change 证据。
 - 下一步：`E2` 仍是正式交付主线；并行孵化线中的 `V2-P6 narrated-slides` 当前已补齐完整验收包与 stop-point 建议，`${var}` foundation、`bgm.slot.required = false`、`timeline placeholder video` 与 `sections[].visual.slot.required = false` 都已落地；当前更合理的动作是不再继续扩 narrated-slides scope，而是保留当前成果、回到 `E2` 主线，后续如需重开 narrated 线，应以新的明确卡片进入，而不是直接跳到 section 删除、batch 或图表后端；`D1` 最早在 `2026-05-22` 后再次重判。
 - 下一步：`E2` 仍是正式交付主线；当前 `E2-A1 ~ A4` 的阶段检查已补齐，`E2-F2 ~ F4` 与 `E2-G1` 也已有现成阶段结论，仓库内更合理的动作是不再横向扩张 `E2`，而是保留当前成果、等待新的明确 `E2` 卡或 **2026-05-22** 后的下一次 `D1` 重判；并行孵化线中的 `V2-P6 narrated-slides` 也已补齐完整验收包与 stop-point 建议，当前不应继续做无边界追加；如确需重开 narrated，只允许以新的明确卡片推进。当前已按该规则显式重开 `V2-P6-C15 数据驱动 batch narrated`，范围仅限 `Cli` batch wrapper。
 - 下一步：简易 `motion effects` 当前不进入 `E2` 主线，也不直接并入 `V2-P6 narrated-slides`；边界卡、spec、plan、implementation、phase-check 与人工阶段验收已完成，当前更合理的动作是回到 stop-point，而不是继续横向扩 effect 范围；第一期范围仍只允许 `move / orbit / zoompan`，不扩成 `Live2D`、角色动画器或关键帧工作台。
-- 下一步：`E2` 当前如果继续推进，只允许沿新明确卡片前进；当前唯一正在执行的主线窄卡是 `docs/plans/2026-04-26-e2-schema-v1-stability-guardrail.md`，目标是把 `edit.json schema v1` 的稳定窗口再往前推进成自动化护栏，而不是继续横向补命令或提前启动 `D1`。
+- 下一步：`E2` 当前如果继续推进，只允许沿新明确卡片前进；`schema v1` 稳定窗口自动化护栏已完成当前范围，验收入口见 `docs/plans/2026-04-26-e2-schema-v1-stability-guardrail-phase-check.md`，当前不应继续在同一卡内横向补更多 snapshot，而应等待新的明确 `E2` 卡或 **2026-05-22** 后的下一次 `D1` 重判。
 - 长期演化路线：`docs/plans/2026-04-21-long-term-evolution-roadmap.md`
 
 ## 整体开发流程
