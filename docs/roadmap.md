@@ -37,6 +37,8 @@
 - 下一步：简易 `motion effects` 当前不进入 `E2` 主线，也不直接并入 `V2-P6 narrated-slides`；边界卡、spec、plan、implementation、phase-check 与人工阶段验收已完成，当前更合理的动作是回到 stop-point，而不是继续横向扩 effect 范围；第一期范围仍只允许 `move / orbit / zoompan`，不扩成 `Live2D`、角色动画器或关键帧工作台。
 - 下一步：`E2` 当前如果继续推进，只允许沿新明确卡片前进；`schema v1` 稳定窗口自动化护栏已完成当前范围，验收入口见 `docs/plans/2026-04-26-e2-schema-v1-stability-guardrail-phase-check.md`，当前不应继续在同一卡内横向补更多 snapshot，而应等待新的明确 `E2` 卡或 **2026-05-12** 后的下一次 `D1` 重判。
 - 下一步：`docs/plans/2026-04-26-e2-g1-recheck-evidence-plan.md` 已补齐当前范围，验收入口见 `docs/plans/2026-04-26-e2-g1-recheck-evidence-phase-check.md`；当前不应继续把同一张卡膨胀成 Desktop 实施稿，更合理的动作是保留这份执行包，等待 **2026-05-12** 或之后按卡执行下一次 `E2-G1 / D1` 重判。
+- 下一步：`docs/plans/2026-04-26-d1-desktop-value-judgement-template.md` 已新增为 `E2-G1 / D1` 重判配套模板；它只负责回答“Desktop 是否比继续留在 E2 更值得”，不等于启动 `D1`。
+- 下一步：`docs/plans/2026-04-26-v1-0-release-precheck-and-boundary.md` 已新增为 `v1.0` 发布边界整理卡；当前更合理的动作是先按卡收敛正式承诺能力、验证方式与阻塞缺陷口径，再决定何时真的进入 `1.0.0`。
 - 长期演化路线：`docs/plans/2026-04-21-long-term-evolution-roadmap.md`
 
 ## 整体开发流程
