@@ -61,6 +61,26 @@ public sealed class EditPlanSerializationTests
             $"Minimal schema v1 snapshot mismatch.{Environment.NewLine}Expected:{Environment.NewLine}{expected}{Environment.NewLine}{Environment.NewLine}Actual:{Environment.NewLine}{actual}");
     }
 
+    [Theory]
+    [InlineData("edit-plan-schema-v1.json")]
+    [InlineData("edit-plan-schema-v1-minimal.json")]
+    public void EditPlan_Snapshots_Deserialize_AndPassValidation(string fileName)
+    {
+        var json = File.ReadAllText(Path.Combine(SnapshotsDir, fileName));
+        var plan = JsonSerializer.Deserialize<EditPlan>(json, OpenVideoToolboxJson.Shared);
+
+        Assert.NotNull(plan);
+
+        var validator = new EditPlanValidator();
+        var availableTemplates = GetAvailableTemplatesForSnapshot(fileName);
+        var result = availableTemplates is null
+            ? validator.Validate(plan!)
+            : validator.Validate(plan!, availableTemplates: availableTemplates);
+
+        Assert.True(result.IsValid, $"Expected snapshot '{fileName}' to pass validation, but got: {string.Join(", ", result.Issues.Select(issue => issue.Code))}");
+        Assert.Empty(result.Issues);
+    }
+
     private static EditPlan CreateSchemaV1Plan()
     {
         return new EditPlan
@@ -171,5 +191,33 @@ public sealed class EditPlanSerializationTests
     {
         var path = Path.Combine(SnapshotsDir, fileName);
         return JsonNode.Parse(File.ReadAllText(path))!;
+    }
+
+    private static IReadOnlyList<EditPlanTemplateDefinition>? GetAvailableTemplatesForSnapshot(string fileName)
+    {
+        return string.Equals(fileName, "edit-plan-schema-v1.json", StringComparison.Ordinal)
+            ? [CreateTemplateDefinition("shorts-captioned")]
+            : null;
+    }
+
+    private static EditPlanTemplateDefinition CreateTemplateDefinition(string id)
+    {
+        return new EditPlanTemplateDefinition
+        {
+            Id = id,
+            DisplayName = "Template",
+            Description = "Template description",
+            Category = "test",
+            OutputContainer = "mp4",
+            ArtifactSlots =
+            [
+                new EditPlanArtifactSlot
+                {
+                    Id = "subtitles",
+                    Kind = "subtitle",
+                    Description = "Subtitle file"
+                }
+            ]
+        };
     }
 }
