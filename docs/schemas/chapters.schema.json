@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://open-video-toolbox.local/schemas/chapters.schema.json",
+  "title": "Open Video Toolbox External AI Chapters",
+  "description": "Workflow-level schema for chapter lists authored by an external AI or a human. This is not yet a formal CLI command contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "source",
+    "chapters"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input"
+      ],
+      "properties": {
+        "input": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the local source media, resolved by the workflow owner."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional transcript, subtitle, or text artifact used to author the chapters."
+        },
+        "origin": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional human-readable provenance, such as local file, YouTube URL, or meeting recording source."
+        }
+      }
+    },
+    "chapters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/chapter"
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional workflow note for humans and external AI agents. OVT does not depend on this field for media decisions."
+    }
+  },
+  "$defs": {
+    "chapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$",
+          "description": "Stable id suitable for directory names and batch item ids."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "start": {
+          "$ref": "#/$defs/timecode"
+        },
+        "end": {
+          "$ref": "#/$defs/timecode"
+        },
+        "summary": {
+          "type": "string",
+          "description": "External AI or human summary. OVT should not rely on this for deterministic editing decisions."
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "selected": {
+          "type": "boolean",
+          "description": "Optional workflow flag for human/AI selection. Consumers may ignore unselected chapters."
+        }
+      }
+    },
+    "timecode": {
+      "type": "string",
+      "pattern": "^(?:\\d{2}:)?\\d{2}:\\d{2}\\.\\d{3}$",
+      "description": "MM:SS.mmm or HH:MM:SS.mmm."
+    }
+  }
+}

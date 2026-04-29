@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "input": "../source/source.mp4",
+    "text": "transcript.json",
+    "origin": "external video imported by the user"
+  },
+  "chapters": [
+    {
+      "id": "chapter-01",
+      "title": "AI competition is not a single race",
+      "start": "00:00:00.000",
+      "end": "00:02:40.000",
+      "summary": "The speaker frames AI competition as multiple strategic paths instead of one uniform race.",
+      "keywords": [
+        "AI",
+        "strategy",
+        "competition"
+      ],
+      "selected": false
+    },
+    {
+      "id": "chapter-02",
+      "title": "Enterprise versus consumer strategy",
+      "start": "00:02:40.000",
+      "end": "00:04:40.000",
+      "summary": "The segment compares enterprise and consumer product strategy, including tradeoffs in adoption and market focus.",
+      "keywords": [
+        "enterprise",
+        "consumer",
+        "product"
+      ],
+      "selected": true
+    }
+  ],
+  "notes": "This file is authored outside OVT. OVT should only consume deterministic fields such as id/start/end after a future contract is implemented."
+}

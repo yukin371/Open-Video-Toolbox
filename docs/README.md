@@ -15,6 +15,11 @@
 - [PRD](PRD.md) — Product positioning and user stories
 - [AI Editor Positioning](decisions/ADR-0002-cli-ai-editor-positioning.md) — How external AI should interact with CLI
 - [Edit Plan Manual Pass](decisions/ADR-0003-edit-plan-manual-pass.md) — Human post-editing workflow
+- [Open Video Toolbox Workflow Skill](../skills/open-video-toolbox-workflow/SKILL.md) — Repository-local skill draft for CLI-first external AI video workflows
+- [YouTube Clipper Feasibility](plans/2026-04-29-youtube-clipper-feasibility.md) — Analysis of YouTube-clipper-style workflows and safe integration boundaries
+- [External Video Workflow Feature Plan](plans/2026-04-29-external-video-workflow-feature-plan.md) — Candidate feature plan for external video import, chapters, bilingual subtitles, and AI-authored publishing artifacts
+- [External AI Video Workflow Design](plans/2026-04-29-external-ai-video-workflow-design.md) — End-to-end workflow design for local media, external AI chapters/translations/copy, OVT validation, preview, and render
+- [External AI Video Workflow Example](../examples/external-ai-video-workflow/) — Copyable workflow sample with `chapters.json`, command template, render-batch manifest, and publishing copy artifact
 
 ### Plugin Developers
 

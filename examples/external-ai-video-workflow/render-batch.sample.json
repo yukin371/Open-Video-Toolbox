@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "chapter-02",
+      "plan": "tasks/chapter-02/edit.json",
+      "output": "exports/chapter-02.mp4",
+      "overwrite": true
+    }
+  ]
+}

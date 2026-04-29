@@ -1,6 +1,6 @@
 # 功能与使用总览
 
-最后更新：2026-04-24
+最后更新：2026-04-29
 
 ## 文档定位
 
@@ -168,6 +168,8 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
 | 想快速找模板 | 本文档 + `COMMAND_REFERENCE.md` | `<ovt> templates --summary` |
 | 想直接做传统转码 | 本文档“传统转码”工作流 | `<ovt> probe input.mp4 --json-out probe.json` |
 | 想生成 `edit.json` 再导出 | 本文档“模板生成到最终导出”工作流 | `<ovt> init-plan input.mp4 --template shorts-captioned --output edit.json --render-output final.mp4` |
+| 想处理 YouTube 等外部来源 | 本文档“外部视频导入到短视频工作流” | 先用外部工具下载到本地，再 `<ovt> probe input.mp4 --json-out probe.json` |
+| 想让外部 AI 按章节剪短视频 | 本文档“外部 AI 章节驱动剪辑工作流” | 先生成章节清单，再用 `<ovt> cut` 或 `init-plan` / `render` |
 | 想查某条命令的精确签名 | `COMMAND_REFERENCE.md` | 按命令名查对应条目 |
 
 ## 命令矩阵
@@ -207,6 +209,8 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
 | 导出 | `mix-audio` | 音频混合预览 / 执行 | `mixed.wav` / preview JSON |
 | 导出 | `render` | 最终视频导出预览 / 执行 | `final.mp4` / preview JSON |
 | 导出 | `render-batch` | 从 manifest 批量预览或执行多份 plan | stdout / `summary.json` |
+| 外部 AI 工作流 | 外部下载器 + OVT CLI | YouTube / 网页视频先落本地，再进入 `probe` / `scaffold-template` / `render` | 本地素材、字幕、`edit.json`、成片 |
+| 外部 AI 工作流 | 外部 AI + OVT CLI | 由外部 AI 读取 transcript / 字幕并写回章节、翻译或文案，OVT 只消费结构化文件 | 章节清单、字幕文件、文案、成片 |
 
 ## 标准输出约定
 
@@ -869,6 +873,53 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
 <ovt> validate-plan --plan edit.json --plugin-dir .plugins\community-pack
 ```
 
+### 工作流 6：外部视频导入到短视频流程
+
+适合 YouTube、网页视频、会议录屏等外部来源。OVT 当前不内置下载器；外部下载步骤必须先把有权处理的素材落成本地文件，再进入 OVT。
+
+```powershell
+# 1. 外部工具下载，示例仅表示边界，不属于 OVT 内置命令
+yt-dlp -f "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]" --write-subs --write-auto-subs --sub-langs en --sub-format vtt -o "source.%(ext)s" "<video-url>"
+
+# 2. 进入 OVT 可审计流程
+<ovt> probe source.mp4 --json-out probe.json
+<ovt> scaffold-template source.mp4 --template shorts-captioned --dir .workspace --validate
+<ovt> render --plan .workspace\edit.json --output final.mp4 --preview --json-out render-preview.json
+```
+
+如果下载器同时产出了字幕文件，可以让外部 AI 或脚本先转换为 OVT 当前可消费的字幕 / transcript 形态，再用 `attach-plan-material` 接回 plan。
+
+### 工作流 7：外部 AI 章节驱动剪辑
+
+适合参考 YouTube Clipper 类工作流：外部 AI 读取字幕或 transcript，输出章节选择；OVT 负责确定性剪辑、计划校验和渲染。
+
+当前推荐的结构是：
+
+1. 用 `transcribe` 或外部字幕文件获得可读文本。
+2. 让外部 AI 生成章节清单，至少包含 `id`、`title`、`start`、`end`、`summary`。
+3. 对少量章节，用 `cut` 直接产出 clips；对需要字幕、BGM、配音或批量渲染的章节，用模板工作目录和 `edit.json` 承接。
+
+直接 clips：
+
+```powershell
+<ovt> cut source.mp4 --from 00:02:40.000 --to 00:04:40.000 --output clips\chapter-02.mp4 --json-out clips\chapter-02.cut.json
+```
+
+模板成片：
+
+```powershell
+<ovt> scaffold-template source.mp4 --template shorts-captioned --dir tasks\chapter-02 --validate --check-files
+<ovt> inspect-plan --plan tasks\chapter-02\edit.json --check-files --json-out tasks\chapter-02\inspect.json
+<ovt> render --plan tasks\chapter-02\edit.json --output exports\chapter-02.mp4 --preview --json-out tasks\chapter-02\render-preview.json
+<ovt> render --plan tasks\chapter-02\edit.json --output exports\chapter-02.mp4
+```
+
+重要边界：
+
+- AI 章节分析、翻译和文案生成发生在仓库外。
+- OVT 只消费本地文件、结构化输入和 `edit.json`。
+- 不要让外部 AI 直接拼 FFmpeg 命令；需要剪辑时优先调用 `cut`、`render` 或 `render-batch`。
+
 ## 关键文件与中间产物
 
 常见文件包括：
@@ -891,6 +942,10 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
   - 模板 artifact slot 绑定
 - `template-params.json`
   - 模板参数覆盖
+- `chapters.json`
+  - 外部 AI 生成的章节清单；当前是工作流约定文件，还不是正式 CLI schema
+- `copy.md`
+  - 外部 AI 生成的发布文案；OVT 不解析它，只作为工作目录产物保留
 - `edit.json`
   - 核心剪辑计划
 
@@ -957,6 +1012,8 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
   - 静态 manifest
   - 复用现有 template schema
 - 仓库当前没有内置 AI provider。
+- YouTube / 网页视频下载当前不是 OVT 内置能力；如需处理，先用外部工具获得本地视频，并确认你有权处理该内容。
+- 外部 AI 可以生成章节、翻译字幕和文案，但应通过结构化文件与 CLI 协作，不应要求仓库内接入 AI SDK。
 - Desktop 仍未进入正式实施阶段；当前正式入口仍是 CLI。
 
 ## 相关文档
