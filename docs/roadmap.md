@@ -1,6 +1,6 @@
 # Roadmap
 
-最后更新：2026-04-26
+最后更新：2026-05-08
 
 本文件只保留当前版本目标、实施顺序与活跃工作面，不记录完整历史流水账。
 
@@ -42,6 +42,7 @@
 - 下一步：`docs/plans/2026-04-26-e2-v1-release-note-finalization.md` 已新增为 `E2` 主线窄卡；当前更合理的动作是把 `v1.0` 边界结论同步到 `CHANGELOG.md` 与 release note 口径，而不是继续新增功能或继续堆边界卡。
 - 下一步：`docs/plans/2026-04-26-v1-0-go-no-go-signoff-draft.md` 已新增并补齐当前 release-view smoke 记录；当前更合理的动作是不再重开新的 `E2` 功能卡，而是由 maintainer 复核 `v1.0.0` tag / GitHub Release 资产 / release note 是否与签发稿一致，再决定是否正式签发。
 - 下一步：`docs/plans/2026-04-26-remotion-integration-boundary.md` 已新增为 Remotion 集成边界卡；当前结论已收敛为“放弃接入，回到自身特色主线”，不进入 PoC、不进入 companion repo，也不改当前 `CLI + Core` 主边界。
+- 下一步：`docs/plans/2026-05-08-hyperframes-borrowing-boundary.md` 已新增为 HyperFrames 借鉴边界卡；当前结论已收敛为“借 Studio / inspect / starter experience，不借 HTML-based 主 authoring/render model”；当前不启动新实施卡，只作为未来 `D1` / `E2` 候选输入。
 - 长期演化路线：`docs/plans/2026-04-21-long-term-evolution-roadmap.md`
 
 ## 整体开发流程
