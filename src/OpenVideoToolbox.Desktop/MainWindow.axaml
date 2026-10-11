@@ -92,14 +92,14 @@
         </Border>
 
         <Border Grid.Column="1" Background="#FFFFFF" BorderBrush="#DCE3EA" BorderThickness="1" CornerRadius="6" Padding="20">
-          <Grid RowDefinitions="Auto,Auto,*">
+          <Grid RowDefinitions="Auto,Auto,*" MinHeight="0">
             <StackPanel Spacing="4">
               <TextBlock Text="当前任务" Classes="section-title" />
               <TextBlock x:Name="SelectionText" Text="尚未选择输入文件" Classes="caption" TextWrapping="Wrap" />
               <TextBlock x:Name="DependencyText" Text="正在检查 ffmpeg / ffprobe..." Classes="caption" TextWrapping="Wrap" />
             </StackPanel>
             <Separator Grid.Row="1" Margin="0,14,0,0" />
-            <TabControl Grid.Row="2" Margin="0,12,0,0">
+            <TabControl Grid.Row="2" Margin="0,12,0,0" MinHeight="0" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
               <TabItem Header="视频压制">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,4,8,12">
                   <StackPanel Spacing="16">
@@ -167,27 +167,31 @@
                 </ScrollViewer>
               </TabItem>
               <TabItem Header="音频">
-                <StackPanel Spacing="14" Margin="0,8,8,0">
-                  <TextBlock Text="音频素材" Classes="section-title" />
-                  <TextBlock Text="为当前任务附加外部音频、配音或 BGM。" Classes="caption" TextWrapping="Wrap" />
-                  <Button Content="选择音频文件" Click="OnAudioClick" HorizontalAlignment="Left" />
-                  <TextBlock x:Name="MaterialText" Text="未附加字幕或音频" Classes="caption" TextWrapping="Wrap" />
-                </StackPanel>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,4,8,12">
+                  <StackPanel Spacing="14">
+                    <TextBlock Text="音频素材" Classes="section-title" />
+                    <TextBlock Text="为当前任务附加外部音频、配音或 BGM。" Classes="caption" TextWrapping="Wrap" />
+                    <Button Content="选择音频文件" Click="OnAudioClick" HorizontalAlignment="Left" />
+                    <TextBlock x:Name="MaterialText" Text="未附加字幕或音频" Classes="caption" TextWrapping="Wrap" />
+                  </StackPanel>
+                </ScrollViewer>
               </TabItem>
               <TabItem Header="计划">
-                <StackPanel Spacing="14" Margin="0,8,8,0">
-                  <TextBlock Text="计划与输出" Classes="section-title" />
-                  <TextBlock Text="先预览 Core 生成的命令计划，再执行或导出标准 edit.json。" Classes="caption" TextWrapping="Wrap" />
-                  <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Button Content="预览命令" Click="OnPreviewClick" Classes="primary" />
-                    <Button Content="执行选中任务" Click="OnQueueClick" Classes="primary" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,4,8,12">
+                  <StackPanel Spacing="14">
+                    <TextBlock Text="计划与输出" Classes="section-title" />
+                    <TextBlock Text="先预览 Core 生成的命令计划，再执行或导出标准 edit.json。" Classes="caption" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <Button Content="预览命令" Click="OnPreviewClick" Classes="primary" />
+                      <Button Content="执行选中任务" Click="OnQueueClick" Classes="primary" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <Button Content="重试选中任务" Click="OnRetryClick" />
+                      <Button Content="导出 edit.json" Click="OnExportPlanClick" />
+                      <Button Content="打开输出目录" Click="OnOpenOutputDirectoryClick" />
+                    </StackPanel>
                   </StackPanel>
-                  <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Button Content="重试选中任务" Click="OnRetryClick" />
-                    <Button Content="导出 edit.json" Click="OnExportPlanClick" />
-                    <Button Content="打开输出目录" Click="OnOpenOutputDirectoryClick" />
-                  </StackPanel>
-                </StackPanel>
+                </ScrollViewer>
               </TabItem>
             </TabControl>
           </Grid>
