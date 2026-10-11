@@ -25,7 +25,9 @@ public sealed class FfmpegCommandBuilder
         {
             ToolName = "ffmpeg",
             ExecutablePath = executablePath,
-            WorkingDirectory = job.Output.OutputDirectory,
+            WorkingDirectory = string.IsNullOrWhiteSpace(job.Output.WorkingDirectory)
+                ? job.Output.OutputDirectory
+                : job.Output.WorkingDirectory,
             Arguments = arguments,
             CommandLine = BuildCommandLine(executablePath, arguments)
         };

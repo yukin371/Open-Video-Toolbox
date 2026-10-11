@@ -27,7 +27,7 @@
 | `edit.json` 导出 | 通过 | `EditPlanTemplateFactory` 生成标准计划并由 `OpenVideoToolboxJson` 序列化 |
 | 覆盖策略编辑 | 通过 | `OverwriteComboBox` 持久化到任务并传入 `JobOutput` |
 | 依赖状态面板 | 通过 | 启动时通过 `ExternalDependencyInspector` 检查 ffmpeg、ffprobe 和可选 whisper-cli |
-| 独立工作目录 | 待完成 | 当前使用任务输出目录，尚未建立每任务工作目录 |
+| 独立工作目录 | 通过 | `WorkbenchTask.WorkingDirectory` 持久化为 `.ovt-work/<task-id>`，并传入 `JobOutput.WorkingDirectory` |
 
 ## 验证命令
 

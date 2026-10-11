@@ -39,6 +39,12 @@ public partial class MainWindow : Window
         {
             await UpdateDependencyStatusAsync();
             foreach (var task in await _queueStore.LoadAsync()) QueueItems.Add(task);
+            foreach (var task in QueueItems)
+            {
+                task.WorkingDirectory ??= ResolveTaskWorkingDirectory(task);
+                Directory.CreateDirectory(task.WorkingDirectory);
+            }
+            await PersistQueueAsync();
             UpdateQueueCount();
             if (QueueItems.Count > 0)
             {
@@ -73,7 +79,8 @@ public partial class MainWindow : Window
                 Id = $"desktop-{Guid.NewGuid():N}",
                 InputPath = Path.GetFullPath(path),
                 PresetId = defaultPreset,
-                OutputDirectory = outputDirectory
+                OutputDirectory = outputDirectory,
+                WorkingDirectory = Path.Combine(outputDirectory, ".ovt-work", $"desktop-{Guid.NewGuid():N}")
             });
         }
 
@@ -132,7 +139,8 @@ public partial class MainWindow : Window
                 Id = $"desktop-{Guid.NewGuid():N}",
                 InputPath = Path.GetFullPath(path),
                 PresetId = BuiltInPresetCatalog.DefaultPresetId,
-                OutputDirectory = ResolveOutputDirectory(OutputDirectoryTextBox.Text)
+                OutputDirectory = ResolveOutputDirectory(OutputDirectoryTextBox.Text),
+                WorkingDirectory = Path.Combine(ResolveOutputDirectory(OutputDirectoryTextBox.Text), ".ovt-work", $"desktop-{Guid.NewGuid():N}")
             });
         }
         UpdateQueueCount();
@@ -443,6 +451,7 @@ public partial class MainWindow : Window
         try
         {
             Directory.CreateDirectory(job.Output.OutputDirectory);
+            Directory.CreateDirectory(job.Output.WorkingDirectory ?? job.Output.OutputDirectory);
             task.State = WorkbenchTaskState.Running;
             task.ErrorMessage = null;
             task.ProducedPaths = [];
@@ -538,6 +547,7 @@ public partial class MainWindow : Window
         Output = new JobOutput
         {
             OutputDirectory = task.OutputDirectory,
+                WorkingDirectory = task.WorkingDirectory ?? ResolveTaskWorkingDirectory(task),
             FileNameStem = $"{Path.GetFileNameWithoutExtension(task.InputPath)}-{preset.Id}",
             ContainerExtension = preset.Output.ContainerExtension,
             OverwriteExisting = task.OverwriteExisting ?? preset.Output.OverwriteExisting
@@ -625,6 +635,9 @@ public partial class MainWindow : Window
     }
 
     private static string ResolveOutputDirectory(string? value) => Path.GetFullPath(string.IsNullOrWhiteSpace(value) ? "exports" : value.Trim());
+
+    private static string ResolveTaskWorkingDirectory(WorkbenchTask task) =>
+        Path.Combine(task.OutputDirectory, ".ovt-work", task.Id);
 
     private static bool IsSupportedVideoPath(string path) => new[] { ".mp4", ".mov", ".mkv", ".webm", ".avi" }.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
 

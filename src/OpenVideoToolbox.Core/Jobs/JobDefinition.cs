@@ -36,6 +36,8 @@ public sealed record JobOutput
 {
     public required string OutputDirectory { get; init; }
 
+    public string? WorkingDirectory { get; init; }
+
     public required string FileNameStem { get; init; }
 
     public required string ContainerExtension { get; init; }

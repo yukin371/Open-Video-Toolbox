@@ -144,6 +144,18 @@ public sealed class FfmpegCommandBuilderTests
         Assert.Equal("subtitles='" + Path.GetFullPath(Path.Combine("samples", "captions", "episode.srt")).Replace("\\", "\\\\").Replace(":", "\\:") + "'", plan.Arguments[filterIndex + 1]);
     }
 
+    [Fact]
+    public void Build_UsesDedicatedWorkingDirectory_WhenConfigured()
+    {
+        var plan = new FfmpegCommandBuilder().Build(BuildJob() with
+        {
+            Output = BuildJob().Output with { WorkingDirectory = "output/.ovt-work/job-1" }
+        });
+
+        Assert.Equal("output/.ovt-work/job-1", plan.WorkingDirectory);
+        Assert.StartsWith("output", plan.Arguments[^1], StringComparison.Ordinal);
+    }
+
     private static JobDefinition BuildJob()
     {
         return new JobDefinition
