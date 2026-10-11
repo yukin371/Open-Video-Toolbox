@@ -97,6 +97,7 @@
               <Button Grid.Column="1" Content="执行选中任务" Click="OnQueueClick" MinWidth="120" />
             </Grid>
             <Button Content="重试选中任务" Click="OnRetryClick" HorizontalAlignment="Left" MinWidth="120" />
+            <Button Content="导出 edit.json" Click="OnExportPlanClick" HorizontalAlignment="Left" MinWidth="120" />
           </StackPanel>
         </ScrollViewer>
       </Border>

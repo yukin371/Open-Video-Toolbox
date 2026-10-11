@@ -29,6 +29,7 @@ public sealed class WorkbenchTask : INotifyPropertyChanged
     public string SubtitleMode { get; set; } = "sidecar";
     public string? WhisperModelPath { get; set; }
     public string? TranscriptPath { get; set; }
+    public string? PlanPath { get; set; }
     public string? TranscriptionLanguage { get; set; }
     public bool TranslateToEnglish { get; set; }
     public string? AudioPath { get; set; }

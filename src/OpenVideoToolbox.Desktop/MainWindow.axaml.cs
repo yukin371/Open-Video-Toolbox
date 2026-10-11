@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -8,6 +9,8 @@ using OpenVideoToolbox.Core.Media;
 using OpenVideoToolbox.Core.Presets;
 using OpenVideoToolbox.Core.Subtitles;
 using OpenVideoToolbox.Core.Speech;
+using OpenVideoToolbox.Core.Editing;
+using OpenVideoToolbox.Core.Serialization;
 
 namespace OpenVideoToolbox.Desktop;
 
@@ -309,6 +312,37 @@ public partial class MainWindow : Window
         OnQueueClick(sender, e);
     }
 
+    private async void OnExportPlanClick(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedTask is null) return;
+        try
+        {
+            var outputDirectory = ResolveOutputDirectory(_selectedTask.OutputDirectory);
+            Directory.CreateDirectory(outputDirectory);
+            var outputPath = Path.Combine(outputDirectory, $"{Path.GetFileNameWithoutExtension(_selectedTask.InputPath)}-edit.json");
+            var plan = new EditPlanTemplateFactory().Create(
+                "shorts-captioned",
+                new EditPlanTemplateRequest
+                {
+                    InputPath = _selectedTask.InputPath,
+                    RenderOutputPath = Path.Combine(outputDirectory, $"{Path.GetFileNameWithoutExtension(_selectedTask.InputPath)}-render.mp4"),
+                    SubtitlePath = _selectedTask.SubtitlePath,
+                    SubtitleModeOverride = ParseSubtitleMode(_selectedTask.SubtitleMode)
+                });
+            await File.WriteAllTextAsync(outputPath, JsonSerializer.Serialize(plan, OpenVideoToolboxJson.Shared));
+            _selectedTask.PlanPath = outputPath;
+            _selectedTask.Touch();
+            StatusText.Text = "edit.json 已导出";
+            LogText.Text = $"[{DateTime.Now:HH:mm:ss}] 计划已导出\n{outputPath}";
+            await PersistQueueAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "计划导出失败";
+            LogText.Text = ex.Message;
+        }
+    }
+
     private async void OnRunQueueClick(object? sender, RoutedEventArgs e)
     {
         if (_queueRunning || QueueItems.Count == 0) return;
@@ -557,6 +591,13 @@ public partial class MainWindow : Window
     {
         return (SubtitleModeComboBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "sidecar";
     }
+
+    private static SubtitleMode? ParseSubtitleMode(string mode) => mode.ToLowerInvariant() switch
+    {
+        "sidecar" => SubtitleMode.Sidecar,
+        "burnin" => SubtitleMode.BurnIn,
+        _ => null
+    };
 
     private void UpdateLogForTask(WorkbenchTask task)
     {

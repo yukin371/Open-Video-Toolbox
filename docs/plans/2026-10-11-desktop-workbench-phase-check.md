@@ -22,8 +22,9 @@
 | 本地 Whisper 转写 | 通过 | `WhisperCppTranscriptionService` + `OnTranscribeClick` |
 | 外部翻译接入口 | 通过 | 第二份 SRT/VTT 字幕文件作为 `TranslationSubtitlePath` |
 | sidecar/burn-in 实际渲染 | 通过 | `JobDefinition.SubtitleMode` 进入 `FfmpegCommandBuilder`；sidecar 由 `TranscodeJobRunner` 复制并记录产物 |
+| `edit.json` 导出 | 通过 | `EditPlanTemplateFactory` 生成标准计划并由 `OpenVideoToolboxJson` 序列化 |
 | 依赖状态面板 | 通过 | 启动时通过 `ExternalDependencyInspector` 检查 ffmpeg、ffprobe 和可选 whisper-cli |
-| 工作目录 / edit.json 导出 | 待完成 | 保留在 D1-3 / D1-4 |
+| 独立工作目录 | 待完成 | 当前使用任务输出目录，尚未建立每任务工作目录 |
 
 ## 验证命令
 
