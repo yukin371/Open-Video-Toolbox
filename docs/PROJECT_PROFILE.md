@@ -20,7 +20,7 @@
 
 - CLI 入口：`src/OpenVideoToolbox.Cli/Program.cs`
 - Desktop 入口：`src/OpenVideoToolbox.Desktop/Program.cs`
-  - 当前状态：仍是占位入口；`D1-0` 已完成需求、技术评估、启动评估、实施规划与交互设计文档
+  - 当前状态：Avalonia 工作台壳已启动，支持文件选择、队列展示、预设/输出表单、字幕/音频选择和日志面板；真实 Core.Execution 接入仍在 D1-1 后续步骤
 
 ## 用户文档入口
 
@@ -202,8 +202,8 @@
   - `pr-validation.yml` 会在 `pull_request` 与 `workflow_dispatch` 下校验 PR 标题 / 正文约束；手动触发时通过 `pr_number` 反查真实 PR 元数据，作为自动 PR 事件偶发缺失时的维护 fallback
   - 另有 `.github/workflows/release.yml` 承接 tag 触发的 release 发布
   - 当前未纳入：依赖 `whisper.cpp` / `demucs` 的可选 smoke
-- Desktop 实际 UI 框架接入状态：`TBD`，Avalonia 为首选候选
-  - 确认路径：完成 `D1-0` 框架与发布评估后，再引入 UI 依赖并更新本文件
+- Desktop 实际 UI 框架接入状态：`Avalonia 11.3.12`
+  - 确认路径：D1-1 完成单任务 Core.Execution 接入后，补齐发布 smoke 和 UI 关键交互测试
 - 打包 / 发布流程：已落地核心发布链
   - 当前已有 tag 触发的 GitHub Release 和跨平台 single-file 发布
   - 尚未落地：包管理器渠道；如继续推进，转入 `E2`

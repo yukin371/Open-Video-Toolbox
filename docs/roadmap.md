@@ -16,7 +16,7 @@
 - 实施规划：`docs/plans/2026-10-11-desktop-workbench-implementation-plan.md`
 - 交互设计：`docs/plans/2026-10-11-desktop-workbench-design.md`
 
-当前阶段为 `D1-0`：先冻结 UI 框架、应用状态边界、任务状态和验收样例，再进入 Desktop 实现。Avalonia 是首选候选，但尚未引入依赖。
+当前阶段为 `D1-1`：`D1-0` 的边界、评估、规划和设计已完成，Avalonia 工作台壳已启动；当前先完成单任务交互壳，再接入 Core.Execution。
 
 ## 产品定位
 

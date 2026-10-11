@@ -1,0 +1,87 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="OpenVideoToolbox.Desktop.MainWindow"
+        Title="Open Video Toolbox"
+        Width="1360"
+        Height="820"
+        MinWidth="1024"
+        MinHeight="640">
+  <Grid RowDefinitions="Auto,*" Background="#F5F6F8">
+    <Border Grid.Row="0" Background="#1F2937" Padding="24,18">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="4">
+          <TextBlock Text="Open Video Toolbox" FontSize="22" FontWeight="SemiBold" Foreground="White" />
+          <TextBlock Text="本地视频工作台" Foreground="#CBD5E1" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <Button Content="添加视频" Click="OnAddVideosClick" MinWidth="112" />
+          <Button Content="清空队列" Click="OnClearQueueClick" MinWidth="112" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="300,*,360" Margin="18" ColumnSpacing="18">
+      <Border Grid.Column="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="16">
+        <Grid RowDefinitions="Auto,Auto,*">
+          <TextBlock Text="任务队列" FontSize="18" FontWeight="SemiBold" />
+          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,14,0,12">
+            <TextBlock Text="待处理" Foreground="#64748B" VerticalAlignment="Center" />
+            <Border Grid.Column="1" Background="#E2E8F0" CornerRadius="12" Padding="9,3">
+              <TextBlock x:Name="QueueCountText" Text="0" Foreground="#334155" />
+            </Border>
+          </Grid>
+          <ListBox x:Name="QueueList" Grid.Row="2" ItemsSource="{Binding QueueItems}" BorderThickness="0" />
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="1" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="22">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="18">
+            <StackPanel Spacing="4">
+              <TextBlock Text="当前任务" FontSize="18" FontWeight="SemiBold" />
+              <TextBlock x:Name="SelectionText" Text="尚未选择输入文件" Foreground="#64748B" />
+            </StackPanel>
+            <Separator />
+            <TextBlock Text="处理预设" FontWeight="SemiBold" />
+            <ComboBox SelectedIndex="0">
+              <ComboBoxItem Content="H.264 通用兼容" />
+              <ComboBoxItem Content="H.265 高压缩" />
+              <ComboBoxItem Content="仅提取音频" />
+            </ComboBox>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+              <StackPanel Spacing="7">
+                <TextBlock Text="输出目录" Foreground="#475569" />
+                <TextBox Text="exports" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Spacing="7">
+                <TextBlock Text="覆盖策略" Foreground="#475569" />
+                <ComboBox SelectedIndex="0">
+                  <ComboBoxItem Content="不覆盖已有文件" />
+                  <ComboBoxItem Content="覆盖已有文件" />
+                </ComboBox>
+              </StackPanel>
+            </Grid>
+            <TextBlock Text="字幕与音频" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
+              <Button Content="选择字幕文件" Click="OnSubtitleClick" />
+              <Button Grid.Column="1" Content="选择音频文件" Click="OnAudioClick" />
+            </Grid>
+            <TextBlock x:Name="MaterialText" Text="未附加字幕或音频" Foreground="#64748B" TextWrapping="Wrap" />
+            <Button Content="加入队列" Click="OnQueueClick" HorizontalAlignment="Left" MinWidth="120" />
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+
+      <Border Grid.Column="2" Background="#111827" CornerRadius="6" Padding="18">
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+          <TextBlock Text="执行日志" FontSize="18" FontWeight="SemiBold" Foreground="White" />
+          <TextBlock x:Name="StatusText" Grid.Row="1" Text="就绪" Foreground="#93C5FD" Margin="0,8,0,12" />
+          <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <TextBlock x:Name="LogText" Text="等待选择媒体文件。" Foreground="#CBD5E1" TextWrapping="Wrap" FontFamily="Cascadia Mono,Consolas,monospace" />
+          </ScrollViewer>
+          <ProgressBar x:Name="ProgressBar" Grid.Row="3" Minimum="0" Maximum="100" Value="0" Margin="0,16,0,0" />
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>
