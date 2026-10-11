@@ -296,6 +296,18 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void OnRetryClick(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedTask is null || _queueRunning) return;
+        _selectedTask.State = WorkbenchTaskState.Ready;
+        _selectedTask.ErrorMessage = null;
+        _selectedTask.FinishedAtUtc = null;
+        _selectedTask.Elapsed = null;
+        _selectedTask.Touch();
+        await PersistQueueAsync();
+        OnQueueClick(sender, e);
+    }
+
     private async void OnRunQueueClick(object? sender, RoutedEventArgs e)
     {
         if (_queueRunning || QueueItems.Count == 0) return;
@@ -344,6 +356,9 @@ public partial class MainWindow : Window
             task.State = WorkbenchTaskState.Running;
             task.ErrorMessage = null;
             task.ProducedPaths = [];
+            task.StartedAtUtc = DateTimeOffset.UtcNow;
+            task.FinishedAtUtc = null;
+            task.Elapsed = null;
             task.ExecutionLog = log;
             task.Touch();
             StatusText.Text = $"正在执行：{Path.GetFileName(task.InputPath)}";
@@ -381,10 +396,12 @@ public partial class MainWindow : Window
         }
         finally
         {
+            task.FinishedAtUtc = DateTimeOffset.UtcNow;
+            if (task.StartedAtUtc is not null) task.Elapsed = task.FinishedAtUtc - task.StartedAtUtc;
             task.Touch();
             ProgressBar.IsIndeterminate = false;
             ProgressBar.Value = task.State == WorkbenchTaskState.Succeeded ? 100 : 0;
-            StatusText.Text = task.StateLabel;
+            StatusText.Text = task.Elapsed is null ? task.StateLabel : $"{task.StateLabel} · 用时 {task.Elapsed.Value.TotalSeconds:0.0}s";
             await PersistQueueAsync();
         }
     }

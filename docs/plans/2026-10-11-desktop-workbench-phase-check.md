@@ -14,6 +14,7 @@
 | 媒体 probe | 通过 | `ProbeSelectedInputAsync` 使用 `FfprobeMediaProbeService` |
 | 预设选择与命令预览 | 通过 | `TryBuildJob`、`FfmpegCommandBuilder` |
 | 单任务执行与取消 | 通过 | `OnQueueClick`、`RunTaskAsync`、`OnCancelClick` |
+| 失败任务重试 | 通过 | `OnRetryClick` 重置任务状态并复用原任务配置 |
 | 批量串行执行 | 通过 | `OnRunQueueClick`；跳过成功项、失败后继续、取消后停止调度 |
 | 队列本地持久化 | 通过 | `WorkbenchQueueStore`；保存状态、错误、日志、产物路径和字幕/转写路径 |
 | SRT/VTT 字幕选择 | 通过 | `OnSubtitleClick`、`OnTranslationSubtitleClick` |
@@ -22,7 +23,7 @@
 | 外部翻译接入口 | 通过 | 第二份 SRT/VTT 字幕文件作为 `TranslationSubtitlePath` |
 | sidecar/burn-in 实际渲染 | 通过 | `JobDefinition.SubtitleMode` 进入 `FfmpegCommandBuilder`；sidecar 由 `TranscodeJobRunner` 复制并记录产物 |
 | 依赖状态面板 | 待完成 | 当前只在执行失败日志中体现外部工具错误 |
-| 任务重试 / 工作目录 / edit.json 导出 | 待完成 | 保留在 D1-3 / D1-4 |
+| 工作目录 / edit.json 导出 | 待完成 | 保留在 D1-3 / D1-4 |
 
 ## 验证命令
 

@@ -34,6 +34,9 @@ public sealed class WorkbenchTask : INotifyPropertyChanged
     public string? AudioPath { get; set; }
     public DateTimeOffset CreatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAtUtc { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? StartedAtUtc { get; set; }
+    public DateTimeOffset? FinishedAtUtc { get; set; }
+    public TimeSpan? Elapsed { get; set; }
 
     public WorkbenchTaskState State
     {
