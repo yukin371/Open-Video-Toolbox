@@ -16,7 +16,7 @@
 - 实施规划：`docs/plans/2026-10-11-desktop-workbench-implementation-plan.md`
 - 交互设计：`docs/plans/2026-10-11-desktop-workbench-design.md`
 
-当前阶段为 `D1-2`：`D1-0` 的边界、评估、规划和设计已完成；单任务探测、预览、执行、取消、本地任务队列持久化和按顺序批量执行已经落地。Desktop 已接入 SRT/VTT 选择、外部翻译字幕留口、双语字幕合并、本地 Whisper 转写，以及通过 Core 执行链实现的 sidecar/burn-in；下一步转入 D1-3/D1-4 的依赖状态、重试、工作目录和 edit.json 导出。
+当前阶段为 `D1-2` 收口：`D1-0` 的边界、评估、规划和设计已完成；单任务探测、预览、执行、取消、本地任务队列持久化、按顺序批量执行、失败重试、目录导入、字幕截取、edit.json 导出、依赖状态、独立工作目录，以及通过 Core 执行链实现的 sidecar/burn-in 均已落地。下一步转入 D1-4 的最近任务、预设导入/导出和发布 smoke。
 
 ## 产品定位
 

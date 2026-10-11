@@ -20,7 +20,7 @@
 
 - CLI 入口：`src/OpenVideoToolbox.Cli/Program.cs`
 - Desktop 入口：`src/OpenVideoToolbox.Desktop/Program.cs`
-  - 当前状态：Avalonia 工作台已接入单任务 probe、preview、执行、取消、本地任务队列持久化、按顺序批量执行、SRT/VTT 字幕选择、双语字幕合并、本地 Whisper 转写和 Core 执行链中的 sidecar/burn-in；D1-3/D1-4 仍待补依赖状态、重试、工作目录和 edit.json 导出
+  - 当前状态：Avalonia 工作台已接入单任务 probe、preview、执行、取消、本地任务队列持久化、按顺序批量执行、失败重试、目录导入、SRT/VTT 字幕选择、字幕截取、双语字幕合并、本地 Whisper 转写、edit.json 导出、依赖状态检查、独立工作目录和 Core 执行链中的 sidecar/burn-in；后续 D1-4 主要补最近任务、预设导入/导出和发布 smoke
 
 ## 用户文档入口
 
@@ -33,7 +33,7 @@
 - 构建解决方案：`dotnet build OpenVideoToolbox.sln`
 - 运行测试：`dotnet test OpenVideoToolbox.sln`
 - 运行 CLI：`dotnet run --project ./src/OpenVideoToolbox.Cli/OpenVideoToolbox.Cli.csproj -- <command>`
-- 运行 Desktop 占位入口：`dotnet run --project ./src/OpenVideoToolbox.Desktop/OpenVideoToolbox.Desktop.csproj`
+- 运行 Desktop 工作台：`dotnet run --project ./src/OpenVideoToolbox.Desktop/OpenVideoToolbox.Desktop.csproj`
 - 启用仓库级 Git hooks：`powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1`
 - 校验仓库级 Git hooks：`powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1 -VerifyOnly`
 - 自检 Git hooks 完整性：`powershell -ExecutionPolicy Bypass -File .\scripts\Test-GitHooksSetup.ps1`
