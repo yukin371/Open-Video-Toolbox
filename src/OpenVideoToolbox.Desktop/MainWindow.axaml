@@ -2,128 +2,227 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="OpenVideoToolbox.Desktop.MainWindow"
         Title="Open Video Toolbox"
-        Width="1360"
-        Height="820"
-        MinWidth="1024"
-        MinHeight="640">
-  <Grid RowDefinitions="Auto,*" Background="#F5F6F8">
-    <Border Grid.Row="0" Background="#1F2937" Padding="24,18">
-      <Grid ColumnDefinitions="*,Auto">
-        <StackPanel Spacing="4">
-          <TextBlock Text="Open Video Toolbox" FontSize="22" FontWeight="SemiBold" Foreground="White" />
-          <TextBlock Text="本地视频工作台" Foreground="#CBD5E1" />
+        Width="1440"
+        Height="900"
+        MinWidth="1120"
+        MinHeight="720">
+  <Window.Styles>
+    <Style Selector="Button">
+      <Setter Property="Background" Value="#FFFFFF" />
+      <Setter Property="Foreground" Value="#243447" />
+      <Setter Property="BorderBrush" Value="#CBD5E1" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+    <Style Selector="Button:pointerover">
+      <Setter Property="Background" Value="#F1F5F9" />
+      <Setter Property="BorderBrush" Value="#94A3B8" />
+    </Style>
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="#2563EB" />
+      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="BorderBrush" Value="#2563EB" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.primary:pointerover">
+      <Setter Property="Background" Value="#1D4ED8" />
+      <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    <Style Selector="Button.danger">
+      <Setter Property="Foreground" Value="#B42318" />
+      <Setter Property="BorderBrush" Value="#F0A7A0" />
+    </Style>
+    <Style Selector="TextBlock.section-title">
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="#1F2937" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="#64748B" />
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*" Background="#F4F6F8">
+    <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,16">
+      <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+        <StackPanel Spacing="3">
+          <TextBlock Text="Open Video Toolbox" FontSize="21" FontWeight="SemiBold" Foreground="#172033" />
+          <TextBlock Text="本地视频工作台" Classes="caption" />
         </StackPanel>
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-          <Button Content="添加视频" Click="OnAddVideosClick" MinWidth="112" />
-          <Button Content="添加目录" Click="OnAddDirectoryClick" MinWidth="112" />
-          <Button Content="执行队列" Click="OnRunQueueClick" MinWidth="112" x:Name="RunQueueButton" />
-          <Button Content="清空队列" Click="OnClearQueueClick" MinWidth="112" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <Button Content="添加媒体" Click="OnAddVideosClick" Classes="primary" MinWidth="104" />
+          <Button Content="添加目录" Click="OnAddDirectoryClick" MinWidth="104" />
+          <Button Content="执行队列" Click="OnRunQueueClick" Classes="primary" MinWidth="104" x:Name="RunQueueButton" />
+          <Button Content="清空队列" Click="OnClearQueueClick" Classes="danger" MinWidth="96" />
         </StackPanel>
       </Grid>
     </Border>
 
-    <Grid Grid.Row="1" ColumnDefinitions="300,*,360" Margin="18" ColumnSpacing="18">
-      <Border Grid.Column="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="16">
-        <Grid RowDefinitions="Auto,Auto,*">
-          <TextBlock Text="任务队列" FontSize="18" FontWeight="SemiBold" />
-          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,14,0,12">
-            <TextBlock Text="待处理" Foreground="#64748B" VerticalAlignment="Center" />
-            <Border Grid.Column="1" Background="#E2E8F0" CornerRadius="12" Padding="9,3">
-              <TextBlock x:Name="QueueCountText" Text="0" Foreground="#334155" />
-            </Border>
-          </Grid>
-          <ListBox x:Name="QueueList" Grid.Row="2" ItemsSource="{Binding QueueItems}" SelectionChanged="OnQueueSelectionChanged" BorderThickness="0">
-            <ListBox.ItemTemplate>
-              <DataTemplate>
-                <StackPanel Spacing="3" Margin="0,5">
-                  <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" />
-                  <TextBlock Text="{Binding PresetId}" FontSize="11" Foreground="#64748B" />
-                </StackPanel>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-        </Grid>
-      </Border>
-
-      <Border Grid.Column="1" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Padding="22">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <StackPanel Spacing="18">
-            <StackPanel Spacing="4">
-              <TextBlock Text="当前任务" FontSize="18" FontWeight="SemiBold" />
-              <TextBlock x:Name="SelectionText" Text="尚未选择输入文件" Foreground="#64748B" />
-              <TextBlock x:Name="DependencyText" Text="正在检查 ffmpeg / ffprobe..." Foreground="#64748B" TextWrapping="Wrap" />
+    <Grid Grid.Row="1" RowDefinitions="*,220" Margin="16" RowSpacing="14">
+      <Grid Grid.Row="0" ColumnDefinitions="280,*,320" ColumnSpacing="14">
+        <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#DCE3EA" BorderThickness="1" CornerRadius="6" Padding="16">
+          <Grid RowDefinitions="Auto,Auto,Auto,*">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="任务队列" Classes="section-title" />
+              <Border Grid.Column="1" Background="#E8EEF7" CornerRadius="12" Padding="9,3">
+                <TextBlock x:Name="QueueCountText" Text="0" Foreground="#31527A" FontSize="12" />
+              </Border>
+            </Grid>
+            <TextBlock Grid.Row="1" Text="按添加顺序执行，成功任务会自动跳过" Classes="caption" Margin="0,5,0,12" />
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6" Margin="0,0,0,10">
+              <Button Content="全部" Padding="8,4" />
+              <Button Content="待执行" Padding="8,4" />
+              <Button Content="失败" Padding="8,4" />
             </StackPanel>
-            <Separator />
-            <TextBlock Text="处理预设" FontWeight="SemiBold" />
-            <ComboBox x:Name="PresetComboBox" SelectedIndex="0" DisplayMemberBinding="{Binding DisplayName}" />
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-              <Button Content="导入预设" Click="OnImportPresetClick" />
-              <Button Grid.Column="1" Content="导出预设" Click="OnExportPresetClick" />
-            </Grid>
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
-              <StackPanel Spacing="7">
-                <TextBlock Text="输出目录" Foreground="#475569" />
-                <TextBox x:Name="OutputDirectoryTextBox" Text="exports" />
-              </StackPanel>
-              <StackPanel Grid.Column="1" Spacing="7">
-                <TextBlock Text="覆盖策略" Foreground="#475569" />
-                <ComboBox x:Name="OverwriteComboBox" SelectedIndex="0">
-                  <ComboBoxItem Content="不覆盖已有文件" />
-                  <ComboBoxItem Content="覆盖已有文件" />
-                </ComboBox>
-              </StackPanel>
-            </Grid>
-            <TextBlock Text="字幕与音频" FontWeight="SemiBold" Margin="0,8,0,0" />
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
-              <Button Content="选择字幕文件" Click="OnSubtitleClick" />
-              <Button Grid.Column="1" Content="选择音频文件" Click="OnAudioClick" />
-            </Grid>
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
-              <Button Content="选择翻译字幕" Click="OnTranslationSubtitleClick" />
-              <ComboBox Grid.Column="1" x:Name="SubtitleModeComboBox" SelectedIndex="0" MinWidth="140">
-                <ComboBoxItem Content="sidecar 字幕" Tag="sidecar" />
-                <ComboBoxItem Content="burn-in 烧录" Tag="burnIn" />
-              </ComboBox>
-            </Grid>
-            <Button Content="合并双语字幕" Click="OnMergeSubtitlesClick" HorizontalAlignment="Left" MinWidth="140" />
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-              <TextBox x:Name="SubtitleClipStartTextBox" Watermark="截取开始，例如 00:00:10" />
-              <TextBox Grid.Column="1" x:Name="SubtitleClipEndTextBox" Watermark="截取结束，例如 00:01:00" />
-            </Grid>
-            <Button Content="截取字幕" Click="OnClipSubtitleClick" HorizontalAlignment="Left" MinWidth="120" />
-            <TextBlock Text="本地转写" FontWeight="SemiBold" Margin="0,8,0,0" />
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-              <TextBox x:Name="WhisperModelPathTextBox" Watermark="Whisper 模型文件路径" />
-              <Button Grid.Column="1" Content="选择模型" Click="OnWhisperModelClick" MinWidth="96" />
-            </Grid>
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-              <TextBox x:Name="TranscriptionLanguageTextBox" Watermark="语言（可选，例如 zh）" />
-              <CheckBox Grid.Column="1" x:Name="TranslateToEnglishCheckBox" Content="翻译为英文" VerticalAlignment="Center" />
-            </Grid>
-            <Button Content="转写并生成字幕" Click="OnTranscribeClick" HorizontalAlignment="Left" MinWidth="140" />
-            <TextBlock x:Name="MaterialText" Text="未附加字幕或音频" Foreground="#64748B" TextWrapping="Wrap" />
-            <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
-              <Button Content="预览命令" Click="OnPreviewClick" MinWidth="120" />
-              <Button Grid.Column="1" Content="执行选中任务" Click="OnQueueClick" MinWidth="120" />
-            </Grid>
-            <Button Content="重试选中任务" Click="OnRetryClick" HorizontalAlignment="Left" MinWidth="120" />
-            <Button Content="导出 edit.json" Click="OnExportPlanClick" HorizontalAlignment="Left" MinWidth="120" />
-            <Button Content="打开输出目录" Click="OnOpenOutputDirectoryClick" HorizontalAlignment="Left" MinWidth="120" />
-          </StackPanel>
-        </ScrollViewer>
-      </Border>
-
-      <Border Grid.Column="2" Background="#111827" CornerRadius="6" Padding="18">
-        <Grid RowDefinitions="Auto,Auto,*,Auto">
-          <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Text="执行日志" FontSize="18" FontWeight="SemiBold" Foreground="White" />
-            <Button Grid.Column="1" Content="取消" Click="OnCancelClick" IsEnabled="False" x:Name="CancelButton" />
+            <ListBox x:Name="QueueList" Grid.Row="3" ItemsSource="{Binding QueueItems}" SelectionChanged="OnQueueSelectionChanged" BorderThickness="0">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,8">
+                    <StackPanel Spacing="4">
+                      <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" Foreground="#27364A" />
+                      <TextBlock Text="{Binding PresetId}" Classes="caption" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
           </Grid>
-          <TextBlock x:Name="StatusText" Grid.Row="1" Text="就绪" Foreground="#93C5FD" Margin="0,8,0,12" />
-          <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <TextBlock x:Name="LogText" Text="等待选择媒体文件。" Foreground="#CBD5E1" TextWrapping="Wrap" FontFamily="Cascadia Mono,Consolas,monospace" />
+        </Border>
+
+        <Border Grid.Column="1" Background="#FFFFFF" BorderBrush="#DCE3EA" BorderThickness="1" CornerRadius="6" Padding="20">
+          <Grid RowDefinitions="Auto,Auto,*">
+            <StackPanel Spacing="4">
+              <TextBlock Text="当前任务" Classes="section-title" />
+              <TextBlock x:Name="SelectionText" Text="尚未选择输入文件" Classes="caption" TextWrapping="Wrap" />
+              <TextBlock x:Name="DependencyText" Text="正在检查 ffmpeg / ffprobe..." Classes="caption" TextWrapping="Wrap" />
+            </StackPanel>
+            <Separator Grid.Row="1" Margin="0,14,0,0" />
+            <TabControl Grid.Row="2" Margin="0,12,0,0">
+              <TabItem Header="转换">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,4,8,12">
+                  <StackPanel Spacing="16">
+                    <TextBlock Text="处理预设" Classes="section-title" />
+                    <ComboBox x:Name="PresetComboBox" SelectedIndex="0" DisplayMemberBinding="{Binding DisplayName}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                      <Button Content="导入预设" Click="OnImportPresetClick" />
+                      <Button Grid.Column="1" Content="导出预设" Click="OnExportPresetClick" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,180" ColumnSpacing="12">
+                      <StackPanel Spacing="6">
+                        <TextBlock Text="输出目录" Classes="caption" />
+                        <TextBox x:Name="OutputDirectoryTextBox" Text="exports" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" Spacing="6">
+                        <TextBlock Text="覆盖策略" Classes="caption" />
+                        <ComboBox x:Name="OverwriteComboBox" SelectedIndex="0">
+                          <ComboBoxItem Content="不覆盖已有文件" />
+                          <ComboBoxItem Content="覆盖已有文件" />
+                        </ComboBox>
+                      </StackPanel>
+                    </Grid>
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="12">
+                      <StackPanel Spacing="8">
+                        <TextBlock Text="转换流程" Classes="caption" />
+                        <TextBlock Text="选择预设 → 预览命令 → 执行任务" Foreground="#334155" />
+                      </StackPanel>
+                    </Border>
+                  </StackPanel>
+                </ScrollViewer>
+              </TabItem>
+              <TabItem Header="字幕">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,4,8,12">
+                  <StackPanel Spacing="14">
+                    <TextBlock Text="字幕与翻译" Classes="section-title" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                      <Button Content="选择字幕文件" Click="OnSubtitleClick" />
+                      <Button Grid.Column="1" Content="选择翻译字幕" Click="OnTranslationSubtitleClick" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,150" ColumnSpacing="12">
+                      <Button Content="合并双语字幕" Click="OnMergeSubtitlesClick" />
+                      <ComboBox Grid.Column="1" x:Name="SubtitleModeComboBox" SelectedIndex="0">
+                        <ComboBoxItem Content="sidecar 字幕" Tag="sidecar" />
+                        <ComboBoxItem Content="burn-in 烧录" Tag="burnIn" />
+                      </ComboBox>
+                    </Grid>
+                    <TextBlock Text="截取范围" Classes="caption" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                      <TextBox x:Name="SubtitleClipStartTextBox" Watermark="开始 00:00:10" />
+                      <TextBox Grid.Column="1" x:Name="SubtitleClipEndTextBox" Watermark="结束 00:01:00" />
+                    </Grid>
+                    <Button Content="截取字幕" Click="OnClipSubtitleClick" HorizontalAlignment="Left" />
+                    <TextBlock Text="本地转写" Classes="section-title" Margin="0,8,0,0" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                      <TextBox x:Name="WhisperModelPathTextBox" Watermark="Whisper 模型文件路径" />
+                      <Button Grid.Column="1" Content="选择模型" Click="OnWhisperModelClick" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                      <TextBox x:Name="TranscriptionLanguageTextBox" Watermark="语言（可选，例如 zh）" />
+                      <CheckBox Grid.Column="1" x:Name="TranslateToEnglishCheckBox" Content="翻译为英文" VerticalAlignment="Center" />
+                    </Grid>
+                    <Button Content="转写并生成字幕" Click="OnTranscribeClick" Classes="primary" HorizontalAlignment="Left" />
+                  </StackPanel>
+                </ScrollViewer>
+              </TabItem>
+              <TabItem Header="音频">
+                <StackPanel Spacing="14" Margin="0,8,8,0">
+                  <TextBlock Text="音频素材" Classes="section-title" />
+                  <TextBlock Text="为当前任务附加外部音频、配音或 BGM。" Classes="caption" TextWrapping="Wrap" />
+                  <Button Content="选择音频文件" Click="OnAudioClick" HorizontalAlignment="Left" />
+                  <TextBlock x:Name="MaterialText" Text="未附加字幕或音频" Classes="caption" TextWrapping="Wrap" />
+                </StackPanel>
+              </TabItem>
+              <TabItem Header="计划">
+                <StackPanel Spacing="14" Margin="0,8,8,0">
+                  <TextBlock Text="计划与输出" Classes="section-title" />
+                  <TextBlock Text="先预览 Core 生成的命令计划，再执行或导出标准 edit.json。" Classes="caption" TextWrapping="Wrap" />
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="预览命令" Click="OnPreviewClick" Classes="primary" />
+                    <Button Content="执行选中任务" Click="OnQueueClick" Classes="primary" />
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Content="重试选中任务" Click="OnRetryClick" />
+                    <Button Content="导出 edit.json" Click="OnExportPlanClick" />
+                    <Button Content="打开输出目录" Click="OnOpenOutputDirectoryClick" />
+                  </StackPanel>
+                </StackPanel>
+              </TabItem>
+            </TabControl>
+          </Grid>
+        </Border>
+
+        <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#DCE3EA" BorderThickness="1" CornerRadius="6" Padding="16">
+          <StackPanel Spacing="14">
+            <TextBlock Text="任务详情" Classes="section-title" />
+            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="12">
+              <StackPanel Spacing="8">
+                <TextBlock Text="当前状态" Classes="caption" />
+                <TextBlock x:Name="StatusText" Text="就绪" FontSize="17" FontWeight="SemiBold" Foreground="#2563EB" />
+                <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="100" Value="0" Height="6" />
+              </StackPanel>
+            </Border>
+            <TextBlock Text="材料" Classes="caption" />
+            <TextBlock Text="字幕、翻译字幕和音频将在对应工作页管理。" Classes="caption" TextWrapping="Wrap" />
+            <Separator />
+            <TextBlock Text="输出与日志" Classes="caption" />
+            <TextBlock Text="完整日志位于底部面板，任务状态和产物会随队列保存。" Classes="caption" TextWrapping="Wrap" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <Border Grid.Row="1" Background="#182335" CornerRadius="6" Padding="16">
+        <Grid RowDefinitions="Auto,*">
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="执行日志" FontSize="15" FontWeight="SemiBold" Foreground="#F8FAFC" />
+              <TextBlock Text="stdout / stderr" FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center" />
+            </StackPanel>
+            <Button Grid.Column="1" Content="取消执行" Click="OnCancelClick" Classes="danger" IsEnabled="False" x:Name="CancelButton" />
+          </Grid>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+            <TextBlock x:Name="LogText" Text="等待选择媒体文件。" Foreground="#D7E2F0" TextWrapping="Wrap" FontFamily="Cascadia Mono,Consolas,monospace" />
           </ScrollViewer>
-          <ProgressBar x:Name="ProgressBar" Grid.Row="3" Minimum="0" Maximum="100" Value="0" Margin="0,16,0,0" />
         </Grid>
       </Border>
     </Grid>
