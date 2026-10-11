@@ -18,6 +18,7 @@ public sealed class WorkbenchTask : INotifyPropertyChanged
     private WorkbenchTaskState _state = WorkbenchTaskState.Ready;
     private string? _errorMessage;
     private string[] _producedPaths = [];
+    private string _executionLog = string.Empty;
 
     public required string Id { get; init; }
     public required string InputPath { get; init; }
@@ -44,6 +45,12 @@ public sealed class WorkbenchTask : INotifyPropertyChanged
     {
         get => _producedPaths;
         set => SetField(ref _producedPaths, value ?? []);
+    }
+
+    public string ExecutionLog
+    {
+        get => _executionLog;
+        set => SetField(ref _executionLog, value ?? string.Empty);
     }
 
     [JsonIgnore]

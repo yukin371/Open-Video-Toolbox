@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private CancellationTokenSource? _executionCancellation;
     private WorkbenchTask? _selectedTask;
     private MediaProbeResult? _probe;
+    private bool _queueRunning;
 
     public MainWindow()
     {
@@ -149,22 +150,77 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (_queueRunning) return;
+        _executionCancellation?.Dispose();
+        _executionCancellation = new CancellationTokenSource();
+        CancelButton.IsEnabled = true;
+        try
+        {
+            await RunTaskAsync(task, job, _executionCancellation.Token);
+        }
+        finally
+        {
+            CancelButton.IsEnabled = false;
+        }
+    }
+
+    private async void OnRunQueueClick(object? sender, RoutedEventArgs e)
+    {
+        if (_queueRunning || QueueItems.Count == 0) return;
+
+        _queueRunning = true;
+        _executionCancellation?.Dispose();
+        _executionCancellation = new CancellationTokenSource();
+        RunQueueButton.IsEnabled = false;
+        CancelButton.IsEnabled = true;
+
+        try
+        {
+            foreach (var task in QueueItems.ToArray())
+            {
+                if (task.State == WorkbenchTaskState.Succeeded) continue;
+                if (_executionCancellation.IsCancellationRequested) break;
+
+                _selectedTask = task;
+                SelectionText.Text = task.InputPath;
+                StatusText.Text = task.StateLabel;
+                UpdateLogForTask(task);
+                var preset = BuiltInPresetCatalog.TryGet(task.PresetId, out var selectedPreset)
+                    ? selectedPreset
+                    : BuiltInPresetCatalog.GetRequired(BuiltInPresetCatalog.DefaultPresetId);
+                var job = BuildJob(task, preset, null);
+                await RunTaskAsync(task, job, _executionCancellation.Token);
+            }
+        }
+        finally
+        {
+            _queueRunning = false;
+            RunQueueButton.IsEnabled = true;
+            CancelButton.IsEnabled = false;
+            ProgressBar.IsIndeterminate = false;
+            await PersistQueueAsync();
+        }
+    }
+
+    private async Task RunTaskAsync(WorkbenchTask task, JobDefinition job, CancellationToken cancellationToken)
+    {
+        var commandLine = new FfmpegCommandBuilder().Build(job).CommandLine;
+        var log = $"[{DateTime.Now:HH:mm:ss}] 开始执行\n{commandLine}";
         try
         {
             Directory.CreateDirectory(job.Output.OutputDirectory);
-            _executionCancellation?.Dispose();
-            _executionCancellation = new CancellationTokenSource();
             task.State = WorkbenchTaskState.Running;
             task.ErrorMessage = null;
+            task.ProducedPaths = [];
+            task.ExecutionLog = log;
             task.Touch();
-            await PersistQueueAsync();
-            StatusText.Text = "正在执行";
+            StatusText.Text = $"正在执行：{Path.GetFileName(task.InputPath)}";
+            LogText.Text = log;
             ProgressBar.IsIndeterminate = true;
-            CancelButton.IsEnabled = true;
-            LogText.Text = $"[{DateTime.Now:HH:mm:ss}] 开始执行\n{new FfmpegCommandBuilder().Build(job).CommandLine}";
+            await PersistQueueAsync();
 
             var runner = new TranscodeJobRunner(new FfmpegCommandBuilder(), new DefaultProcessRunner());
-            var result = await runner.RunAsync(job, cancellationToken: _executionCancellation.Token);
+            var result = await runner.RunAsync(job, cancellationToken: cancellationToken);
             task.State = result.Status switch
             {
                 ExecutionStatus.Succeeded => WorkbenchTaskState.Succeeded,
@@ -173,24 +229,30 @@ public partial class MainWindow : Window
             };
             task.ErrorMessage = result.ErrorMessage;
             task.ProducedPaths = result.ProducedPaths.ToArray();
-            task.Touch();
-            ProgressBar.IsIndeterminate = false;
-            CancelButton.IsEnabled = false;
-            ProgressBar.Value = result.Status == ExecutionStatus.Succeeded ? 100 : 0;
-            StatusText.Text = task.StateLabel;
             var output = string.Join(Environment.NewLine, result.OutputLines.Select(line => $"[{line.Channel}] {line.Text}"));
-            LogText.Text = $"{LogText.Text}{Environment.NewLine}{output}{Environment.NewLine}状态：{result.Status}{Environment.NewLine}输出：{string.Join(", ", result.ProducedPaths)}";
-            await PersistQueueAsync();
+            task.ExecutionLog = $"{log}{Environment.NewLine}{output}{Environment.NewLine}状态：{result.Status}{Environment.NewLine}输出：{string.Join(", ", result.ProducedPaths)}";
+            LogText.Text = task.ExecutionLog;
+        }
+        catch (OperationCanceledException)
+        {
+            task.State = WorkbenchTaskState.Cancelled;
+            task.ErrorMessage = "执行已取消。";
+            task.ExecutionLog = $"{log}{Environment.NewLine}状态：Cancelled";
+            LogText.Text = task.ExecutionLog;
         }
         catch (Exception ex)
         {
             task.State = WorkbenchTaskState.Failed;
             task.ErrorMessage = ex.Message;
+            task.ExecutionLog = $"{log}{Environment.NewLine}错误：{ex.Message}";
+            LogText.Text = task.ExecutionLog;
+        }
+        finally
+        {
             task.Touch();
             ProgressBar.IsIndeterminate = false;
-            CancelButton.IsEnabled = false;
+            ProgressBar.Value = task.State == WorkbenchTaskState.Succeeded ? 100 : 0;
             StatusText.Text = task.StateLabel;
-            LogText.Text = ex.Message;
             await PersistQueueAsync();
         }
     }
@@ -222,24 +284,26 @@ public partial class MainWindow : Window
 
         task.PresetId = preset.Id;
         task.OutputDirectory = ResolveOutputDirectory(OutputDirectoryTextBox.Text);
-        job = new JobDefinition
-        {
-            Id = task.Id,
-            CreatedAtUtc = task.CreatedAtUtc,
-            Source = new JobSource { InputPath = task.InputPath },
-            Output = new JobOutput
-            {
-                OutputDirectory = task.OutputDirectory,
-                FileNameStem = $"{Path.GetFileNameWithoutExtension(task.InputPath)}-{preset.Id}",
-                ContainerExtension = preset.Output.ContainerExtension,
-                OverwriteExisting = preset.Output.OverwriteExisting
-            },
-            Preset = preset,
-            ProbeSnapshot = _probe
-        };
+        job = BuildJob(task, preset, _probe);
         task.Touch();
         return true;
     }
+
+    private static JobDefinition BuildJob(WorkbenchTask task, PresetDefinition preset, MediaProbeResult? probe) => new()
+    {
+        Id = task.Id,
+        CreatedAtUtc = task.CreatedAtUtc,
+        Source = new JobSource { InputPath = task.InputPath },
+        Output = new JobOutput
+        {
+            OutputDirectory = task.OutputDirectory,
+            FileNameStem = $"{Path.GetFileNameWithoutExtension(task.InputPath)}-{preset.Id}",
+            ContainerExtension = preset.Output.ContainerExtension,
+            OverwriteExisting = preset.Output.OverwriteExisting
+        },
+        Preset = preset,
+        ProbeSnapshot = probe
+    };
 
     private async Task ProbeSelectedInputAsync()
     {
@@ -289,6 +353,11 @@ public partial class MainWindow : Window
 
     private void UpdateLogForTask(WorkbenchTask task)
     {
+        if (!string.IsNullOrWhiteSpace(task.ExecutionLog))
+        {
+            LogText.Text = task.ExecutionLog;
+            return;
+        }
         var output = task.ProducedPaths.Length == 0 ? "" : $"\n输出：{string.Join(", ", task.ProducedPaths)}";
         LogText.Text = $"状态：{task.StateLabel}{output}{(string.IsNullOrWhiteSpace(task.ErrorMessage) ? "" : $"\n错误：{task.ErrorMessage}")}";
     }

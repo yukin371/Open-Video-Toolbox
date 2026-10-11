@@ -15,6 +15,7 @@
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <Button Content="添加视频" Click="OnAddVideosClick" MinWidth="112" />
+          <Button Content="执行队列" Click="OnRunQueueClick" MinWidth="112" x:Name="RunQueueButton" />
           <Button Content="清空队列" Click="OnClearQueueClick" MinWidth="112" />
         </StackPanel>
       </Grid>
