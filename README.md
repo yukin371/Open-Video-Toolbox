@@ -46,7 +46,7 @@
 | 裁切 / 拼接 / 提音轨 | `cut` / `concat` / `extract-audio` | 基础媒体处理产物 | 已可用 |
 | 响度处理 | `audio-analyze` / `audio-gain` / `audio-normalize` | 分析、增益、归一化 | 已可用 |
 | 节拍 / 静音信号 | `beat-track` / `detect-silence` / `auto-cut-silence` | `beats.json` / `silence.json` / 去静音 clips / v1 `edit.json` / 基于 v2 模板的 timeline `edit.json` 草稿 | 已可用 |
-| 转写 / 字幕 | `transcribe` / `subtitle` | `transcript.json`、`srt`、`ass` | 已可用 |
+| 转写 / 字幕 | `transcribe` / `subtitle` / `subtitle-import` / `subtitle-clip` / `merge-subtitles` | 本地转写、SRT/VTT 导入、字幕截取、双语字幕合并 | 已可用（翻译由外部工具提供） |
 | 音频分离 | `separate-audio` | 人声 / 伴奏 stem 输出 | 已可用 |
 | 插件模板 | `validate-plugin`、`templates --plugin-dir` | 静态模板插件发现与校验 | 已可用 |
 | 外部视频导入工作流 | 外部 `yt-dlp` / 浏览器下载 + `probe` / `scaffold-template` | 把 YouTube 等外部来源先落成本地视频与字幕，再进入 OVT 可审计流程 | 已文档化（不内置下载器） |

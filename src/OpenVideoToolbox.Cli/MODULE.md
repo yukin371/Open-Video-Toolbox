@@ -8,7 +8,7 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 
 ## Owns
 
-- 命令分发：`presets`、`templates`、`effects`、`doctor`、`validate-plugin`、`init-plan`、`init-narrated-plan`、`init-narrated-plan-batch`、`scaffold-template`、`scaffold-template-batch`、`beat-track`、`audio-analyze`、`audio-gain`、`audio-normalize`、`transcribe`、`detect-silence`、`auto-cut-silence`、`separate-audio`、`probe`、`plan`、`run`、`cut`、`concat`、`extract-audio`、`subtitle`、`validate-plan`、`inspect-plan`、`replace-plan-material`、`replace-plan-material-batch`、`attach-plan-material`、`attach-plan-material-batch`、`bind-voice-track`、`bind-voice-track-batch`、`export`、`mix-audio`、`render`、`render-batch`
+- 命令分发：`presets`、`templates`、`effects`、`doctor`、`validate-plugin`、`init-plan`、`init-narrated-plan`、`init-narrated-plan-batch`、`scaffold-template`、`scaffold-template-batch`、`beat-track`、`audio-analyze`、`audio-gain`、`audio-normalize`、`transcribe`、`detect-silence`、`auto-cut-silence`、`separate-audio`、`probe`、`plan`、`run`、`cut`、`concat`、`extract-audio`、`subtitle`、`subtitle-import`、`subtitle-clip`、`merge-subtitles`、`validate-plan`、`inspect-plan`、`replace-plan-material`、`replace-plan-material-batch`、`attach-plan-material`、`attach-plan-material-batch`、`bind-voice-track`、`bind-voice-track-batch`、`export`、`mix-audio`、`render`、`render-batch`
 - 参数解析、默认值选择、帮助输出
 - CLI 级错误提示和退出码语义
 - 稳定的结构化输出契约
@@ -71,7 +71,7 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 - `TemplateCommandHandlers.cs` 负责 `templates`、`init-plan`、`scaffold-template`、`scaffold-template-batch` 这组模板命令的入口 wrapper；`Program.cs` 只保留顶层分发，不再保留这组 wrapper 的内联实现
 - `init-narrated-plan` 当前作为模板相关命令族中的独立显式入口保留在 `TemplateCommandHandlers.cs`；CLI 只透传 `Core.Editing` 的 narrated plan 生成结果，不把它偷偷并入现有 `templates` catalog
 - `MediaCommandHandlers.cs` 负责 `cut`、`concat`、`extract-audio` 这组媒体基础命令的入口 wrapper；`Program.cs` 只保留顶层分发，不再保留这组 wrapper 的内联实现
-- `AudioCommandHandlers.cs` 负责 `audio-analyze`、`audio-gain`、`audio-normalize`、`transcribe`、`detect-silence`、`auto-cut-silence`、`separate-audio`、`beat-track`、`subtitle` 这组音频 / speech / silence-driven draft 命令的入口 wrapper；`Program.cs` 只保留顶层分发，不再保留这组 wrapper 的内联实现
+- `AudioCommandHandlers.cs` 负责 `audio-analyze`、`audio-gain`、`audio-normalize`、`transcribe`、`detect-silence`、`auto-cut-silence`、`separate-audio`、`beat-track`、`subtitle`、`subtitle-import`、`subtitle-clip`、`merge-subtitles` 这组音频 / speech / subtitle / silence-driven draft 命令的入口 wrapper；`Program.cs` 只保留顶层分发，不再保留这组 wrapper 的内联实现
 - `EditPlanCommandHandlers.cs` 负责 `validate-plan`、`inspect-plan`、`replace-plan-material`、`replace-plan-material-batch`、`attach-plan-material`、`attach-plan-material-batch`、`bind-voice-track`、`bind-voice-track-batch` 这组 edit-plan inspection / material mutation 命令的入口 wrapper；`Program.cs` 只保留顶层分发，不再保留这组 wrapper 的内联实现
 - `RenderCommandHandlers.cs` 负责 `mix-audio`、`render` 这组执行命令 wrapper，以及仅服务这组命令的 plan loading glue；`Program.cs` 只保留顶层分发，不再保留这组 wrapper 的内联实现
 - `TemplateCommandPresentation.cs` 负责模板目录发现后的 guide / preview / commands / example 写盘组织；`TemplatePlanValidationSupport.cs` 负责 `validate-plan` 相关的模板校验 glue；两者都只组合 `Core.Editing` 与现有 CLI helper，不拥有模板 schema 或 plan 生成规则
@@ -86,6 +86,7 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 - `auto-cut-silence` 只负责加载 `silence.json`、解析 CLI 阈值与模式、决定总时长来源顺序（`--source-duration-ms` 优先，否则探测 `silence.json.inputPath`）、调用 `Core.Editing.AutoCutSilencePlanner` 并输出统一 command envelope；它不拥有非静音区间算法，也不把结果自动接进 `render` / `run`
 - `separate-audio` 只负责分离参数解析、输出目录落盘和结构化摘要；传 `--json-out` 时只负责把同一份 command envelope 落盘；当分离阶段失败时，也应继续输出统一 command envelope 与错误消息，而不是退回纯 usage；不持有 `demucs` 目录映射或命令拼接规则
 - `subtitle` 只负责加载 `transcript.json`、选择输出格式、落盘 sidecar 文件，并把渲染委托给 `Core.Subtitles`；传 `--json-out` 时只负责把同一份结构化结果 envelope 落盘，不维护第二套输出结构
+- `subtitle-import`、`subtitle-clip`、`merge-subtitles` 只负责加载 SRT/VTT、解析参数和落盘结构化字幕结果；翻译由外部工具生成，CLI 不接入 AI provider
 - `validate-plan` 负责加载 `edit.json`、解析相对路径、调用 `Core.Editing.EditPlanValidator` 并输出结构化校验结果；传 `--plugin-dir` 时只负责提供插件模板目录上下文，不复制 `Core.Editing` 的来源校验规则
 - `validate-plan`、`inspect-plan` 以及 `replace-plan-material` / `attach-plan-material` / `bind-voice-track` 的后置校验都必须复用同一份 built-in effect registry，不能让 mutation 路径和显式 `validate-plan` 对 motion effects 给出不同结论
 - `effects` 只负责 effect list / describe 的命令入口、过滤条件与 envelope 输出；effect 参数 schema、template mode 与 built-in catalog 仍由 `Core.Editing` 持有

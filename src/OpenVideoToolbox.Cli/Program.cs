@@ -41,6 +41,9 @@ static async Task<int> MainAsync(string[] args)
         "render" => await RenderCommandHandlers.RunRenderAsync(remaining, Fail),
         "render-batch" => await RenderCommandHandlers.RunRenderBatchAsync(remaining, Fail),
         "subtitle" => await AudioCommandHandlers.RunSubtitleAsync(remaining, Fail),
+        "subtitle-import" => await AudioCommandHandlers.RunSubtitleImportAsync(remaining, Fail),
+        "subtitle-clip" => await AudioCommandHandlers.RunSubtitleClipAsync(remaining, Fail),
+        "merge-subtitles" => await AudioCommandHandlers.RunMergeSubtitlesAsync(remaining, Fail),
         "inspect-plan" => await EditPlanCommandHandlers.RunInspectPlanAsync(remaining, Fail),
         "replace-plan-material" => await EditPlanCommandHandlers.RunReplacePlanMaterialAsync(remaining, Fail),
         "replace-plan-material-batch" => await EditPlanCommandHandlers.RunReplacePlanMaterialBatchAsync(remaining, Fail),
@@ -110,6 +113,9 @@ static void PrintUsage()
     Console.WriteLine("  render --plan <path> [--output <path>] [--preview [true|false]] [--json-out <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--overwrite]");
     Console.WriteLine("  render-batch --manifest <batch.json> [--preview [true|false]] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>]");
     Console.WriteLine("  subtitle <input> --transcript <transcript.json> --format <srt|ass> --output <path> [--max-line-length <n>] [--json-out <path>]");
+    Console.WriteLine("  subtitle-import <input.srt|input.vtt> --output <output.srt> [--json-out <path>]");
+    Console.WriteLine("  subtitle-clip <input.srt|input.vtt> --from <hh:mm:ss.fff> --to <hh:mm:ss.fff> --output <output.srt> [--json-out <path>]");
+    Console.WriteLine("  merge-subtitles <primary.srt|primary.vtt> --secondary <secondary.srt|secondary.vtt> --output <bilingual.srt> [--secondary-first true|false] [--json-out <path>]");
     Console.WriteLine("  inspect-plan --plan <edit.json> [--check-files [true|false]] [--plugin-dir <path>] [--json-out <path>]");
     Console.WriteLine("  replace-plan-material --plan <edit.json> [--write-to <path>] [--in-place [true|false]] --path <new-file> (--source-input | --audio-track-id <id> | --artifact-slot <slotId> | --transcript | --beats | --subtitles) [--subtitle-mode <sidecar|burnIn>] [--path-style <auto|relative|absolute>] [--check-files [true|false]] [--plugin-dir <path>] [--require-valid [true|false]] [--json-out <path>]");
     Console.WriteLine("  replace-plan-material-batch --manifest <batch.json> [--plugin-dir <path>] [--json-out <path>]");

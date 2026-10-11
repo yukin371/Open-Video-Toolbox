@@ -13,6 +13,9 @@
 - `SubtitleRenderRequest`
 - `SubtitleRenderResult`
 - `SubtitleRenderer`
+- `SubtitleDocument` / `SubtitleCue`
+- `SubtitleDocumentParser` / `SubtitleDocumentRenderer`
+- `SubtitleWorkflow`
 
 ## Must Not Own
 
@@ -30,6 +33,7 @@
 
 - `transcript.json` 必须保持足够简单，方便外部 AI 直接生成
 - 字幕导出必须是确定性的，不依赖机器本地状态
+- SRT/VTT 导入、片段截取和双语合并必须只处理结构化字幕文件，不内置翻译 provider
 - 烧录仍由 `render` / `ffmpeg` 链承接，本模块只负责生成 sidecar 文本
 
 ## 常见坑

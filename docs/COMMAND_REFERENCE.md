@@ -402,6 +402,32 @@ subtitle <input> --transcript <transcript.json> --format <srt|ass> --output <pat
 
 - 渲染 sidecar 字幕
 
+### `subtitle-import`
+
+```text
+subtitle-import <input.srt|input.vtt> --output <output.srt> [--json-out <path>]
+```
+
+- 读取 SRT 或 WebVTT，规范化输出为 SRT
+- 不负责翻译；可把输出交给外部 AI 或其他翻译工具
+
+### `subtitle-clip`
+
+```text
+subtitle-clip <input.srt|input.vtt> --from <hh:mm:ss.fff> --to <hh:mm:ss.fff> --output <output.srt> [--json-out <path>]
+```
+
+- 截取时间范围内的字幕并将时间轴重置到片段起点
+
+### `merge-subtitles`
+
+```text
+merge-subtitles <primary.srt|primary.vtt> --secondary <secondary.srt|secondary.vtt> --output <bilingual.srt> [--secondary-first true|false] [--json-out <path>]
+```
+
+- 按字幕序号和时间轴合并原文与译文
+- 两份字幕的条数和时间轴必须对齐；翻译文件由外部工具生成
+
 ## 导出
 
 ### `mix-audio`
