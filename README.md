@@ -52,7 +52,7 @@
 | 外部视频导入工作流 | 外部 `yt-dlp` / 浏览器下载 + `probe` / `scaffold-template` | 把 YouTube 等外部来源先落成本地视频与字幕，再进入 OVT 可审计流程 | 已文档化（不内置下载器） |
 | 语义章节剪辑工作流 | 外部 AI 生成章节 + `cut` / `init-plan` / `render` | 从字幕或 transcript 生成章节选择，再批量产出 clips 或 `edit.json` | 已文档化（AI 在仓库外） |
 | 双语字幕与发布文案工作流 | 外部 AI 翻译 / 文案 + `subtitle` / `attach-plan-material` / `render` | 双语字幕 sidecar / burn-in 成片与社媒文案文件 | 已文档化（不内置翻译 provider） |
-| Desktop 交互壳 | `OpenVideoToolbox.Desktop` | 图形界面入口 | 规划中 |
+| Desktop 交互壳 | `OpenVideoToolbox.Desktop` | 小丸工具箱式本地转码、批量队列、字幕/音频处理和日志工作台 | D1-0 文档与框架冻结 |
 
 ## 快速开始
 
@@ -490,7 +490,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Test-GitHooksSetup.ps1
 
 ## 当前定位
 
-当前仓库的重心仍然是 CLI 能力，而不是桌面 GUI。你可以把它理解成：
+当前仓库的核心能力仍由 CLI/Core 提供，Desktop 已进入 D1-0 工作台规划阶段。你可以把它理解成：
 
 - 一个适合外部 AI 和脚本调用的视频生产内核
 - 一个更关注“草稿生成、模板化产出、可审计流程”的工具箱

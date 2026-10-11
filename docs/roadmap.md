@@ -4,6 +4,20 @@
 
 本文件只保留当前版本目标、实施顺序与活跃工作面，不记录完整历史流水账。
 
+## 当前新增工作面（2026-10-11）
+
+`E2` 首轮能力已基本收口，当前正式新增 `D1 Desktop 工作台` 工作面。目标不是启动完整 NLE，而是实现小丸工具箱式的本地视频工作台：批量导入、预设转码、字幕/音频处理、任务队列、进度、取消、日志和输出管理。
+
+当前文档入口：
+
+- 需求：`docs/plans/2026-10-11-desktop-workbench-requirements.md`
+- 技术评估：`docs/plans/2026-10-11-desktop-workbench-technology-evaluation.md`
+- 启动评估：`docs/plans/2026-10-11-desktop-workbench-evaluation.md`
+- 实施规划：`docs/plans/2026-10-11-desktop-workbench-implementation-plan.md`
+- 交互设计：`docs/plans/2026-10-11-desktop-workbench-design.md`
+
+当前阶段为 `D1-0`：先冻结 UI 框架、应用状态边界、任务状态和验收样例，再进入 Desktop 实现。Avalonia 是首选候选，但尚未引入依赖。
+
 ## 产品定位
 
 - 产品不是专业深度编辑器，也不是缩小版 PR / Resolve。
@@ -361,10 +375,12 @@
       - `bind-voice-track` 已落地，作为外部配音 / TTS / voice conversion 的更直接接回入口
       - `bind-voice-track-batch` 已落地，当前支持 manifest 驱动的批量配音接回、相对路径解析、`summary.json` / `results/<id>.json` 结果落盘与稳定退出码
       - 当前判断：`E2-F2` 已进入完成前状态；`E2-F3` 也已进入完成前状态；当前下一步进入 `E2-F4` 的 batch / 工作目录统一设计
-- `D1` 仍不是当前活跃面：
+- 历史状态（2026-05-08 前）：`D1` 仍不是当前活跃面：
   - `E2-G1` 首轮正式判断已完成，结果为暂不启动
   - `edit.json schema v1` 稳定窗口尚未满足，最早重新判断日期收敛为 `2026-05-12`
   - `docs/plans/2026-04-25-e2-current-stop-point.md` 已补：当前建议把 `E2` 视为 `ready_to_hold`，等待新的明确卡片或下一次 `D1` 重判窗口
+
+- 上述历史判断已由 **2026-10-11** 的新工作面更新：`D1 Desktop 工作台` 已通过重新评估，进入 `D1-0` 文档与框架冻结阶段；后续实现仍必须遵守 Desktop 交互壳边界。
 
 ## 当前决策面
 

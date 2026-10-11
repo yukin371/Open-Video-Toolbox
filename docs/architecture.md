@@ -36,6 +36,8 @@ Wave 1 的细化执行流见 `docs/wave1-cli-flow.drawio`。
 - 媒体文件导入
 - 任务队列视图
 - 预设编辑器
+- 小丸工具箱式的本地转码工作台：批量任务、进度、取消、重试和输出管理
+- 字幕导入/截取/双语文件接入，以及本地转写任务的启动和结果查看
 - 轻量剪辑计划可视化
 - 执行进度与日志界面
 
@@ -51,6 +53,20 @@ Wave 1 的细化执行流见 `docs/wave1-cli-flow.drawio`。
   -> 构建外部命令
   -> 执行任务
   -> 采集日志与产物元数据
+
+Desktop 工作台交互流：
+
+```text
+选择文件/目录
+  -> probe 与依赖检查
+  -> 选择预设和输出规则
+  -> 可选接入 transcript / subtitles / audio track
+  -> 生成或加载 edit.json / CommandPlan
+  -> preview
+  -> 加入任务队列
+  -> Core.Execution 执行
+  -> 展示进度、原始日志、错误和产物
+```
 ```
 
 ## 3. 关键对象建议
@@ -72,3 +88,4 @@ Wave 1 的细化执行流见 `docs/wave1-cli-flow.drawio`。
 - 让 `edit.json` 成为 CLI 与未来轻量 UI 的共同边界
 - 引入任务历史与恢复
 - 将 CLI 已验证的流程接入 Desktop
+- 以 Desktop 工作台作为首个正式 GUI 场景，先覆盖“批量转码与字幕/音频处理”而不是完整时间线
