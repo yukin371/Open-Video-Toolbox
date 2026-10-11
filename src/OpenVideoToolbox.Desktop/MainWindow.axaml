@@ -43,15 +43,11 @@
             </StackPanel>
             <Separator />
             <TextBlock Text="处理预设" FontWeight="SemiBold" />
-            <ComboBox SelectedIndex="0">
-              <ComboBoxItem Content="H.264 通用兼容" />
-              <ComboBoxItem Content="H.265 高压缩" />
-              <ComboBoxItem Content="仅提取音频" />
-            </ComboBox>
+            <ComboBox x:Name="PresetComboBox" SelectedIndex="0" DisplayMemberBinding="{Binding DisplayName}" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
               <StackPanel Spacing="7">
                 <TextBlock Text="输出目录" Foreground="#475569" />
-                <TextBox Text="exports" />
+                <TextBox x:Name="OutputDirectoryTextBox" Text="exports" />
               </StackPanel>
               <StackPanel Grid.Column="1" Spacing="7">
                 <TextBlock Text="覆盖策略" Foreground="#475569" />
@@ -67,14 +63,20 @@
               <Button Grid.Column="1" Content="选择音频文件" Click="OnAudioClick" />
             </Grid>
             <TextBlock x:Name="MaterialText" Text="未附加字幕或音频" Foreground="#64748B" TextWrapping="Wrap" />
-            <Button Content="加入队列" Click="OnQueueClick" HorizontalAlignment="Left" MinWidth="120" />
+            <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
+              <Button Content="预览命令" Click="OnPreviewClick" MinWidth="120" />
+              <Button Grid.Column="1" Content="执行任务" Click="OnQueueClick" MinWidth="120" />
+            </Grid>
           </StackPanel>
         </ScrollViewer>
       </Border>
 
       <Border Grid.Column="2" Background="#111827" CornerRadius="6" Padding="18">
         <Grid RowDefinitions="Auto,Auto,*,Auto">
-          <TextBlock Text="执行日志" FontSize="18" FontWeight="SemiBold" Foreground="White" />
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="执行日志" FontSize="18" FontWeight="SemiBold" Foreground="White" />
+            <Button Grid.Column="1" Content="取消" Click="OnCancelClick" IsEnabled="False" x:Name="CancelButton" />
+          </Grid>
           <TextBlock x:Name="StatusText" Grid.Row="1" Text="就绪" Foreground="#93C5FD" Margin="0,8,0,12" />
           <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
             <TextBlock x:Name="LogText" Text="等待选择媒体文件。" Foreground="#CBD5E1" TextWrapping="Wrap" FontFamily="Cascadia Mono,Consolas,monospace" />
