@@ -20,7 +20,7 @@
 
 - CLI 入口：`src/OpenVideoToolbox.Cli/Program.cs`
 - Desktop 入口：`src/OpenVideoToolbox.Desktop/Program.cs`
-  - 当前状态：Avalonia 工作台壳已启动，支持文件选择、队列展示、预设/输出表单、字幕/音频选择和日志面板；真实 Core.Execution 接入仍在 D1-1 后续步骤
+  - 当前状态：Avalonia 工作台已接入单任务 probe、preview、执行、取消和本地任务队列持久化；批量执行和字幕/转写工作流仍在 D1 后续步骤
 
 ## 用户文档入口
 

@@ -30,7 +30,16 @@
               <TextBlock x:Name="QueueCountText" Text="0" Foreground="#334155" />
             </Border>
           </Grid>
-          <ListBox x:Name="QueueList" Grid.Row="2" ItemsSource="{Binding QueueItems}" BorderThickness="0" />
+          <ListBox x:Name="QueueList" Grid.Row="2" ItemsSource="{Binding QueueItems}" SelectionChanged="OnQueueSelectionChanged" BorderThickness="0">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Spacing="3" Margin="0,5">
+                  <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" />
+                  <TextBlock Text="{Binding PresetId}" FontSize="11" Foreground="#64748B" />
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
         </Grid>
       </Border>
 
@@ -65,7 +74,7 @@
             <TextBlock x:Name="MaterialText" Text="未附加字幕或音频" Foreground="#64748B" TextWrapping="Wrap" />
             <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
               <Button Content="预览命令" Click="OnPreviewClick" MinWidth="120" />
-              <Button Grid.Column="1" Content="执行任务" Click="OnQueueClick" MinWidth="120" />
+              <Button Grid.Column="1" Content="执行选中任务" Click="OnQueueClick" MinWidth="120" />
             </Grid>
           </StackPanel>
         </ScrollViewer>
