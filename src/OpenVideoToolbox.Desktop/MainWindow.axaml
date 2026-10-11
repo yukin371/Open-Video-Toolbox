@@ -100,11 +100,12 @@
             </StackPanel>
             <Separator Grid.Row="1" Margin="0,14,0,0" />
             <TabControl Grid.Row="2" Margin="0,12,0,0">
-              <TabItem Header="转换">
+              <TabItem Header="视频压制">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,4,8,12">
                   <StackPanel Spacing="16">
                     <TextBlock Text="处理预设" Classes="section-title" />
                     <ComboBox x:Name="PresetComboBox" SelectedIndex="0" DisplayMemberBinding="{Binding DisplayName}" />
+                    <TextBlock x:Name="PresetDescriptionText" Text="" Classes="caption" TextWrapping="Wrap" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                       <Button Content="导入预设" Click="OnImportPresetClick" />
                       <Button Grid.Column="1" Content="导出预设" Click="OnExportPresetClick" />

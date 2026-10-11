@@ -14,6 +14,7 @@
 | 目录导入 | 通过 | `OnAddDirectoryClick` 扫描目录内的视频文件 |
 | 媒体 probe | 通过 | `ProbeSelectedInputAsync` 使用 `FfprobeMediaProbeService` |
 | 预设选择与命令预览 | 通过 | `TryBuildJob`、`FfmpegCommandBuilder` |
+| 默认压制方案 | 通过 | 内置兼容优先、快速压制、小体积 720p、H.265 体积优先和快速封装预设 |
 | 单任务执行与取消 | 通过 | `OnQueueClick`、`RunTaskAsync`、`OnCancelClick` |
 | 失败任务重试 | 通过 | `OnRetryClick` 重置任务状态并复用原任务配置 |
 | 批量串行执行 | 通过 | `OnRunQueueClick`；跳过成功项、失败后继续、取消后停止调度 |

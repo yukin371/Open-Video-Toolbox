@@ -8,6 +8,8 @@ public sealed record PresetDefinition
 
     public required string DisplayName { get; init; }
 
+    public string? Description { get; init; }
+
     public PresetKind Kind { get; init; } = PresetKind.Transcode;
 
     public VideoEncoderSettings? Video { get; init; }

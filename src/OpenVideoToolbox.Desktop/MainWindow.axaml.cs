@@ -31,6 +31,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = this;
         PresetComboBox.ItemsSource = Presets;
+        PresetComboBox.SelectionChanged += OnPresetSelectionChanged;
         PresetComboBox.SelectedItem = BuiltInPresetCatalog.GetRequired(BuiltInPresetCatalog.DefaultPresetId);
         Loaded += OnLoaded;
     }
@@ -112,6 +113,11 @@ public partial class MainWindow : Window
         StatusText.Text = task.StateLabel;
         UpdateLogForTask(task);
         await ProbeSelectedInputAsync();
+    }
+
+    private void OnPresetSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        PresetDescriptionText.Text = (PresetComboBox.SelectedItem as PresetDefinition)?.Description ?? string.Empty;
     }
 
     private async void OnClearQueueClick(object? sender, RoutedEventArgs e)

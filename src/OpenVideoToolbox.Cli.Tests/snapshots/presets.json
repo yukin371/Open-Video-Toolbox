@@ -5,6 +5,7 @@
     {
       "schemaVersion": 1,
       "id": "h264-aac-mp4",
+      "description": "兼容优先：适合大多数播放器、手机和社交平台。1080p 原尺寸，CRF 23。",
       "displayName": "H.264 \u002B AAC / MP4",
       "kind": "transcode",
       "video": {
@@ -34,7 +35,72 @@
     },
     {
       "schemaVersion": 1,
+      "id": "h264-aac-fast",
+      "displayName": "快速压制 · H.264 + AAC / MP4",
+      "description": "速度优先：适合先快速出片或批量预览，文件体积略大。",
+      "kind": "transcode",
+      "video": {
+        "encoder": "libx264",
+        "preset": "veryfast",
+        "crf": 24,
+        "pixelFormat": "yuv420p",
+        "extraArguments": []
+      },
+      "audio": {
+        "encoder": "aac",
+        "bitrateKbps": 160,
+        "channels": 2,
+        "sampleRate": 48000,
+        "extraArguments": []
+      },
+      "output": {
+        "containerExtension": ".mp4",
+        "fastStart": true,
+        "overwriteExisting": false
+      },
+      "metadataTags": {},
+      "extraArguments": [
+        "-map_metadata",
+        "-1"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "h264-aac-720p",
+      "displayName": "小体积 · H.264 720p + AAC",
+      "description": "体积优先：缩放到 720p，适合分享、预览和存档副本。",
+      "kind": "transcode",
+      "video": {
+        "encoder": "libx264",
+        "preset": "medium",
+        "crf": 24,
+        "pixelFormat": "yuv420p",
+        "extraArguments": []
+      },
+      "audio": {
+        "encoder": "aac",
+        "bitrateKbps": 160,
+        "channels": 2,
+        "sampleRate": 48000,
+        "extraArguments": []
+      },
+      "output": {
+        "containerExtension": ".mp4",
+        "fastStart": true,
+        "overwriteExisting": false
+      },
+      "metadataTags": {},
+      "extraArguments": [
+        "-vf",
+        "scale=-2:720",
+        "-map_metadata",
+        "-1"
+      ]
+    },
+    {
+      "schemaVersion": 1,
       "id": "h265-aac-mp4",
+      "description": "体积优先：比 H.264 更省空间，但部分旧设备兼容性较弱。",
       "displayName": "H.265 \u002B AAC / MP4",
       "kind": "transcode",
       "video": {
@@ -65,6 +131,7 @@
     {
       "schemaVersion": 1,
       "id": "copy-aac-mkv",
+      "description": "快速封装：不重新压制视频，仅转换音频，速度最快。",
       "displayName": "Copy Video \u002B AAC / MKV",
       "kind": "transcode",
       "video": {

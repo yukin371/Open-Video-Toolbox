@@ -16,7 +16,7 @@
 - 实施规划：`docs/plans/2026-10-11-desktop-workbench-implementation-plan.md`
 - 交互设计：`docs/plans/2026-10-11-desktop-workbench-design.md`
 
-当前阶段为 `D1-4` 收口：D1-0 至 D1-3 的边界、实现和验收已完成；最近任务恢复、预设 JSON 导入/导出、输出目录快捷打开和 Windows `win-x64` publish smoke 已落地。后续只做发布版本复核，不再扩展 Desktop 业务范围。
+当前阶段为 `D1-4` 收口：D1-0 至 D1-3 的边界、实现和验收已完成；最近任务恢复、默认视频压制方案、预设 JSON 导入/导出、输出目录快捷打开和 Windows `win-x64` publish smoke 已落地。后续只做发布版本复核，不再扩展 Desktop 业务范围。
 
 ## 产品定位
 
