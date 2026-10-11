@@ -34,6 +34,7 @@ public partial class MainWindow : Window
     {
         try
         {
+            await UpdateDependencyStatusAsync();
             foreach (var task in await _queueStore.LoadAsync()) QueueItems.Add(task);
             UpdateQueueCount();
             if (QueueItems.Count > 0)
@@ -476,6 +477,48 @@ public partial class MainWindow : Window
             StatusText.Text = "媒体探测失败";
             LogText.Text = ex.Message;
         }
+    }
+
+    private async Task UpdateDependencyStatusAsync()
+    {
+        var report = await new ExternalDependencyInspector(new DefaultProcessRunner()).InspectAsync(
+        [
+            new DependencyProbeDefinition
+            {
+                Id = "ffmpeg",
+                Kind = DependencyProbeKind.Executable,
+                Required = true,
+                Source = DependencyValueSource.Default,
+                ResolvedValue = "ffmpeg",
+                ProbeArguments = ["-version"],
+                Timeout = TimeSpan.FromSeconds(5)
+            },
+            new DependencyProbeDefinition
+            {
+                Id = "ffprobe",
+                Kind = DependencyProbeKind.Executable,
+                Required = true,
+                Source = DependencyValueSource.Default,
+                ResolvedValue = "ffprobe",
+                ProbeArguments = ["-version"],
+                Timeout = TimeSpan.FromSeconds(5)
+            },
+            new DependencyProbeDefinition
+            {
+                Id = "whisper-cli",
+                Kind = DependencyProbeKind.Executable,
+                Required = false,
+                Source = DependencyValueSource.Environment,
+                ResolvedValue = Environment.GetEnvironmentVariable("OVT_WHISPER_CLI_PATH") ?? "whisper-cli",
+                ProbeArguments = ["--help"],
+                Timeout = TimeSpan.FromSeconds(5)
+            }
+        ]);
+        var available = string.Join(", ", report.Dependencies.Where(item => item.IsAvailable).Select(item => item.Id));
+        var missing = string.Join(", ", report.Dependencies.Where(item => !item.IsAvailable).Select(item => item.Id));
+        DependencyText.Text = string.IsNullOrWhiteSpace(missing)
+            ? $"依赖正常：{available}"
+            : $"可用依赖：{available}；缺失：{missing}";
     }
 
     private async Task PersistQueueAsync() => await _queueStore.SaveAsync(QueueItems);

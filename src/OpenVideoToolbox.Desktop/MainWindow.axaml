@@ -50,6 +50,7 @@
             <StackPanel Spacing="4">
               <TextBlock Text="当前任务" FontSize="18" FontWeight="SemiBold" />
               <TextBlock x:Name="SelectionText" Text="尚未选择输入文件" Foreground="#64748B" />
+              <TextBlock x:Name="DependencyText" Text="正在检查 ffmpeg / ffprobe..." Foreground="#64748B" TextWrapping="Wrap" />
             </StackPanel>
             <Separator />
             <TextBlock Text="处理预设" FontWeight="SemiBold" />
