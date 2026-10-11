@@ -90,6 +90,7 @@ public partial class MainWindow : Window
         _selectedTask = task;
         _probe = null;
         OutputDirectoryTextBox.Text = task.OutputDirectory;
+        OverwriteComboBox.SelectedIndex = task.OverwriteExisting == true ? 1 : 0;
         SubtitleModeComboBox.SelectedIndex = string.Equals(task.SubtitleMode, "burnIn", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         WhisperModelPathTextBox.Text = task.WhisperModelPath ?? string.Empty;
         TranscriptionLanguageTextBox.Text = task.TranscriptionLanguage ?? string.Empty;
@@ -114,6 +115,29 @@ public partial class MainWindow : Window
         SelectionText.Text = "尚未选择输入文件";
         StatusText.Text = "就绪";
         LogText.Text = "队列已清空。";
+        await PersistQueueAsync();
+    }
+
+    private async void OnAddDirectoryClick(object? sender, RoutedEventArgs e)
+    {
+        var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "选择视频目录" });
+        var folder = folders.FirstOrDefault()?.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(folder)) return;
+        var mediaPaths = Directory.EnumerateFiles(folder, "*.*", SearchOption.TopDirectoryOnly).Where(IsSupportedVideoPath).ToArray();
+        foreach (var path in mediaPaths)
+        {
+            if (QueueItems.Any(task => string.Equals(task.InputPath, path, StringComparison.OrdinalIgnoreCase))) continue;
+            QueueItems.Add(new WorkbenchTask
+            {
+                Id = $"desktop-{Guid.NewGuid():N}",
+                InputPath = Path.GetFullPath(path),
+                PresetId = BuiltInPresetCatalog.DefaultPresetId,
+                OutputDirectory = ResolveOutputDirectory(OutputDirectoryTextBox.Text)
+            });
+        }
+        UpdateQueueCount();
+        if (_selectedTask is null && QueueItems.Count > 0) QueueList.SelectedIndex = 0;
+        StatusText.Text = $"已从目录添加 {mediaPaths.Length} 个文件";
         await PersistQueueAsync();
     }
 
@@ -176,6 +200,37 @@ public partial class MainWindow : Window
         _selectedTask.Touch();
         MaterialText.Text = BuildMaterialText(_selectedTask);
         await PersistQueueAsync();
+    }
+
+    private async void OnClipSubtitleClick(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedTask is null || string.IsNullOrWhiteSpace(_selectedTask.SubtitlePath)) return;
+        if (!SubtitleDocumentParser.TryParseTimestamp(SubtitleClipStartTextBox.Text ?? string.Empty, out var start)
+            || !SubtitleDocumentParser.TryParseTimestamp(SubtitleClipEndTextBox.Text ?? string.Empty, out var end) || end <= start)
+        {
+            StatusText.Text = "字幕截取失败";
+            LogText.Text = "请输入有效的开始和结束时间。";
+            return;
+        }
+        try
+        {
+            var clipped = SubtitleWorkflow.Clip(new SubtitleClipRequest { Document = ParseSubtitleFile(_selectedTask.SubtitlePath), Start = start, End = end });
+            var outputDirectory = ResolveOutputDirectory(_selectedTask.OutputDirectory);
+            Directory.CreateDirectory(outputDirectory);
+            var outputPath = Path.Combine(outputDirectory, $"{Path.GetFileNameWithoutExtension(_selectedTask.InputPath)}-clip.srt");
+            await File.WriteAllTextAsync(outputPath, SubtitleDocumentRenderer.RenderSrt(clipped));
+            _selectedTask.SubtitlePath = outputPath;
+            _selectedTask.Touch();
+            MaterialText.Text = BuildMaterialText(_selectedTask);
+            StatusText.Text = "字幕截取完成";
+            LogText.Text = $"[{DateTime.Now:HH:mm:ss}] 字幕截取完成\n输出：{outputPath}\n字幕条数：{clipped.Cues.Count}";
+            await PersistQueueAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "字幕截取失败";
+            LogText.Text = ex.Message;
+        }
     }
 
     private async void OnWhisperModelClick(object? sender, RoutedEventArgs e)
@@ -469,6 +524,7 @@ public partial class MainWindow : Window
         task.PresetId = preset.Id;
         task.OutputDirectory = ResolveOutputDirectory(OutputDirectoryTextBox.Text);
         task.SubtitleMode = GetSelectedSubtitleMode();
+        task.OverwriteExisting = OverwriteComboBox.SelectedIndex == 1;
         job = BuildJob(task, preset, _probe);
         task.Touch();
         return true;
@@ -484,7 +540,7 @@ public partial class MainWindow : Window
             OutputDirectory = task.OutputDirectory,
             FileNameStem = $"{Path.GetFileNameWithoutExtension(task.InputPath)}-{preset.Id}",
             ContainerExtension = preset.Output.ContainerExtension,
-            OverwriteExisting = preset.Output.OverwriteExisting
+            OverwriteExisting = task.OverwriteExisting ?? preset.Output.OverwriteExisting
         },
         Preset = preset,
         ProbeSnapshot = probe,
@@ -569,6 +625,8 @@ public partial class MainWindow : Window
     }
 
     private static string ResolveOutputDirectory(string? value) => Path.GetFullPath(string.IsNullOrWhiteSpace(value) ? "exports" : value.Trim());
+
+    private static bool IsSupportedVideoPath(string path) => new[] { ".mp4", ".mov", ".mkv", ".webm", ".avi" }.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
 
     private static string BuildMaterialText(WorkbenchTask task)
     {

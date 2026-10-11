@@ -11,6 +11,7 @@
 | 需求 | 状态 | 证据 |
 | --- | --- | --- |
 | 多文件导入与任务队列 | 通过 | `MainWindow.axaml.cs` 的 `OnAddVideosClick`、`QueueItems` |
+| 目录导入 | 通过 | `OnAddDirectoryClick` 扫描目录内的视频文件 |
 | 媒体 probe | 通过 | `ProbeSelectedInputAsync` 使用 `FfprobeMediaProbeService` |
 | 预设选择与命令预览 | 通过 | `TryBuildJob`、`FfmpegCommandBuilder` |
 | 单任务执行与取消 | 通过 | `OnQueueClick`、`RunTaskAsync`、`OnCancelClick` |
@@ -19,10 +20,12 @@
 | 队列本地持久化 | 通过 | `WorkbenchQueueStore`；保存状态、错误、日志、产物路径和字幕/转写路径 |
 | SRT/VTT 字幕选择 | 通过 | `OnSubtitleClick`、`OnTranslationSubtitleClick` |
 | 双语字幕合并 | 通过 | `SubtitleWorkflow.MergeBilingual` + `SubtitleDocumentRenderer.RenderSrt` |
+| 字幕截取 | 通过 | `SubtitleWorkflow.Clip` + `SubtitleDocumentRenderer.RenderSrt` |
 | 本地 Whisper 转写 | 通过 | `WhisperCppTranscriptionService` + `OnTranscribeClick` |
 | 外部翻译接入口 | 通过 | 第二份 SRT/VTT 字幕文件作为 `TranslationSubtitlePath` |
 | sidecar/burn-in 实际渲染 | 通过 | `JobDefinition.SubtitleMode` 进入 `FfmpegCommandBuilder`；sidecar 由 `TranscodeJobRunner` 复制并记录产物 |
 | `edit.json` 导出 | 通过 | `EditPlanTemplateFactory` 生成标准计划并由 `OpenVideoToolboxJson` 序列化 |
+| 覆盖策略编辑 | 通过 | `OverwriteComboBox` 持久化到任务并传入 `JobOutput` |
 | 依赖状态面板 | 通过 | 启动时通过 `ExternalDependencyInspector` 检查 ffmpeg、ffprobe 和可选 whisper-cli |
 | 独立工作目录 | 待完成 | 当前使用任务输出目录，尚未建立每任务工作目录 |
 

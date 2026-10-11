@@ -24,6 +24,7 @@ public sealed class WorkbenchTask : INotifyPropertyChanged
     public required string InputPath { get; init; }
     public required string PresetId { get; set; }
     public required string OutputDirectory { get; set; }
+    public bool? OverwriteExisting { get; set; }
     public string? SubtitlePath { get; set; }
     public string? TranslationSubtitlePath { get; set; }
     public string SubtitleMode { get; set; } = "sidecar";

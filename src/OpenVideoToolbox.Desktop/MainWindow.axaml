@@ -15,6 +15,7 @@
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <Button Content="添加视频" Click="OnAddVideosClick" MinWidth="112" />
+          <Button Content="添加目录" Click="OnAddDirectoryClick" MinWidth="112" />
           <Button Content="执行队列" Click="OnRunQueueClick" MinWidth="112" x:Name="RunQueueButton" />
           <Button Content="清空队列" Click="OnClearQueueClick" MinWidth="112" />
         </StackPanel>
@@ -62,7 +63,7 @@
               </StackPanel>
               <StackPanel Grid.Column="1" Spacing="7">
                 <TextBlock Text="覆盖策略" Foreground="#475569" />
-                <ComboBox SelectedIndex="0">
+                <ComboBox x:Name="OverwriteComboBox" SelectedIndex="0">
                   <ComboBoxItem Content="不覆盖已有文件" />
                   <ComboBoxItem Content="覆盖已有文件" />
                 </ComboBox>
@@ -81,6 +82,11 @@
               </ComboBox>
             </Grid>
             <Button Content="合并双语字幕" Click="OnMergeSubtitlesClick" HorizontalAlignment="Left" MinWidth="140" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+              <TextBox x:Name="SubtitleClipStartTextBox" Watermark="截取开始，例如 00:00:10" />
+              <TextBox Grid.Column="1" x:Name="SubtitleClipEndTextBox" Watermark="截取结束，例如 00:01:00" />
+            </Grid>
+            <Button Content="截取字幕" Click="OnClipSubtitleClick" HorizontalAlignment="Left" MinWidth="120" />
             <TextBlock Text="本地转写" FontWeight="SemiBold" Margin="0,8,0,0" />
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
               <TextBox x:Name="WhisperModelPathTextBox" Watermark="Whisper 模型文件路径" />
