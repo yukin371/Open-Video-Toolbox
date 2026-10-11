@@ -130,6 +130,20 @@ public sealed class FfmpegCommandBuilderTests
         Assert.Equal(1, plan.Arguments.Count(argument => argument == "-movflags"));
     }
 
+    [Fact]
+    public void Build_AddsBurnInSubtitleFilter_WhenRequested()
+    {
+        var plan = new FfmpegCommandBuilder().Build(BuildJob() with
+        {
+            SubtitlePath = Path.Combine("samples", "captions", "episode.srt"),
+            SubtitleMode = "burnIn"
+        });
+
+        var filterIndex = Array.IndexOf(plan.Arguments.ToArray(), "-vf");
+        Assert.True(filterIndex >= 0);
+        Assert.Equal("subtitles='" + Path.GetFullPath(Path.Combine("samples", "captions", "episode.srt")).Replace("\\", "\\\\").Replace(":", "\\:") + "'", plan.Arguments[filterIndex + 1]);
+    }
+
     private static JobDefinition BuildJob()
     {
         return new JobDefinition

@@ -18,6 +18,7 @@ public sealed class FfmpegCommandBuilder
         arguments.Add(job.Source.InputPath);
 
         ApplyPresetArguments(arguments, job.Preset);
+        AppendSubtitleArguments(arguments, job);
         arguments.Add(outputPath);
 
         return new CommandPlan
@@ -115,6 +116,23 @@ public sealed class FfmpegCommandBuilder
 
         AppendExtraArguments(arguments, preset.ExtraArguments);
     }
+
+    private static void AppendSubtitleArguments(List<string> arguments, JobDefinition job)
+    {
+        if (!string.Equals(job.SubtitleMode, "burnIn", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(job.SubtitlePath))
+        {
+            return;
+        }
+
+        arguments.Add("-vf");
+        arguments.Add($"subtitles='{EscapeFilterPath(Path.GetFullPath(job.SubtitlePath))}'");
+    }
+
+    private static string EscapeFilterPath(string path) => path
+        .Replace("\\", "\\\\", StringComparison.Ordinal)
+        .Replace(":", "\\:", StringComparison.Ordinal)
+        .Replace("'", "\\'", StringComparison.Ordinal);
 
     private static void AppendExtraArguments(List<string> arguments, IReadOnlyList<string> extraArguments)
     {

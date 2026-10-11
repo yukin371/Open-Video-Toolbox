@@ -435,7 +435,9 @@ public partial class MainWindow : Window
             OverwriteExisting = preset.Output.OverwriteExisting
         },
         Preset = preset,
-        ProbeSnapshot = probe
+        ProbeSnapshot = probe,
+        SubtitlePath = task.SubtitlePath,
+        SubtitleMode = task.SubtitleMode
     };
 
     private async Task ProbeSelectedInputAsync()

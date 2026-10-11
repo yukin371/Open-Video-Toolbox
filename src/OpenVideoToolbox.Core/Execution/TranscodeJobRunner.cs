@@ -22,7 +22,7 @@ public sealed class TranscodeJobRunner
         ArgumentNullException.ThrowIfNull(job);
 
         var plan = _commandBuilder.Build(job, executablePath);
-        return await _processRunner.ExecuteAsync(
+        var result = await _processRunner.ExecuteAsync(
             new ProcessExecutionRequest
             {
                 CommandPlan = plan,
@@ -30,6 +30,28 @@ public sealed class TranscodeJobRunner
                 ProducedPaths = [FfmpegCommandBuilder.BuildOutputPath(job.Output)]
             },
             cancellationToken).ConfigureAwait(false);
+
+        if (result.Status != ExecutionStatus.Succeeded
+            || !string.Equals(job.SubtitleMode, "sidecar", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(job.SubtitlePath))
+        {
+            return result;
+        }
+
+        var sidecarPath = Path.Combine(job.Output.OutputDirectory, $"{job.Output.FileNameStem}{Path.GetExtension(job.SubtitlePath)}");
+        try
+        {
+            File.Copy(job.SubtitlePath, sidecarPath, overwrite: job.Output.OverwriteExisting);
+            return result with { ProducedPaths = result.ProducedPaths.Append(sidecarPath).ToArray() };
+        }
+        catch (Exception ex)
+        {
+            return result with
+            {
+                Status = ExecutionStatus.Failed,
+                ErrorMessage = $"Subtitle sidecar copy failed: {ex.Message}"
+            };
+        }
     }
 }
 

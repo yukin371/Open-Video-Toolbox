@@ -20,6 +20,10 @@ public sealed record JobDefinition
 
     public MediaProbeResult? ProbeSnapshot { get; init; }
 
+    public string? SubtitlePath { get; init; }
+
+    public string SubtitleMode { get; init; } = "none";
+
     public IReadOnlyList<string> Tags { get; init; } = [];
 }
 

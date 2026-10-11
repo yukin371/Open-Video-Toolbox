@@ -27,7 +27,9 @@
 - 选择 sidecar 或 burn-in。
 - 接入外部翻译产生的第二份字幕并合并。
 
-当前状态：Desktop 已支持选择 SRT/VTT 原字幕与翻译字幕，复用 `Core.Subtitles` 生成双语 SRT，并通过 `WhisperCppTranscriptionService` 生成本地转写字幕；字幕模式和材料路径会持久化，sidecar/burn-in render 接线仍待完成。
+当前状态：Desktop 已支持选择 SRT/VTT 原字幕与翻译字幕，复用 `Core.Subtitles` 生成双语 SRT，并通过 `WhisperCppTranscriptionService` 生成本地转写字幕；字幕模式和材料路径会持久化，`sidecar` 与 `burnIn` 已通过 `Core.Execution` 接入实际命令与产物链。
+
+阶段验收记录：`docs/plans/2026-10-11-desktop-workbench-phase-check.md`。
 
 通过标准：用户能完成“视频 -> 转写/字幕 -> 可选双语 -> 预览 -> 渲染”。
 

@@ -20,7 +20,7 @@
 
 - CLI 入口：`src/OpenVideoToolbox.Cli/Program.cs`
 - Desktop 入口：`src/OpenVideoToolbox.Desktop/Program.cs`
-  - 当前状态：Avalonia 工作台已接入单任务 probe、preview、执行、取消和本地任务队列持久化；批量执行和字幕/转写工作流仍在 D1 后续步骤
+  - 当前状态：Avalonia 工作台已接入单任务 probe、preview、执行、取消、本地任务队列持久化、按顺序批量执行、SRT/VTT 字幕选择、双语字幕合并、本地 Whisper 转写和 Core 执行链中的 sidecar/burn-in；D1-3/D1-4 仍待补依赖状态、重试、工作目录和 edit.json 导出
 
 ## 用户文档入口
 
@@ -141,7 +141,7 @@
 - `src/OpenVideoToolbox.Cli`
   - 当前最小可运行入口，直接组合 `Core` 能力完成媒体处理命令与结构化输出
 - `src/OpenVideoToolbox.Desktop`
-  - 桌面入口占位，尚未接入实际 UI 框架与业务流
+  - Avalonia 11.3.12 单窗口三栏工作台；当前承担文件选择、任务编辑、队列编排、Core.Execution 调用和日志展示，不承担 FFmpeg/字幕/转写算法 owner
 - `src/OpenVideoToolbox.Core.Tests`
   - `Core` 的模型、命令构建、进程执行、媒体探测和作业执行测试
 - `docs`
@@ -165,8 +165,8 @@
 - `transcript.json` 外部转写适配：`src/OpenVideoToolbox.Core/Speech`
 - CLI 参数解析与命令出口语义：`src/OpenVideoToolbox.Cli`
 - 桌面交互与视图模型：`src/OpenVideoToolbox.Desktop`
-  - 当前状态：`TBD`
-  - 确认路径：Desktop MVP 启动时明确 UI 框架、导航和状态管理 owner
+  - 当前状态：owner 已确认；Avalonia `MainWindow` + `WorkbenchTask` + `WorkbenchQueueStore` 承担首版窗口状态、任务状态和本地恢复
+  - 确认路径：后续若拆分 ViewModel，必须保持 `Core.Execution`、`Core.Subtitles` 和 `Core.Speech` 的 owner 不变
 
 ## 已知高风险区域
 
