@@ -39,6 +39,20 @@ public sealed class SerializationTests
     }
 
     [Fact]
+    public void PresetDefinition_RoundTrips_ForDesktopImportExport()
+    {
+        var preset = BuildPreset() with { Id = "custom-desktop-preset", DisplayName = "Custom Desktop Preset" };
+        var json = JsonSerializer.Serialize(preset, OpenVideoToolboxJson.Shared);
+        var restored = JsonSerializer.Deserialize<PresetDefinition>(json, OpenVideoToolboxJson.Shared);
+
+        Assert.NotNull(restored);
+        Assert.Equal(preset.Id, restored!.Id);
+        Assert.Equal(preset.DisplayName, restored.DisplayName);
+        Assert.Equal(preset.Video!.Encoder, restored.Video!.Encoder);
+        Assert.Equal(preset.Output.ContainerExtension, restored.Output.ContainerExtension);
+    }
+
+    [Fact]
     public void ExecutionResult_RoundTrips_WithCommandPlanAndOutputs()
     {
         var result = new ExecutionResult

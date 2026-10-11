@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -17,6 +18,7 @@ namespace OpenVideoToolbox.Desktop;
 public partial class MainWindow : Window
 {
     public ObservableCollection<WorkbenchTask> QueueItems { get; } = [];
+    public ObservableCollection<PresetDefinition> Presets { get; } = new(BuiltInPresetCatalog.GetAll());
 
     private readonly WorkbenchQueueStore _queueStore = new();
     private CancellationTokenSource? _executionCancellation;
@@ -28,7 +30,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = this;
-        PresetComboBox.ItemsSource = BuiltInPresetCatalog.GetAll();
+        PresetComboBox.ItemsSource = Presets;
         PresetComboBox.SelectedItem = BuiltInPresetCatalog.GetRequired(BuiltInPresetCatalog.DefaultPresetId);
         Loaded += OnLoaded;
     }
@@ -404,6 +406,85 @@ public partial class MainWindow : Window
             StatusText.Text = "计划导出失败";
             LogText.Text = ex.Message;
         }
+    }
+
+    private async void OnImportPresetClick(object? sender, RoutedEventArgs e)
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "导入预设 JSON",
+            AllowMultiple = true,
+            FileTypeFilter = [new FilePickerFileType("JSON") { Patterns = ["*.json"] }]
+        });
+        foreach (var file in files)
+        {
+            var path = file.TryGetLocalPath();
+            if (string.IsNullOrWhiteSpace(path)) continue;
+            try
+            {
+                var json = await File.ReadAllTextAsync(path);
+                var imported = DeserializePresets(json);
+                foreach (var preset in imported)
+                {
+                    var index = Presets.ToList().FindIndex(item => string.Equals(item.Id, preset.Id, StringComparison.OrdinalIgnoreCase));
+                    if (index >= 0) Presets[index] = preset;
+                    else Presets.Add(preset);
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusText.Text = "预设导入失败";
+                LogText.Text = ex.Message;
+            }
+        }
+        PresetComboBox.ItemsSource = null;
+        PresetComboBox.ItemsSource = Presets;
+        PresetComboBox.SelectedIndex = Math.Max(0, Presets.Count - 1);
+        StatusText.Text = "预设导入完成";
+    }
+
+    private async void OnExportPresetClick(object? sender, RoutedEventArgs e)
+    {
+        if (PresetComboBox.SelectedItem is not PresetDefinition preset) return;
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "导出预设 JSON",
+            SuggestedFileName = $"{preset.Id}.json",
+            FileTypeChoices = [new FilePickerFileType("JSON") { Patterns = ["*.json"] }]
+        });
+        var path = file?.TryGetLocalPath();
+        if (string.IsNullOrWhiteSpace(path)) return;
+        await File.WriteAllTextAsync(path, JsonSerializer.Serialize(preset, OpenVideoToolboxJson.Shared));
+        StatusText.Text = "预设导出完成";
+        LogText.Text = $"预设：{preset.DisplayName}\n输出：{path}";
+    }
+
+    private void OnOpenOutputDirectoryClick(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedTask is null) return;
+        var directory = ResolveOutputDirectory(_selectedTask.OutputDirectory);
+        Directory.CreateDirectory(directory);
+        var startInfo = OperatingSystem.IsWindows()
+            ? new ProcessStartInfo("explorer.exe", directory) { UseShellExecute = true }
+            : new ProcessStartInfo { FileName = directory, UseShellExecute = true };
+        Process.Start(startInfo);
+    }
+
+    private static IReadOnlyList<PresetDefinition> DeserializePresets(string json)
+    {
+        try
+        {
+            var presets = JsonSerializer.Deserialize<PresetDefinition[]>(json, OpenVideoToolboxJson.Shared);
+            if (presets is { Length: > 0 }) return presets;
+        }
+        catch (JsonException)
+        {
+            // Fall through and try the single-preset shape.
+        }
+
+        var preset = JsonSerializer.Deserialize<PresetDefinition>(json, OpenVideoToolboxJson.Shared)
+            ?? throw new JsonException("Preset JSON must contain one preset or an array of presets.");
+        return [preset];
     }
 
     private async void OnRunQueueClick(object? sender, RoutedEventArgs e)

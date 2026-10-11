@@ -20,7 +20,7 @@
 
 - CLI 入口：`src/OpenVideoToolbox.Cli/Program.cs`
 - Desktop 入口：`src/OpenVideoToolbox.Desktop/Program.cs`
-  - 当前状态：Avalonia 工作台已接入单任务 probe、preview、执行、取消、本地任务队列持久化、按顺序批量执行、失败重试、目录导入、SRT/VTT 字幕选择、字幕截取、双语字幕合并、本地 Whisper 转写、edit.json 导出、依赖状态检查、独立工作目录和 Core 执行链中的 sidecar/burn-in；后续 D1-4 主要补最近任务、预设导入/导出和发布 smoke
+  - 当前状态：Avalonia 工作台已接入单任务 probe、preview、执行、取消、本地任务队列持久化、按顺序批量执行、失败重试、目录导入、SRT/VTT 字幕选择、字幕截取、双语字幕合并、本地 Whisper 转写、edit.json 导出、依赖状态检查、独立工作目录、预设导入/导出、输出目录快捷打开和 Core 执行链中的 sidecar/burn-in；D1-4 已完成 Windows `win-x64` publish smoke
 
 ## 用户文档入口
 

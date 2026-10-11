@@ -2,7 +2,7 @@
 
 > 验收日期：2026-10-11
 > 当前分支：`ui`
-> 当前阶段：`D1-2 字幕与转写工作流`
+> 当前阶段：`D1-4 工作台收口`
 
 ## 验收范围
 
@@ -28,6 +28,10 @@
 | 覆盖策略编辑 | 通过 | `OverwriteComboBox` 持久化到任务并传入 `JobOutput` |
 | 依赖状态面板 | 通过 | 启动时通过 `ExternalDependencyInspector` 检查 ffmpeg、ffprobe 和可选 whisper-cli |
 | 独立工作目录 | 通过 | `WorkbenchTask.WorkingDirectory` 持久化为 `.ovt-work/<task-id>`，并传入 `JobOutput.WorkingDirectory` |
+| 最近任务恢复 | 通过 | 启动时 `WorkbenchQueueStore.LoadAsync` 恢复任务、状态、日志和产物 |
+| 预设导入/导出 | 通过 | Desktop JSON 文件选择器支持单个或数组预设 |
+| 输出目录快捷打开 | 通过 | `OnOpenOutputDirectoryClick` |
+| Windows 发布 smoke | 通过 | `scripts/Test-DesktopPublish.ps1` 已验证 `win-x64` 产物含 exe 与 deps.json |
 
 ## 验证命令
 
@@ -40,10 +44,10 @@ git diff --check
 当前通过结果：
 
 - Desktop 构建：0 警告、0 错误
-- `OpenVideoToolbox.Core.Tests`：199/199
+- `OpenVideoToolbox.Core.Tests`：200/200
 - `OpenVideoToolbox.Cli.Tests`：195/195
 
-## D1-2 通过标准
+## D1-4 通过标准
 
 - 用户可以为任务选择原字幕和外部翻译字幕。
 - 用户可以复用 Core 字幕模型生成双语 SRT。
@@ -51,7 +55,8 @@ git diff --check
 - 模型路径、转写选项、字幕路径和任务状态会随队列保存并在下次启动恢复。
 - 翻译仍由外部工具提供，仓库不内置 provider、SDK 或远程模型调用。
 - `sidecar` 与 `burnIn` 均通过 Core 执行链生效，Desktop 不直接拼接 FFmpeg 参数。
+- 最近任务、预设导入/导出、输出目录快捷打开和 Windows `win-x64` 发布 smoke 均有可复查入口。
 
 ## 下一张实现卡
 
-下一步转入 D1-4：补最近任务、预设导入/导出和 Windows 优先发布 smoke；这些属于 D1-4 收口增强，不影响已通过的 D1-2 字幕与转写闭环。
+D1-4 收口：后续只需按发布版本复核 smoke 产物，不再新增 Desktop 业务能力。

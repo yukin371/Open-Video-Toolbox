@@ -56,6 +56,10 @@
             <Separator />
             <TextBlock Text="处理预设" FontWeight="SemiBold" />
             <ComboBox x:Name="PresetComboBox" SelectedIndex="0" DisplayMemberBinding="{Binding DisplayName}" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+              <Button Content="导入预设" Click="OnImportPresetClick" />
+              <Button Grid.Column="1" Content="导出预设" Click="OnExportPresetClick" />
+            </Grid>
             <Grid ColumnDefinitions="*,*" ColumnSpacing="14">
               <StackPanel Spacing="7">
                 <TextBlock Text="输出目录" Foreground="#475569" />
@@ -104,6 +108,7 @@
             </Grid>
             <Button Content="重试选中任务" Click="OnRetryClick" HorizontalAlignment="Left" MinWidth="120" />
             <Button Content="导出 edit.json" Click="OnExportPlanClick" HorizontalAlignment="Left" MinWidth="120" />
+            <Button Content="打开输出目录" Click="OnOpenOutputDirectoryClick" HorizontalAlignment="Left" MinWidth="120" />
           </StackPanel>
         </ScrollViewer>
       </Border>

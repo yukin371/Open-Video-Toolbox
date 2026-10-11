@@ -16,7 +16,7 @@
 - 实施规划：`docs/plans/2026-10-11-desktop-workbench-implementation-plan.md`
 - 交互设计：`docs/plans/2026-10-11-desktop-workbench-design.md`
 
-当前阶段为 `D1-2` 收口：`D1-0` 的边界、评估、规划和设计已完成；单任务探测、预览、执行、取消、本地任务队列持久化、按顺序批量执行、失败重试、目录导入、字幕截取、edit.json 导出、依赖状态、独立工作目录，以及通过 Core 执行链实现的 sidecar/burn-in 均已落地。下一步转入 D1-4 的最近任务、预设导入/导出和发布 smoke。
+当前阶段为 `D1-4` 收口：D1-0 至 D1-3 的边界、实现和验收已完成；最近任务恢复、预设 JSON 导入/导出、输出目录快捷打开和 Windows `win-x64` publish smoke 已落地。后续只做发布版本复核，不再扩展 Desktop 业务范围。
 
 ## 产品定位
 
