@@ -16,7 +16,7 @@
 - 实施规划：`docs/plans/2026-10-11-desktop-workbench-implementation-plan.md`
 - 交互设计：`docs/plans/2026-10-11-desktop-workbench-design.md`
 
-当前阶段为 `D1-2`：`D1-0` 的边界、评估、规划和设计已完成；单任务探测、预览、执行、取消、本地任务队列持久化和按顺序批量执行已经落地。Desktop 已接入 SRT/VTT 选择、外部翻译字幕留口和双语字幕合并；下一步是把转写服务与 sidecar/burn-in render 接入同一执行链。
+当前阶段为 `D1-2`：`D1-0` 的边界、评估、规划和设计已完成；单任务探测、预览、执行、取消、本地任务队列持久化和按顺序批量执行已经落地。Desktop 已接入 SRT/VTT 选择、外部翻译字幕留口、双语字幕合并和本地 Whisper 转写；下一步是把 sidecar/burn-in render 接入同一执行链。
 
 ## 产品定位
 

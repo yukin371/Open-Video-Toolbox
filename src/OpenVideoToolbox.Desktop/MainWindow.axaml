@@ -80,6 +80,16 @@
               </ComboBox>
             </Grid>
             <Button Content="合并双语字幕" Click="OnMergeSubtitlesClick" HorizontalAlignment="Left" MinWidth="140" />
+            <TextBlock Text="本地转写" FontWeight="SemiBold" Margin="0,8,0,0" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <TextBox x:Name="WhisperModelPathTextBox" Watermark="Whisper 模型文件路径" />
+              <Button Grid.Column="1" Content="选择模型" Click="OnWhisperModelClick" MinWidth="96" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <TextBox x:Name="TranscriptionLanguageTextBox" Watermark="语言（可选，例如 zh）" />
+              <CheckBox Grid.Column="1" x:Name="TranslateToEnglishCheckBox" Content="翻译为英文" VerticalAlignment="Center" />
+            </Grid>
+            <Button Content="转写并生成字幕" Click="OnTranscribeClick" HorizontalAlignment="Left" MinWidth="140" />
             <TextBlock x:Name="MaterialText" Text="未附加字幕或音频" Foreground="#64748B" TextWrapping="Wrap" />
             <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
               <Button Content="预览命令" Click="OnPreviewClick" MinWidth="120" />

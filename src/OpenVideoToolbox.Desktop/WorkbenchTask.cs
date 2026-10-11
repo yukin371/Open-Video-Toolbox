@@ -27,6 +27,10 @@ public sealed class WorkbenchTask : INotifyPropertyChanged
     public string? SubtitlePath { get; set; }
     public string? TranslationSubtitlePath { get; set; }
     public string SubtitleMode { get; set; } = "sidecar";
+    public string? WhisperModelPath { get; set; }
+    public string? TranscriptPath { get; set; }
+    public string? TranscriptionLanguage { get; set; }
+    public bool TranslateToEnglish { get; set; }
     public string? AudioPath { get; set; }
     public DateTimeOffset CreatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAtUtc { get; private set; } = DateTimeOffset.UtcNow;

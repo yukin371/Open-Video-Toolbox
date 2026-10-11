@@ -7,6 +7,7 @@ using OpenVideoToolbox.Core.Jobs;
 using OpenVideoToolbox.Core.Media;
 using OpenVideoToolbox.Core.Presets;
 using OpenVideoToolbox.Core.Subtitles;
+using OpenVideoToolbox.Core.Speech;
 
 namespace OpenVideoToolbox.Desktop;
 
@@ -86,6 +87,9 @@ public partial class MainWindow : Window
         _probe = null;
         OutputDirectoryTextBox.Text = task.OutputDirectory;
         SubtitleModeComboBox.SelectedIndex = string.Equals(task.SubtitleMode, "burnIn", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        WhisperModelPathTextBox.Text = task.WhisperModelPath ?? string.Empty;
+        TranscriptionLanguageTextBox.Text = task.TranscriptionLanguage ?? string.Empty;
+        TranslateToEnglishCheckBox.IsChecked = task.TranslateToEnglish;
         PresetComboBox.SelectedItem = BuiltInPresetCatalog.TryGet(task.PresetId, out var preset)
             ? preset
             : BuiltInPresetCatalog.GetRequired(BuiltInPresetCatalog.DefaultPresetId);
@@ -168,6 +172,89 @@ public partial class MainWindow : Window
         _selectedTask.Touch();
         MaterialText.Text = BuildMaterialText(_selectedTask);
         await PersistQueueAsync();
+    }
+
+    private async void OnWhisperModelClick(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedTask is null) return;
+        _selectedTask.WhisperModelPath = await PickSingleFileAsync("选择 Whisper 模型", ["*.bin", "*.gguf"]);
+        WhisperModelPathTextBox.Text = _selectedTask.WhisperModelPath ?? string.Empty;
+        _selectedTask.Touch();
+        await PersistQueueAsync();
+    }
+
+    private async void OnTranscribeClick(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedTask is null) return;
+        var modelPath = WhisperModelPathTextBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(modelPath))
+        {
+            StatusText.Text = "转写失败";
+            LogText.Text = "请先选择 Whisper 模型文件。";
+            return;
+        }
+
+        if (_queueRunning) return;
+        _selectedTask.WhisperModelPath = Path.GetFullPath(modelPath);
+        _selectedTask.TranscriptionLanguage = string.IsNullOrWhiteSpace(TranscriptionLanguageTextBox.Text)
+            ? null
+            : TranscriptionLanguageTextBox.Text.Trim();
+        _selectedTask.TranslateToEnglish = TranslateToEnglishCheckBox.IsChecked == true;
+        _executionCancellation?.Dispose();
+        _executionCancellation = new CancellationTokenSource();
+        try
+        {
+            StatusText.Text = "正在转写";
+            LogText.Text = $"[{DateTime.Now:HH:mm:ss}] 开始本地转写\n模型：{_selectedTask.WhisperModelPath}";
+            await PersistQueueAsync();
+
+            var service = new WhisperCppTranscriptionService(
+                new AudioWaveformExtractRunner(new FfmpegAudioWaveformExtractCommandBuilder(), new DefaultProcessRunner()),
+                new WhisperCppTranscriptionRunner(new WhisperCppCommandBuilder(), new DefaultProcessRunner()),
+                new WhisperCppJsonParser());
+            var transcript = await service.TranscribeAsync(
+                new WhisperCppTranscriptionRequest
+                {
+                    InputPath = _selectedTask.InputPath,
+                    ModelPath = _selectedTask.WhisperModelPath,
+                    Language = _selectedTask.TranscriptionLanguage,
+                    TranslateToEnglish = _selectedTask.TranslateToEnglish
+                },
+                cancellationToken: _executionCancellation.Token);
+
+            var outputDirectory = ResolveOutputDirectory(_selectedTask.OutputDirectory);
+            Directory.CreateDirectory(outputDirectory);
+            var outputPath = Path.Combine(outputDirectory, $"{Path.GetFileNameWithoutExtension(_selectedTask.InputPath)}-transcript.srt");
+            var rendered = new SubtitleRenderer().Render(new SubtitleRenderRequest
+            {
+                Transcript = transcript,
+                OutputPath = outputPath,
+                Format = SubtitleFormat.Srt
+            });
+            await File.WriteAllTextAsync(outputPath, rendered.Content, _executionCancellation.Token);
+            _selectedTask.TranscriptPath = outputPath;
+            _selectedTask.SubtitlePath = outputPath;
+            _selectedTask.Touch();
+            MaterialText.Text = BuildMaterialText(_selectedTask);
+            StatusText.Text = "转写完成";
+            LogText.Text = $"[{DateTime.Now:HH:mm:ss}] 本地转写完成\n语言：{transcript.Language ?? "未知"}\n片段：{transcript.Segments.Count}\n字幕：{outputPath}";
+            await PersistQueueAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            StatusText.Text = "转写已取消";
+            LogText.Text = $"{LogText.Text}\n[{DateTime.Now:HH:mm:ss}] 已取消转写。";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "转写失败";
+            LogText.Text = ex.Message;
+        }
+        finally
+        {
+            _executionCancellation?.Dispose();
+            _executionCancellation = null;
+        }
     }
 
     private async void OnPreviewClick(object? sender, RoutedEventArgs e)
