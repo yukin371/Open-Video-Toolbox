@@ -6,6 +6,7 @@ using OpenVideoToolbox.Core.Execution;
 using OpenVideoToolbox.Core.Jobs;
 using OpenVideoToolbox.Core.Media;
 using OpenVideoToolbox.Core.Presets;
+using OpenVideoToolbox.Core.Subtitles;
 
 namespace OpenVideoToolbox.Desktop;
 
@@ -84,6 +85,7 @@ public partial class MainWindow : Window
         _selectedTask = task;
         _probe = null;
         OutputDirectoryTextBox.Text = task.OutputDirectory;
+        SubtitleModeComboBox.SelectedIndex = string.Equals(task.SubtitleMode, "burnIn", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         PresetComboBox.SelectedItem = BuiltInPresetCatalog.TryGet(task.PresetId, out var preset)
             ? preset
             : BuiltInPresetCatalog.GetRequired(BuiltInPresetCatalog.DefaultPresetId);
@@ -114,6 +116,49 @@ public partial class MainWindow : Window
         _selectedTask.Touch();
         MaterialText.Text = BuildMaterialText(_selectedTask);
         await PersistQueueAsync();
+    }
+
+    private async void OnTranslationSubtitleClick(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedTask is null) return;
+        _selectedTask.TranslationSubtitlePath = await PickSingleFileAsync("选择翻译字幕文件", ["*.srt", "*.vtt"]);
+        _selectedTask.Touch();
+        MaterialText.Text = BuildMaterialText(_selectedTask);
+        await PersistQueueAsync();
+    }
+
+    private async void OnMergeSubtitlesClick(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedTask is null) return;
+        if (string.IsNullOrWhiteSpace(_selectedTask.SubtitlePath) || string.IsNullOrWhiteSpace(_selectedTask.TranslationSubtitlePath))
+        {
+            StatusText.Text = "双语字幕合并失败";
+            LogText.Text = "请先选择原字幕和翻译字幕文件。";
+            return;
+        }
+
+        try
+        {
+            var primary = ParseSubtitleFile(_selectedTask.SubtitlePath);
+            var secondary = ParseSubtitleFile(_selectedTask.TranslationSubtitlePath);
+            var merged = SubtitleWorkflow.MergeBilingual(primary, secondary);
+            var outputDirectory = ResolveOutputDirectory(_selectedTask.OutputDirectory);
+            Directory.CreateDirectory(outputDirectory);
+            var outputPath = Path.Combine(outputDirectory, $"{Path.GetFileNameWithoutExtension(_selectedTask.InputPath)}-bilingual.srt");
+            await File.WriteAllTextAsync(outputPath, SubtitleDocumentRenderer.RenderSrt(merged));
+            _selectedTask.SubtitlePath = outputPath;
+            _selectedTask.SubtitleMode = GetSelectedSubtitleMode();
+            _selectedTask.Touch();
+            MaterialText.Text = BuildMaterialText(_selectedTask);
+            StatusText.Text = "双语字幕已生成";
+            LogText.Text = $"[{DateTime.Now:HH:mm:ss}] 双语字幕合并完成\n输出：{outputPath}\n字幕条数：{merged.Cues.Count}";
+            await PersistQueueAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "双语字幕合并失败";
+            LogText.Text = ex.Message;
+        }
     }
 
     private async void OnAudioClick(object? sender, RoutedEventArgs e)
@@ -284,6 +329,7 @@ public partial class MainWindow : Window
 
         task.PresetId = preset.Id;
         task.OutputDirectory = ResolveOutputDirectory(OutputDirectoryTextBox.Text);
+        task.SubtitleMode = GetSelectedSubtitleMode();
         job = BuildJob(task, preset, _probe);
         task.Touch();
         return true;
@@ -346,9 +392,21 @@ public partial class MainWindow : Window
         var materials = new[]
         {
             task.SubtitlePath is null ? null : $"字幕：{task.SubtitlePath}",
+            task.TranslationSubtitlePath is null ? null : $"翻译字幕：{task.TranslationSubtitlePath}",
             task.AudioPath is null ? null : $"音频：{task.AudioPath}"
         }.Where(value => value is not null);
         return string.Join(Environment.NewLine, materials.DefaultIfEmpty("未附加字幕或音频"));
+    }
+
+    private static SubtitleDocument ParseSubtitleFile(string path)
+    {
+        var format = Path.GetExtension(path).TrimStart('.');
+        return SubtitleDocumentParser.Parse(File.ReadAllText(path), format);
+    }
+
+    private string GetSelectedSubtitleMode()
+    {
+        return (SubtitleModeComboBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "sidecar";
     }
 
     private void UpdateLogForTask(WorkbenchTask task)

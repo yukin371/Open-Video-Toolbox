@@ -25,6 +25,8 @@ public sealed class WorkbenchTask : INotifyPropertyChanged
     public required string PresetId { get; set; }
     public required string OutputDirectory { get; set; }
     public string? SubtitlePath { get; set; }
+    public string? TranslationSubtitlePath { get; set; }
+    public string SubtitleMode { get; set; } = "sidecar";
     public string? AudioPath { get; set; }
     public DateTimeOffset CreatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAtUtc { get; private set; } = DateTimeOffset.UtcNow;

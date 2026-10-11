@@ -72,6 +72,14 @@
               <Button Content="选择字幕文件" Click="OnSubtitleClick" />
               <Button Grid.Column="1" Content="选择音频文件" Click="OnAudioClick" />
             </Grid>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="14">
+              <Button Content="选择翻译字幕" Click="OnTranslationSubtitleClick" />
+              <ComboBox Grid.Column="1" x:Name="SubtitleModeComboBox" SelectedIndex="0" MinWidth="140">
+                <ComboBoxItem Content="sidecar 字幕" Tag="sidecar" />
+                <ComboBoxItem Content="burn-in 烧录" Tag="burnIn" />
+              </ComboBox>
+            </Grid>
+            <Button Content="合并双语字幕" Click="OnMergeSubtitlesClick" HorizontalAlignment="Left" MinWidth="140" />
             <TextBlock x:Name="MaterialText" Text="未附加字幕或音频" Foreground="#64748B" TextWrapping="Wrap" />
             <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
               <Button Content="预览命令" Click="OnPreviewClick" MinWidth="120" />
