@@ -40,7 +40,7 @@ git diff --check
 当前通过结果：
 
 - Desktop 构建：0 警告、0 错误
-- `OpenVideoToolbox.Core.Tests`：196/196
+- `OpenVideoToolbox.Core.Tests`：199/199
 - `OpenVideoToolbox.Cli.Tests`：195/195
 
 ## D1-2 通过标准
@@ -54,4 +54,4 @@ git diff --check
 
 ## 下一张实现卡
 
-下一步转入 D1-3 / D1-4：补依赖状态面板、失败重试、工作目录与 `edit.json` 导出；这些能力不影响已通过的 D1-2 字幕与转写闭环。
+下一步转入 D1-4：补最近任务、预设导入/导出和 Windows 优先发布 smoke；这些属于 D1-4 收口增强，不影响已通过的 D1-2 字幕与转写闭环。
