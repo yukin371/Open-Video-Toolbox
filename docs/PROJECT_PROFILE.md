@@ -1,6 +1,6 @@
 # Project Profile
 
-最后更新：2026-04-26
+最后更新：2026-10-13
 
 ## 项目类型
 
@@ -37,7 +37,7 @@
 
 ## CLI 已确认命令面
 
-- `presets`
+- `presets [--preset-dir <path>] [--preset-file <path>] [--json-out <path>]`
 - `templates [<template-id>] [--template <id>] [--category <id>] [--seed-mode <manual|transcript|beats>] [--output-container <ext>] [--artifact-kind <kind>] [--has-artifacts [true|false]] [--has-subtitles [true|false]] [--summary [true|false]] [--plugin-dir <path>] [--json-out <path>] [--write-examples <dir>]`
 - `effects [list [--category <id>] | describe <type> | <type>] [--json-out <path>]`
 - `doctor [--ffmpeg <path>] [--ffprobe <path>] [--whisper-cli <path>] [--whisper-model <path>] [--demucs <path>] [--json-out <path>] [--timeout-seconds <n>]`
@@ -71,8 +71,8 @@
 - `render --plan <path> [--output <path>] [--preview [true|false]] [--json-out <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--overwrite]`
 - `render-batch --manifest <batch.json> [--preview [true|false]] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>]`
 - `probe <input> [--ffprobe <path>]`
-- `plan <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--overwrite]`
-- `run <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--overwrite]`
+- `plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--overwrite]`
+- `run <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--overwrite]`
 
 说明：
 - 上述命令均已实现；当前 `Project Profile` 只记录仓库已落地命令面，不再混写未来规划命令。
@@ -124,7 +124,7 @@
 - 可选的重依赖 real smoke 现已同时接入 `src/OpenVideoToolbox.Core.Tests/RealMediaSmokeTests.cs` 与 `src/OpenVideoToolbox.Cli.Tests/CliRealMediaSmokeTests.cs`；默认环境缺依赖时会自动跳过。
 - 推荐先跑 `doctor` 确认依赖解析状态，再跑上述 real smoke；否则很容易把环境缺失误判成命令实现故障。
 - 契约冻结与模板稳定收口后，当前阶段已推进到：`H1 -> H2+T1 -> T2 -> P1 -> E1` 完成；下一候选阶段为 `D1` 或 `E2`。
-- 当前测试基线：`OpenVideoToolbox.Core.Tests` 172，`OpenVideoToolbox.Cli.Tests` 186，总计 358。
+- 当前测试基线：`OpenVideoToolbox.Core.Tests` 180，`OpenVideoToolbox.Cli.Tests` 195，总计 375。
 - 发布链现状：`src/OpenVideoToolbox.Cli/OpenVideoToolbox.Cli.csproj` 已明确程序集名 `ovt` 与版本 `0.1.0`，`.github/workflows/release.yml` 已支持 tag 触发的跨平台 single-file 发布。
 - Windows 常用环境变量：
   - `OVT_WHISPER_CLI_PATH`

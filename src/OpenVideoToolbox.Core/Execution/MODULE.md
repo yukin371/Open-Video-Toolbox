@@ -56,6 +56,7 @@
 - `ExecutionResult` 是执行链路的统一结果模型，状态和原始输出都不能丢
 - `doctor` 的依赖探测必须复用本模块的进程执行器与文件存在性检查，不能在 CLI 再维护一套平行探测逻辑
 - 输出文件路径由计划阶段显式计算，不在执行后靠模糊扫描推断
+- `FfmpegCommandBuilder` 消费的 `JobDefinition` 路径必须与 `CommandPlan.WorkingDirectory` 语义一致；CLI foundation 命令在建 job 时统一落成绝对输入路径和输出目录，Core builder 不再对已规范化路径重复拼接
 - 外部命令调用必须通过 `ProcessStartInfo.ArgumentList` / `UseShellExecute = false` 进入统一执行器，不能回退到 shell 字符串拼接
 - timeout / cancellation 必须复用统一进程终止与状态映射逻辑，不能在单命令 runner 里各自实现
 - overwrite 行为必须显式传入请求并映射到单一命令构建点，不能让命令默认静默覆盖已有文件

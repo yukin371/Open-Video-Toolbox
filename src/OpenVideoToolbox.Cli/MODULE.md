@@ -1,6 +1,6 @@
 # OpenVideoToolbox.Cli
 
-> 最后更新：2026-04-24
+> 最后更新：2026-10-13
 
 ## 职责
 
@@ -48,7 +48,8 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 
 - CLI 只组合 `Core` 能力，不复制核心逻辑
 - `plan` 只能生成 `JobDefinition` 和 `CommandPlan` 预览，不直接执行任务
-- `run` 先探测再执行，并把结果序列化输出
+- `run` 先探测再执行，并把结果序列化输出；`plan` / `run` 的输入路径和输出目录在 CLI 入口统一解析为绝对路径，避免 `CommandPlan.WorkingDirectory` 与相对参数重复拼接；未指定输出参数时默认写回输入素材目录并使用预设后缀；`--output-name` 可带当前预设扩展名，CLI 会避免生成重复扩展名；成功执行还会返回输入/输出大小对比
+- `presets` / `plan` / `run` 通过 `--preset-file` 或 `--preset-dir` 复用 `Core.Presets.PresetCatalog` 加载自定义预设，CLI 不解析第二套预设 schema
 - `init-plan` 只负责消费模板目录、生成 `edit.json` skeleton，并把模板规则留在 `Core.Editing`
 - `init-narrated-plan` 只负责消费 narrated manifest、可选装载 `--vars <vars.json>` 变量文件、解析相对路径、在必要时通过 `ffprobe` 探测未显式声明的 section 时长，并把 narrated plan 生成与 `${var}` 解析规则留在 `Core.Editing`
 - `init-narrated-plan` 对 narrated `bgm.slot` 只负责装载和路径判空；是否产出 `bgm` 轨、何时失败仍由 `Core.Editing` 持有

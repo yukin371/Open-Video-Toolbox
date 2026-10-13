@@ -22,5 +22,32 @@ public sealed class BuiltInPresetCatalogTests
         Assert.True(presets.Count >= 3);
         Assert.Contains(presets, preset => preset.Id == "copy-aac-mkv");
     }
+
+    [Fact]
+    public void Load_CombinesBuiltInsWithCustomPresetFile()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"ovt-core-preset-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var path = Path.Combine(directory, "custom.json");
+            File.WriteAllText(path, """
+                {
+                  "id": "custom-test",
+                  "displayName": "Custom Test",
+                  "output": { "containerExtension": ".mp4" }
+                }
+                """);
+
+            var catalog = PresetCatalog.Load(presetFile: path);
+
+            Assert.Equal("Custom Test", catalog.GetRequired("custom-test").DisplayName);
+            Assert.Contains(catalog.GetAll(), preset => preset.Id == "h264-aac-fast");
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
 }
 

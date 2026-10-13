@@ -4,6 +4,102 @@
   "payload": [
     {
       "schemaVersion": 1,
+      "id": "copy-aac-mkv",
+      "displayName": "Copy Video \u002B AAC / MKV",
+      "kind": "transcode",
+      "video": {
+        "encoder": "copy",
+        "preset": null,
+        "crf": null,
+        "pixelFormat": null,
+        "extraArguments": []
+      },
+      "audio": {
+        "encoder": "aac",
+        "bitrateKbps": 192,
+        "channels": 2,
+        "sampleRate": 48000,
+        "extraArguments": []
+      },
+      "output": {
+        "containerExtension": ".mkv",
+        "fastStart": false,
+        "overwriteExisting": false
+      },
+      "outputNameSuffix": "_copy",
+      "metadataTags": {},
+      "extraArguments": [
+        "-map_metadata",
+        "-1"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "h264-aac-720p",
+      "displayName": "H.264 \u002B AAC / MP4 (720p)",
+      "kind": "transcode",
+      "video": {
+        "encoder": "libx264",
+        "preset": "medium",
+        "crf": 23,
+        "pixelFormat": "yuv420p",
+        "extraArguments": [
+          "-vf",
+          "scale=-2:720"
+        ]
+      },
+      "audio": {
+        "encoder": "aac",
+        "bitrateKbps": 160,
+        "channels": 2,
+        "sampleRate": 48000,
+        "extraArguments": []
+      },
+      "output": {
+        "containerExtension": ".mp4",
+        "fastStart": true,
+        "overwriteExisting": false
+      },
+      "outputNameSuffix": "_x264_720p",
+      "metadataTags": {},
+      "extraArguments": [
+        "-map_metadata",
+        "-1"
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "id": "h264-aac-fast",
+      "displayName": "H.264 \u002B AAC / MP4 (Fast)",
+      "kind": "transcode",
+      "video": {
+        "encoder": "libx264",
+        "preset": "veryfast",
+        "crf": 24,
+        "pixelFormat": "yuv420p",
+        "extraArguments": []
+      },
+      "audio": {
+        "encoder": "aac",
+        "bitrateKbps": 160,
+        "channels": 2,
+        "sampleRate": 48000,
+        "extraArguments": []
+      },
+      "output": {
+        "containerExtension": ".mp4",
+        "fastStart": true,
+        "overwriteExisting": false
+      },
+      "outputNameSuffix": "_x264_fast",
+      "metadataTags": {},
+      "extraArguments": [
+        "-map_metadata",
+        "-1"
+      ]
+    },
+    {
+      "schemaVersion": 1,
       "id": "h264-aac-mp4",
       "displayName": "H.264 \u002B AAC / MP4",
       "kind": "transcode",
@@ -26,6 +122,7 @@
         "fastStart": true,
         "overwriteExisting": false
       },
+      "outputNameSuffix": "_x264",
       "metadataTags": {},
       "extraArguments": [
         "-map_metadata",
@@ -56,36 +153,7 @@
         "fastStart": true,
         "overwriteExisting": false
       },
-      "metadataTags": {},
-      "extraArguments": [
-        "-map_metadata",
-        "-1"
-      ]
-    },
-    {
-      "schemaVersion": 1,
-      "id": "copy-aac-mkv",
-      "displayName": "Copy Video \u002B AAC / MKV",
-      "kind": "transcode",
-      "video": {
-        "encoder": "copy",
-        "preset": null,
-        "crf": null,
-        "pixelFormat": null,
-        "extraArguments": []
-      },
-      "audio": {
-        "encoder": "aac",
-        "bitrateKbps": 192,
-        "channels": 2,
-        "sampleRate": 48000,
-        "extraArguments": []
-      },
-      "output": {
-        "containerExtension": ".mkv",
-        "fastStart": false,
-        "overwriteExisting": false
-      },
+      "outputNameSuffix": "_x265",
       "metadataTags": {},
       "extraArguments": [
         "-map_metadata",
