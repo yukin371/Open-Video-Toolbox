@@ -6,6 +6,7 @@
       "schemaVersion": 1,
       "id": "copy-aac-mkv",
       "displayName": "Copy Video \u002B AAC / MKV",
+      "description": "\u5FEB\u901F\u5C01\u88C5\uFF1A\u4E0D\u91CD\u65B0\u538B\u5236\u89C6\u9891\uFF0C\u4EC5\u8F6C\u6362\u97F3\u9891\uFF0C\u901F\u5EA6\u6700\u5FEB\u3002",
       "kind": "transcode",
       "video": {
         "encoder": "copy",
@@ -36,17 +37,15 @@
     {
       "schemaVersion": 1,
       "id": "h264-aac-720p",
-      "displayName": "H.264 \u002B AAC / MP4 (720p)",
+      "displayName": "\u5C0F\u4F53\u79EF \u00B7 H.264 720p \u002B AAC",
+      "description": "\u4F53\u79EF\u4F18\u5148\uFF1A\u7F29\u653E\u5230 720p\uFF0C\u9002\u5408\u5206\u4EAB\u3001\u9884\u89C8\u548C\u5B58\u6863\u526F\u672C\u3002",
       "kind": "transcode",
       "video": {
         "encoder": "libx264",
         "preset": "medium",
-        "crf": 23,
+        "crf": 24,
         "pixelFormat": "yuv420p",
-        "extraArguments": [
-          "-vf",
-          "scale=-2:720"
-        ]
+        "extraArguments": []
       },
       "audio": {
         "encoder": "aac",
@@ -63,6 +62,8 @@
       "outputNameSuffix": "_x264_720p",
       "metadataTags": {},
       "extraArguments": [
+        "-vf",
+        "scale=-2:720",
         "-map_metadata",
         "-1"
       ]
@@ -70,7 +71,8 @@
     {
       "schemaVersion": 1,
       "id": "h264-aac-fast",
-      "displayName": "H.264 \u002B AAC / MP4 (Fast)",
+      "displayName": "\u5FEB\u901F\u538B\u5236 \u00B7 H.264 \u002B AAC / MP4",
+      "description": "\u901F\u5EA6\u4F18\u5148\uFF1A\u9002\u5408\u5148\u5FEB\u901F\u51FA\u7247\u6216\u6279\u91CF\u9884\u89C8\uFF0C\u6587\u4EF6\u4F53\u79EF\u7565\u5927\u3002",
       "kind": "transcode",
       "video": {
         "encoder": "libx264",
@@ -102,6 +104,7 @@
       "schemaVersion": 1,
       "id": "h264-aac-mp4",
       "displayName": "H.264 \u002B AAC / MP4",
+      "description": "\u517C\u5BB9\u4F18\u5148\uFF1A\u9002\u5408\u5927\u591A\u6570\u64AD\u653E\u5668\u3001\u624B\u673A\u548C\u793E\u4EA4\u5E73\u53F0\u30021080p \u539F\u5C3A\u5BF8\uFF0CCRF 23\u3002",
       "kind": "transcode",
       "video": {
         "encoder": "libx264",
@@ -133,6 +136,7 @@
       "schemaVersion": 1,
       "id": "h265-aac-mp4",
       "displayName": "H.265 \u002B AAC / MP4",
+      "description": "\u4F53\u79EF\u4F18\u5148\uFF1A\u6BD4 H.264 \u66F4\u7701\u7A7A\u95F4\uFF0C\u4F46\u90E8\u5206\u65E7\u8BBE\u5907\u517C\u5BB9\u6027\u8F83\u5F31\u3002",
       "kind": "transcode",
       "video": {
         "encoder": "libx265",
