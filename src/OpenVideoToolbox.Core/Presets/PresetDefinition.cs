@@ -16,6 +16,9 @@ public sealed record PresetDefinition
 
     public required OutputSettings Output { get; init; }
 
+    /// <summary>Suffix used when the CLI chooses the default output name.</summary>
+    public string? OutputNameSuffix { get; init; }
+
     public IReadOnlyDictionary<string, string> MetadataTags { get; init; } = new Dictionary<string, string>();
 
     public IReadOnlyList<string> ExtraArguments { get; init; } = [];

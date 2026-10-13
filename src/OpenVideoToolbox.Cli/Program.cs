@@ -64,9 +64,23 @@ static async Task<int> MainAsync(string[] args)
 
 static int RunPresets(string[] args)
 {
-    CliOptionParsing.TryParseOptions(args, out var options, out _);
+    if (!CliOptionParsing.TryParseOptions(args, out var options, out var error))
+    {
+        return Fail(error!);
+    }
+
     var jsonOutPath = CliOptionParsing.GetOption(options, "--json-out");
-    return WriteCommandEnvelope("presets", preview: false, BuiltInPresetCatalog.GetAll(), jsonOutPath);
+    try
+    {
+        var catalog = PresetCatalog.Load(
+            CliOptionParsing.GetOption(options, "--preset-dir"),
+            CliOptionParsing.GetOption(options, "--preset-file"));
+        return WriteCommandEnvelope("presets", preview: false, catalog.GetAll(), jsonOutPath);
+    }
+    catch (Exception ex)
+    {
+        return FailWithCommandEnvelope("presets", preview: false, BuildFailedCommandPayload("presets", new { }, ex.Message), ex.Message, jsonOutPath);
+    }
 }
 
 static int ShowHelp()
@@ -87,7 +101,7 @@ static void PrintUsage()
 {
     Console.WriteLine("Open Video Toolbox CLI");
     Console.WriteLine("Commands:");
-    Console.WriteLine("  presets [--json-out <path>]");
+    Console.WriteLine("  presets [--preset-dir <path>] [--preset-file <path>] [--json-out <path>]");
     Console.WriteLine("  templates [<template-id>] [--template <id>] [--category <id>] [--seed-mode <manual|transcript|beats>] [--output-container <ext>] [--artifact-kind <kind>] [--has-artifacts [true|false]] [--has-subtitles [true|false]] [--summary [true|false]] [--plugin-dir <path>] [--json-out <path>] [--write-examples <dir>]");
     Console.WriteLine("  effects [list [--category <id>] | describe <type> | <type>] [--json-out <path>]");
     Console.WriteLine("  doctor [--ffmpeg <path>] [--ffprobe <path>] [--whisper-cli <path>] [--whisper-model <path>] [--demucs <path>] [--json-out <path>] [--timeout-seconds <n>]");
@@ -125,8 +139,8 @@ static void PrintUsage()
     Console.WriteLine("  bind-voice-track-batch --manifest <batch.json> [--plugin-dir <path>] [--json-out <path>]");
     Console.WriteLine("  validate-plan --plan <edit.json> [--check-files [true|false]] [--plugin-dir <path>] [--json-out <path>]");
     Console.WriteLine("  probe <input> [--ffprobe <path>] [--json-out <path>]");
-    Console.WriteLine("  plan <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]");
-    Console.WriteLine("  run <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite]");
+    Console.WriteLine("  plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]");
+    Console.WriteLine("  run <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite]");
     Console.WriteLine();
     Console.WriteLine("Built-in presets:");
     foreach (var preset in BuiltInPresetCatalog.GetAll())

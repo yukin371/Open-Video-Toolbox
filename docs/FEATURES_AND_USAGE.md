@@ -39,6 +39,35 @@
 - 执行导出：`mix-audio`、`render`
 - 查询：`presets`
 
+### 压缩预设与输出命名
+
+`presets`、`plan`、`run` 共用同一套预设目录。当前内置预设包括：
+
+- `h264-aac-mp4`：兼容性优先，默认后缀 `_x264`
+- `h264-aac-fast`：更快编码，默认后缀 `_x264_fast`
+- `h264-aac-720p`：缩放到 720p，默认后缀 `_x264_720p`
+- `h265-aac-mp4`：更高压缩效率，默认后缀 `_x265`
+- `copy-aac-mkv`：复制视频并转 AAC，默认后缀 `_copy`
+
+未指定输出选项时，CLI 会把结果写到原始素材所在目录。例如 `video01.mp4` 使用默认预设后生成 `video01_x264.mp4`。需要集中管理文件时，可以继续指定 `--output-dir` 和 `--output-name`。
+
+自定义预设采用与内置预设相同的 JSON 结构：
+
+```json
+{
+  "id": "custom-h264",
+  "displayName": "Custom H.264",
+  "video": { "encoder": "libx264", "preset": "fast", "crf": 28, "pixelFormat": "yuv420p" },
+  "audio": { "encoder": "aac", "bitrateKbps": 128, "channels": 2, "sampleRate": 48000 },
+  "output": { "containerExtension": ".mp4", "fastStart": true },
+  "outputNameSuffix": "_custom"
+}
+```
+
+用 `--preset-file <path>` 加载单个文件，或用 `--preset-dir <path>` 加载目录中的全部 JSON 文件。`run` 成功后会在 `payload.sizeComparison` 返回压缩前后字节数、输出/输入比例和变化百分比。
+
+预设文件支持单对象或数组，id 不得与内置预设或其他自定义预设重复。`schemaVersion` 为 1；扩展名只接受可选前导点和字母数字，后缀不能为空或包含文件名非法字符。CRF 压缩不保证一定变小，已高度压缩的素材可能变大；`changePercent` 为负值表示缩小，为正值表示增大。
+
 这些命令现在都满足：
 
 - 成功与失败路径都优先返回结构化 JSON

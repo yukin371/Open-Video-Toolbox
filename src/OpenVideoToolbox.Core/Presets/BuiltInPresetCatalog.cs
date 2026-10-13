@@ -30,6 +30,29 @@ public static class BuiltInPresetCatalog
                     FastStart = true,
                     OverwriteExisting = false
                 },
+                OutputNameSuffix = "_x264",
+                ExtraArguments = ["-map_metadata", "-1"]
+            },
+            ["h264-aac-fast"] = new PresetDefinition
+            {
+                Id = "h264-aac-fast",
+                DisplayName = "H.264 + AAC / MP4 (Fast)",
+                Kind = PresetKind.Transcode,
+                Video = new VideoEncoderSettings { Encoder = "libx264", Preset = "veryfast", Crf = 24, PixelFormat = "yuv420p" },
+                Audio = new AudioEncoderSettings { Encoder = "aac", BitrateKbps = 160, Channels = 2, SampleRate = 48000 },
+                Output = new OutputSettings { ContainerExtension = ".mp4", FastStart = true, OverwriteExisting = false },
+                OutputNameSuffix = "_x264_fast",
+                ExtraArguments = ["-map_metadata", "-1"]
+            },
+            ["h264-aac-720p"] = new PresetDefinition
+            {
+                Id = "h264-aac-720p",
+                DisplayName = "H.264 + AAC / MP4 (720p)",
+                Kind = PresetKind.Transcode,
+                Video = new VideoEncoderSettings { Encoder = "libx264", Preset = "medium", Crf = 23, PixelFormat = "yuv420p", ExtraArguments = ["-vf", "scale=-2:720"] },
+                Audio = new AudioEncoderSettings { Encoder = "aac", BitrateKbps = 160, Channels = 2, SampleRate = 48000 },
+                Output = new OutputSettings { ContainerExtension = ".mp4", FastStart = true, OverwriteExisting = false },
+                OutputNameSuffix = "_x264_720p",
                 ExtraArguments = ["-map_metadata", "-1"]
             },
             ["h265-aac-mp4"] = new PresetDefinition
@@ -57,6 +80,7 @@ public static class BuiltInPresetCatalog
                     FastStart = true,
                     OverwriteExisting = false
                 },
+                OutputNameSuffix = "_x265",
                 ExtraArguments = ["-map_metadata", "-1"]
             },
             ["copy-aac-mkv"] = new PresetDefinition
@@ -81,6 +105,7 @@ public static class BuiltInPresetCatalog
                     FastStart = false,
                     OverwriteExisting = false
                 },
+                OutputNameSuffix = "_copy",
                 ExtraArguments = ["-map_metadata", "-1"]
             }
         };

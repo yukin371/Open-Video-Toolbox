@@ -250,6 +250,9 @@ internal static class FoundationCommandHandlers
                     exitCode: 2);
             }
 
+            var outputPath = result.ProducedPaths.FirstOrDefault();
+            var sizeComparison = BuildSizeComparison(job.Source.InputPath, outputPath);
+
             return WriteCommandEnvelope(
                 "run",
                 preview: false,
@@ -262,7 +265,8 @@ internal static class FoundationCommandHandlers
                         ffmpegPath
                     },
                     job,
-                    execution = result
+                    execution = result,
+                    sizeComparison
                 },
                 jsonOutPath);
         }
@@ -283,6 +287,28 @@ internal static class FoundationCommandHandlers
                 ex.Message,
                 jsonOutPath);
         }
+    }
+
+    private static object? BuildSizeComparison(string inputPath, string? outputPath)
+    {
+        if (string.IsNullOrWhiteSpace(outputPath) || !File.Exists(inputPath) || !File.Exists(outputPath))
+        {
+            return null;
+        }
+
+        var inputBytes = new FileInfo(inputPath).Length;
+        var outputBytes = new FileInfo(outputPath).Length;
+        var deltaBytes = outputBytes - inputBytes;
+        return new
+        {
+            inputPath,
+            outputPath,
+            inputBytes,
+            outputBytes,
+            deltaBytes,
+            outputToInputRatio = inputBytes == 0 ? (double?)null : Math.Round((double)outputBytes / inputBytes, 4),
+            changePercent = inputBytes == 0 ? (double?)null : Math.Round((double)deltaBytes / inputBytes * 100, 2)
+        };
     }
 
 }

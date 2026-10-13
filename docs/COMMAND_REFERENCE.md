@@ -32,12 +32,12 @@
 ### `presets`
 
 ```text
-presets [--json-out <path>]
+presets [--preset-dir <path>] [--preset-file <path>] [--json-out <path>]
 ```
 
 用途：
 
-- 列出内置转码预设
+- 列出内置预设以及通过显式目录或文件加载的自定义预设。
 
 ### `probe`
 
@@ -52,8 +52,12 @@ probe <input> [--ffprobe <path>] [--json-out <path>]
 ### `plan`
 
 ```text
-plan <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]
+plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]
 ```
+
+- `<input>` 与 `--output-dir` 会按当前进程目录解析为绝对路径后写入 job / command plan。
+- `--output-name` 可传文件名或不带扩展名的 stem；若扩展名与当前预设容器一致，只保留一个扩展名。
+- 未指定 `--output-dir` 时，输出默认写到输入素材所在目录；未指定 `--output-name` 时，使用输入 stem 加预设的 `outputNameSuffix`。
 
 用途：
 
@@ -62,12 +66,27 @@ plan <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffmp
 ### `run`
 
 ```text
-run <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite]
+run <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite]
 ```
+
+- `<input>` 与 `--output-dir` 会按当前进程目录解析为绝对路径，确保 FFmpeg 工作目录与参数路径一致。
+- `--output-name` 可传文件名或不带扩展名的 stem；若扩展名与当前预设容器一致，只保留一个扩展名。
+- 未指定输出参数时，默认输出到原始素材目录并追加预设后缀；成功结果的 `payload.sizeComparison` 会给出输入/输出字节数、比例和变化百分比。
 
 用途：
 
 - 执行传统转码任务
+
+自定义预设使用与内置 `PresetDefinition` 相同的 JSON 结构，可传单个文件或目录（目录内读取 `*.json`）：
+
+- 文件根节点可以是预设对象或数组，id 大小写不敏感且不能重复；省略 `outputNameSuffix` 时使用 `_<presetId>`。
+- `schemaVersion` 为 1，编码器名称不能为空；扩展名只接受可选前导点和字母数字，后缀不能为空或包含文件名非法字符。
+- `changePercent = (outputBytes - inputBytes) / inputBytes * 100`；负值表示缩小，正值表示增大，CRF 预设不保证每个素材都能变小。
+
+```powershell
+<ovt> run input.mp4 --preset custom-h264 --preset-file .\presets\custom-h264.json
+<ovt> presets --preset-dir .\presets
+```
 
 ## 模板与计划工作流
 
