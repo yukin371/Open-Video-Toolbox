@@ -24,7 +24,7 @@
 | 场景 | 命令 | 你会得到什么 | 当前状态 |
 | --- | --- | --- | --- |
 | 媒体探测 | `probe` | 规范化媒体信息 JSON | 已可用 |
-| 快速计划 / 执行 | `plan` / `run` | 命令预览或直接执行 | 已可用 |
+| 快速计划 / 执行 | `plan` / `run` | 命令预览或直接执行；默认同目录后缀输出并返回大小对比 | 已可用 |
 | 模板筛选 | `templates` | 模板列表、过滤结果、单模板指南 | 已可用 |
 | 草稿生成 | `init-plan` / `scaffold-template` | 可编辑的 `edit.json` 与工作目录 | 已可用 |
 | 讲解型草稿生成 | `init-narrated-plan` | 从 section manifest 生成 narrated / slide-driven v2 `edit.json` | 已可用（首版 + `${var}` + 可选 BGM slot + 可选 visual slot placeholder） |

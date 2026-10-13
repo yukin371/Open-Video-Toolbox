@@ -10,12 +10,26 @@ internal static class FoundationCommandSupport
 {
     public static JobDefinition BuildJob(string inputPath, IReadOnlyDictionary<string, string> options, MediaProbeResult? probeSnapshot)
     {
+        var resolvedInputPath = Path.GetFullPath(inputPath);
         var presetId = GetOption(options, "--preset") ?? BuiltInPresetCatalog.DefaultPresetId;
-        var preset = BuiltInPresetCatalog.GetRequired(presetId);
+        var preset = PresetCatalog.Load(GetOption(options, "--preset-dir"), GetOption(options, "--preset-file")).GetRequired(presetId);
 
         var outputDirectory = GetOption(options, "--output-dir")
-            ?? Path.Combine(Path.GetDirectoryName(Path.GetFullPath(inputPath)) ?? Environment.CurrentDirectory, "output");
-        var outputName = GetOption(options, "--output-name") ?? Path.GetFileNameWithoutExtension(inputPath);
+            ?? Path.GetDirectoryName(resolvedInputPath)
+            ?? Environment.CurrentDirectory;
+        var resolvedOutputDirectory = Path.GetFullPath(outputDirectory);
+        var outputName = GetOption(options, "--output-name");
+        if (string.IsNullOrWhiteSpace(outputName))
+        {
+            outputName = Path.GetFileNameWithoutExtension(resolvedInputPath) + (preset.OutputNameSuffix ?? $"_{preset.Id}");
+        }
+        var outputExtension = preset.Output.ContainerExtension.StartsWith('.')
+            ? preset.Output.ContainerExtension
+            : $".{preset.Output.ContainerExtension}";
+        if (outputName.EndsWith(outputExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            outputName = outputName[..^outputExtension.Length];
+        }
 
         return new JobDefinition
         {
@@ -23,11 +37,11 @@ internal static class FoundationCommandSupport
             CreatedAtUtc = DateTimeOffset.UtcNow,
             Source = new JobSource
             {
-                InputPath = inputPath
+                InputPath = resolvedInputPath
             },
             Output = new JobOutput
             {
-                OutputDirectory = outputDirectory,
+                OutputDirectory = resolvedOutputDirectory,
                 FileNameStem = outputName,
                 ContainerExtension = preset.Output.ContainerExtension,
                 OverwriteExisting = GetOption(options, "--overwrite") == "true" || preset.Output.OverwriteExisting
