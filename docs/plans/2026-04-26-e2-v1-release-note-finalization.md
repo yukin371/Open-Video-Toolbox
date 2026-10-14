@@ -23,7 +23,7 @@
 - 把 `CLI + Core` 的稳定交付面收成可发布口径
 - 避免 `v1.0` 到真正发版时还在临时解释支持范围
 
-`docs/plans/2026-04-26-v1-0-release-precheck-and-boundary.md` 已经把：
+`docs/plans/v1.0/2026-04-26-v1-0-release-precheck-and-boundary.md` 已经把：
 
 - 正式承诺能力
 - 非主阻塞能力

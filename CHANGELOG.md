@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version Strategy
 
-- **Major (x.0.0):** Breaking changes to CLI output contract (`--json-out` envelope structure, field removal/rename). Always announced with migration notes.
-- **Minor (0.x.0):** New CLI commands, new template categories, new plugin capabilities. Backward compatible.
-- **Patch (0.0.x):** Bug fixes, dependency updates, documentation corrections. No new features.
+- **Initial development (`0.0.1`):** The first runnable repository version; the API and CLI contract are experimental.
+- **Pre-1.0 (`0.x.y`):** New commands and contract changes may still require migration notes before the stable release.
+- **Major (`x.0.0`):** Breaking changes to the CLI output contract (`--json-out` envelope structure, field removal/rename) after the stable release. Always announced with migration notes.
+- **Minor (`x.y.0`):** Backward-compatible commands, template categories, plugin capabilities, and other new features.
+- **Patch (`x.y.z`):** Bug fixes, dependency updates, and documentation corrections without contract changes.
 
 ### Breaking Change Policy
 
@@ -76,7 +78,7 @@ Breaking changes **must**:
   - `osx-x64`
 
 ### Notes
-- The current release-readiness baseline is still based on the public `v0.1.0` release and a planned `v1.0.0` support surface; this `Unreleased` section should be read as release-note preparation, not as proof that `1.0.0` has already shipped.
+- The public `v0.1.0` release is the historical pre-1.0 baseline. The current project version is `1.0.0`, while the `v1.0.0` tag and GitHub Release remain pending; this `Unreleased` section is release-note preparation, not proof that `1.0.0` has already shipped.
 - The intended formal support surface for the next major release is `CLI + Core`; `Desktop` is not part of that support surface.
 - `init-narrated-plan`, `effects`, `export --format edl`, and ongoing `schemaVersion = 2` capabilities may ship alongside the product, but are currently treated as attached / limited capabilities rather than the core `v1.0` promise.
 - `transcribe` and `separate-audio` depend on optional external tools and should not be interpreted as default-environment guarantees.

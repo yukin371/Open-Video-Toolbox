@@ -1,5 +1,7 @@
 # v1.0.0 Go / No-Go 签发稿（草案）
 
+> 历史签发草稿：本文保留 2026-04-26 的 `v0.1.0` / `v1.0.0` 对照证据。当前项目版本已调整为 `1.0.0`，最新发布验证以 [2026-10-13 v1.0 技术债与发布验证卡](2026-10-13-v1-0-technical-debt-and-release-verification-card.md) 为准。
+
 最后更新：2026-04-26
 
 ## 目的
@@ -13,7 +15,7 @@
 3. 哪些问题会阻塞签发，哪些问题只能带说明发布
 4. 最终结论是 `Go`、`Conditional Go` 还是 `No-Go`
 
-它不替代完整边界讨论；详细背景仍以 `docs/plans/2026-04-26-v1-0-release-precheck-and-boundary.md` 为准。
+它不替代完整边界讨论；详细背景仍以 `docs/plans/v1.0/2026-04-26-v1-0-release-precheck-and-boundary.md` 为准。
 
 ## 适用版本
 
@@ -99,7 +101,7 @@
 | 执行日期 |  |
 | 执行人 |  |
 | 目标 tag | `v1.0.0` |
-| 依据文档 | `docs/plans/2026-04-26-v1-0-release-precheck-and-boundary.md` |
+| 依据文档 | `docs/plans/v1.0/2026-04-26-v1-0-release-precheck-and-boundary.md` |
 | release note 基线 | `CHANGELOG.md` |
 | 最终 smoke 入口 | `.artifacts/v1-signoff-smoke-r2/summary.json` |
 | 阻塞缺陷 | 待填写 |

@@ -1,5 +1,7 @@
 # WinGet Submission Checklist
 
+> Historical v0.1.0 evidence: the `v0.1.0` references in this checklist document the previous public release. The current project version is `1.0.0`; repeat the same checks for `v1.0.0` before submitting the new manifest.
+
 最后更新：2026-04-22
 
 本清单只服务 `E2-A2` 的 `winget portable` 路径。
