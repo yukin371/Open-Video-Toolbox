@@ -8,7 +8,7 @@
 
 ## 检查口径
 
-- 功能清单来源：`README.md`、`docs/CLI_MVP.md`、`docs/roadmap.md`
+- 功能清单来源：`README.md`、`docs/reference/cli-mvp-design.md`、`docs/roadmap.md`
 - 设计检查重点：
   - canonical owner 是否清晰
   - CLI 是否只做参数解析与结构化输出

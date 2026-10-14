@@ -1,5 +1,20 @@
 # Documentation
 
+## Start Here
+
+- [Documentation Guide](DOCUMENTATION_GUIDE.md) — Document categories, naming, lifecycle, and migration rules
+- [Current Roadmap](roadmap.md) — Active work and next steps
+- [Open Issues](analysis/issue/current/261013问题.md) — Current repository maintainability and compression-safety findings
+
+## By Document Type
+
+- **Product and requirements:** [PRD](PRD.md), [Feature Matrix and Usage](FEATURES_AND_USAGE.md)
+- **Plans and task cards:** [Planning index](plans/README.md), [v1.0 to later-version feature card](plans/v1.0/2026-10-13-v1-feature-roadmap-and-capability-card.md), [v1.0 technical debt and release verification card](plans/v1.0/2026-10-13-v1-0-technical-debt-and-release-verification-card.md)
+- **Decisions:** [Core module boundaries](decisions/ADR-0001-core-module-boundaries.md), [CLI positioning](decisions/ADR-0002-cli-ai-editor-positioning.md), [Manual pass](decisions/ADR-0003-edit-plan-manual-pass.md)
+- **Architecture and implementation:** [Architecture](architecture.md), [Architecture diagrams](diagrams/), [Architecture Guardrails](ARCHITECTURE_GUARDRAILS.md), module-level `MODULE.md` files
+- **Reference material:** [CLI MVP design](reference/cli-mvp-design.md), [AI repository bootstrap playbook](reference/ai-repo-bootstrap-playbook.md)
+- **Verification:** release and phase evidence is currently colocated with its plan; new standalone reports go under `verification/<version>/`
+
 ## By Audience
 
 ### CLI Users
@@ -8,7 +23,7 @@
 - [Features & Usage Guide](FEATURES_AND_USAGE.md) — Complete feature overview, installation notes, command groups, workflows, and troubleshooting
 - [Command Reference](COMMAND_REFERENCE.md) — Exact CLI signatures grouped by command family
 - [External Dependencies](external-dependencies.md) — How to install ffmpeg, whisper-cli, demucs
-- [CLI MVP & Command Reference](CLI_MVP.md) — Command design and usage patterns
+- [CLI MVP design](reference/cli-mvp-design.md) — Historical command-boundary and intermediate-artifact design
 
 ### AI Agent Orchestrators
 
@@ -50,10 +65,12 @@
 - [ADR-0002: CLI AI Editor Positioning](decisions/ADR-0002-cli-ai-editor-positioning.md)
 - [ADR-0003: Edit Plan Manual Pass](decisions/ADR-0003-edit-plan-manual-pass.md)
 
-### Current Planning References
+### Historical Planning and Evidence References
 
-- [Long-term Evolution Roadmap](plans/2026-04-21-long-term-evolution-roadmap.md) — Current stage mapping and next-stage decision point
-- [D1 Desktop MVP Start Checklist](plans/2026-04-22-d1-desktop-mvp-start-checklist.md) — Start gate checklist and current blocker assessment
+For active priorities, start with [Roadmap](roadmap.md) and the [planning index](plans/README.md). The dated references below retain their original phase conclusions; they do not automatically represent current work.
+
+- [Long-term Evolution Roadmap](plans/2026-04-21-long-term-evolution-roadmap.md) — Historical stage mapping and next-stage decision point
+- [D1 Desktop MVP Start Checklist](plans/2026-04-22-d1-desktop-mvp-start-checklist.md) — Historical start-gate checklist; the current Desktop workline is grouped under [Desktop plans](plans/README.md#desktop-独立开发线)
 - [E2 Ecosystem Sustainability Plan](plans/2026-04-22-e2-ecosystem-sustainability-plan.md) — Execution draft for ecosystem, compatibility, distribution, and sustainability work
 - [E2 Current Stop Point](plans/2026-04-25-e2-current-stop-point.md) — Consolidated current-hold recommendation across E2 A/F lines and the first G1 decision
 - [E2-A1 Contract Compatibility Guardrails](plans/2026-04-22-e2-a1-contract-compatibility-guardrails.md) — Detailed checklist for snapshot, breaking change, and review guardrails

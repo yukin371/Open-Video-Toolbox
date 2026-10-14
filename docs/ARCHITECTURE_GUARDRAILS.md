@@ -94,7 +94,8 @@
 3. 必须保留 stdout / stderr / exit code / timeout / cancellation 上下文
 4. 写盘产物必须在执行前通过 `ProducedPaths` 或等价显式规则声明
 5. 覆盖已有文件必须走显式 overwrite 语义，不允许默认静默覆盖
-6. CLI 与未来 Desktop 只能映射错误，不得吞掉底层执行线索
+6. 传统转码必须先提交临时产物并完成大小检查；较大结果默认拒绝，显式 override 才能提交，且失败时必须保护源文件和已有正式输出
+7. CLI 与未来 Desktop 只能映射错误，不得吞掉底层执行线索
 
 如果后续要扩展新的外部工具，至少也要满足这同一套基线，而不是为某个命令发明例外流程。
 
@@ -167,8 +168,10 @@
   - 当前活跃工作面、阶段检查、下一步
 - `docs/ARCHITECTURE_GUARDRAILS.md`
   - 长期 owner、依赖方向、阶段门槛、更新规则
-- `docs/plans/*.md`
-  - 当前里程碑或专项计划
+- `docs/DOCUMENTATION_GUIDE.md` 与 `docs/README.md`
+  - 文档分类、命名规则与全仓导航
+- `docs/plans/`
+  - 当前里程碑或专项计划；新版本计划按版本目录归类，历史文档暂留原位
 - 模块 `MODULE.md`
   - 模块特有的边界、owner、不变量
 
@@ -181,7 +184,7 @@
 2. owner、依赖方向或启动门槛变化：
    - 更新本文档与相关 `MODULE.md`
 3. 启动新里程碑或专项：
-   - 新增或更新 `docs/plans/*.md`
+   - 新增或更新 `docs/plans/` 下的计划卡，并在 `docs/README.md` 登记入口
 4. 外部使用方式、验收标准或命令契约明显变化：
    - 更新 `README.md`、相关 `MODULE.md` 与当前计划文档
 

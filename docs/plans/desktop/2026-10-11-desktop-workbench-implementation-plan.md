@@ -18,12 +18,18 @@
 
 通过标准：能完成一次可重放的本地转码任务，失败时能看到 stderr 和结构化错误。
 
+当前状态：已完成 probe、预设命令 preview、Core.Execution 执行、取消、原始日志回显，以及任务队列 JSON 持久化。
+
 ## D1-2：字幕与转写工作流
 
 - 启动本地 `transcribe` 对应的 Core 服务。
 - 导入/选择 SRT 或 VTT。
 - 选择 sidecar 或 burn-in。
 - 接入外部翻译产生的第二份字幕并合并。
+
+当前状态：Desktop 已支持选择 SRT/VTT 原字幕与翻译字幕，复用 `Core.Subtitles` 生成双语 SRT，并通过 `WhisperCppTranscriptionService` 生成本地转写字幕；字幕模式和材料路径会持久化，`sidecar` 与 `burnIn` 已通过 `Core.Execution` 接入实际命令与产物链。
+
+阶段验收记录：`docs/plans/desktop/2026-10-11-desktop-workbench-phase-check.md`。
 
 通过标准：用户能完成“视频 -> 转写/字幕 -> 可选双语 -> 预览 -> 渲染”。
 
@@ -36,12 +42,16 @@
 
 通过标准：一批任务中单项失败不会吞掉其他任务日志，结果可定位到具体输入。
 
+当前状态：任务列表支持多项持久化、状态恢复、按顺序批量执行、取消和失败重试；暂停与独立并发策略不进入 D1。
+
 ## D1-4：工作台收口
 
 - 最近任务恢复。
 - 预设导入/导出。
 - 输出目录和日志快速访问。
 - Windows 优先发布 smoke，随后评估其他平台。
+
+当前状态：最近任务通过队列文件自动恢复；已增加预设 JSON 导入/导出、输出目录快捷打开，并补充 Windows 发布 smoke 脚本。`win-x64` publish smoke 已通过，D1-4 收口。
 
 通过标准：新用户无需手写 CLI 命令即可完成首轮闭环，维护者仍可从结构化产物复查全部步骤。
 
