@@ -19,8 +19,19 @@ public sealed class BuiltInPresetCatalogTests
     {
         var presets = BuiltInPresetCatalog.GetAll();
 
-        Assert.True(presets.Count >= 3);
+        Assert.True(presets.Count >= 5);
         Assert.Contains(presets, preset => preset.Id == "copy-aac-mkv");
+    }
+
+    [Fact]
+    public void BuiltInPresets_ExposeClearCompressionChoices()
+    {
+        var presets = BuiltInPresetCatalog.GetAll();
+
+        Assert.Contains(presets, preset => preset.Id == "h264-aac-mp4" && preset.Video!.Crf == 23);
+        Assert.Contains(presets, preset => preset.Id == "h264-aac-fast" && preset.Video!.Preset == "veryfast");
+        Assert.Contains(presets, preset => preset.Id == "h264-aac-720p" && preset.Video!.Sizing!.Height == 720);
+        Assert.All(presets, preset => Assert.False(string.IsNullOrWhiteSpace(preset.Description)));
     }
 
     [Fact]

@@ -22,7 +22,7 @@ public sealed class CompressionCommandsIntegrationTests
             await CliTestProcessHelper.CreateSampleVideoAsync(input, TimeSpan.FromSeconds(1));
             var inputBytes = new FileInfo(input).Length;
 
-            var result = await CliTestProcessHelper.RunCliAsync("run", input, "--json-out", report, "--timeout-seconds", "30");
+            var result = await CliTestProcessHelper.RunCliAsync("run", input, "--allow-larger-output", "--json-out", report, "--timeout-seconds", "30");
 
             Assert.Equal(0, result.ExitCode);
             Assert.True(File.Exists(output));
@@ -38,6 +38,35 @@ public sealed class CompressionCommandsIntegrationTests
             Assert.Equal(outputBytes - inputBytes, comparison["deltaBytes"]!.GetValue<long>());
             Assert.Equal(Math.Round((double)outputBytes / inputBytes, 4), comparison["outputToInputRatio"]!.GetValue<double>());
             Assert.Equal(Math.Round((double)(outputBytes - inputBytes) / inputBytes * 100, 2), comparison["changePercent"]!.GetValue<double>());
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Run_RejectsLargerOutputByDefaultAndPreservesExistingOutput()
+    {
+        if (!CliTestProcessHelper.IsToolAvailable("ffmpeg") || !CliTestProcessHelper.IsToolAvailable("ffprobe"))
+        {
+            return;
+        }
+
+        var directory = CreateTempDirectory();
+        try
+        {
+            var input = Path.Combine(directory, "video01.mp4");
+            var output = Path.Combine(directory, "video01_x264.mp4");
+            await CliTestProcessHelper.CreateSampleVideoAsync(input, TimeSpan.FromSeconds(1));
+            await File.WriteAllBytesAsync(output, [1, 2, 3]);
+
+            var result = await CliTestProcessHelper.RunCliAsync("run", input, "--json-out", Path.Combine(directory, "run.json"), "--timeout-seconds", "30", "--overwrite");
+
+            Assert.NotEqual(0, result.ExitCode);
+            Assert.Equal(new byte[] { 1, 2, 3 }, await File.ReadAllBytesAsync(output));
+            var envelope = JsonNode.Parse(result.StdOut)!;
+            Assert.Contains("larger than input", envelope["payload"]!["error"]!["message"]!.GetValue<string>(), StringComparison.OrdinalIgnoreCase);
         }
         finally
         {
@@ -67,6 +96,92 @@ public sealed class CompressionCommandsIntegrationTests
             Assert.Equal("renamed", payload["job"]!["output"]!["fileNameStem"]!.GetValue<string>());
             Assert.Equal(Path.Combine(outputDirectory, "renamed.mp4"), payload["commandPlan"]!["arguments"]!.AsArray().Last()!.GetValue<string>());
             Assert.False(Directory.Exists(outputDirectory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Plan_SizingOptionsProduceFitAndResolutionFilter()
+    {
+        var directory = CreateTempDirectory();
+        try
+        {
+            var input = Path.Combine(directory, "video01.mp4");
+            var result = await CliTestProcessHelper.RunCliAsync("plan", input, "--resolution", "1080p", "--fit", "9:16");
+
+            Assert.Equal(0, result.ExitCode);
+            var payload = JsonNode.Parse(result.StdOut)!["payload"]!;
+            var arguments = payload["commandPlan"]!["arguments"]!.AsArray().Select(item => item!.GetValue<string>()).ToArray();
+            var filterIndex = Array.IndexOf(arguments, "-vf");
+            Assert.True(filterIndex >= 0);
+            Assert.Contains("scale=608:1080:force_original_aspect_ratio=decrease,pad=608:1080", arguments[filterIndex + 1]);
+            Assert.Equal(608, payload["job"]!["preset"]!["video"]!["sizing"]!["width"]!.GetValue<int>());
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Plan_WatermarkOptionsProduceStructuredFilterGraph()
+    {
+        var directory = CreateTempDirectory();
+        try
+        {
+            var input = Path.Combine(directory, "video01.mp4");
+            var watermark = Path.Combine(directory, "brand.png");
+            await File.WriteAllBytesAsync(watermark, [1, 2, 3]);
+            var result = await CliTestProcessHelper.RunCliAsync(
+                "plan", input,
+                "--watermark", watermark,
+                "--watermark-position", "top-left",
+                "--watermark-margin", "18",
+                "--watermark-opacity", "0.5");
+
+            Assert.Equal(0, result.ExitCode);
+            var payload = JsonNode.Parse(result.StdOut)!["payload"]!;
+            var arguments = payload["commandPlan"]!["arguments"]!.AsArray().Select(item => item!.GetValue<string>()).ToArray();
+            var filterIndex = Array.IndexOf(arguments, "-filter_complex");
+            Assert.True(filterIndex >= 0);
+            Assert.Contains("overlay=18:18:shortest=1[ovt_watermarked]", arguments[filterIndex + 1]);
+            Assert.Equal("topLeft", payload["job"]!["watermark"]!["position"]!.GetValue<string>());
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Plan_SubtitleStyleOptionsProduceForceStyleFilter()
+    {
+        var directory = CreateTempDirectory();
+        try
+        {
+            var input = Path.Combine(directory, "video01.mp4");
+            var subtitles = Path.Combine(directory, "captions.srt");
+            await File.WriteAllTextAsync(subtitles, "1\n00:00:00,000 --> 00:00:01,000\nHello\n");
+            var result = await CliTestProcessHelper.RunCliAsync(
+                "plan", input,
+                "--subtitle", subtitles,
+                "--subtitle-mode", "burnIn",
+                "--subtitle-font", "Microsoft YaHei",
+                "--subtitle-size", "32",
+                "--subtitle-color", "&H00FFFFFF",
+                "--subtitle-outline-color", "&H00000000",
+                "--subtitle-outline", "2",
+                "--subtitle-margin-v", "48");
+
+            Assert.Equal(0, result.ExitCode);
+            var payload = JsonNode.Parse(result.StdOut)!["payload"]!;
+            var arguments = payload["commandPlan"]!["arguments"]!.AsArray().Select(item => item!.GetValue<string>()).ToArray();
+            var filterIndex = Array.IndexOf(arguments, "-vf");
+            Assert.Contains("force_style='FontName=Microsoft YaHei,FontSize=32,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,MarginV=48'", arguments[filterIndex + 1]);
+            Assert.Equal("Microsoft YaHei", payload["job"]!["subtitleStyle"]!["fontName"]!.GetValue<string>());
         }
         finally
         {

@@ -26,6 +26,7 @@ static async Task<int> MainAsync(string[] args)
         "scaffold-template" => await TemplateCommandHandlers.RunScaffoldTemplateAsync(remaining, Fail),
         "scaffold-template-batch" => await TemplateCommandHandlers.RunScaffoldTemplateBatchAsync(remaining, Fail),
         "extract-audio" => await MediaCommandHandlers.RunExtractAudioAsync(remaining, Fail),
+        "extract-frame" => await MediaCommandHandlers.RunExtractFrameAsync(remaining, Fail),
         "audio-analyze" => await AudioCommandHandlers.RunAudioAnalyzeAsync(remaining, Fail),
         "audio-gain" => await AudioCommandHandlers.RunAudioGainAsync(remaining, Fail),
         "audio-normalize" => await AudioCommandHandlers.RunAudioNormalizeAsync(remaining, Fail),
@@ -104,7 +105,7 @@ static void PrintUsage()
     Console.WriteLine("  presets [--preset-dir <path>] [--preset-file <path>] [--json-out <path>]");
     Console.WriteLine("  templates [<template-id>] [--template <id>] [--category <id>] [--seed-mode <manual|transcript|beats>] [--output-container <ext>] [--artifact-kind <kind>] [--has-artifacts [true|false]] [--has-subtitles [true|false]] [--summary [true|false]] [--plugin-dir <path>] [--json-out <path>] [--write-examples <dir>]");
     Console.WriteLine("  effects [list [--category <id>] | describe <type> | <type>] [--json-out <path>]");
-    Console.WriteLine("  doctor [--ffmpeg <path>] [--ffprobe <path>] [--whisper-cli <path>] [--whisper-model <path>] [--demucs <path>] [--json-out <path>] [--timeout-seconds <n>]");
+    Console.WriteLine("  doctor [--ffmpeg <path>] [--ffprobe <path>] [--whisper-cli <path>] [--whisper-model <path>] [--demucs <path>] [--test-hardware-encoder <name>] [--json-out <path>] [--timeout-seconds <n>]  (also reports available hardware encoders)");
     Console.WriteLine("  validate-plugin --plugin-dir <path> [--json-out <path>]");
     Console.WriteLine("  beat-track <input> --output <beats.json> [--ffmpeg <path>] [--sample-rate <hz>] [--json-out <path>] [--timeout-seconds <n>]");
     Console.WriteLine("  audio-analyze <input> --output <audio.json> [--ffmpeg <path>] [--json-out <path>] [--timeout-seconds <n>]");
@@ -117,6 +118,7 @@ static void PrintUsage()
     Console.WriteLine("  cut <input> --from <hh:mm:ss.fff> --to <hh:mm:ss.fff> --output <path> [--ffmpeg <path>] [--json-out <path>] [--timeout-seconds <n>] [--overwrite]");
     Console.WriteLine("  concat --input-list <path> --output <path> [--ffmpeg <path>] [--json-out <path>] [--timeout-seconds <n>] [--overwrite]");
     Console.WriteLine("  extract-audio <input> --track <n> --output <path> [--ffmpeg <path>] [--json-out <path>] [--timeout-seconds <n>] [--overwrite]");
+    Console.WriteLine("  extract-frame <input> (--at <time[,time...]> | --start <time> --interval <time> --count <n>) [--output <path>] [--output-dir <dir>] [--prefix <name>] [--ffmpeg <path>] [--json-out <path>] [--timeout-seconds <n>] [--overwrite]");
     Console.WriteLine("  init-plan <input> --template <id> --output <edit.json> [--render-output <path>] [--probe] [--ffprobe <path>] [--transcript <transcript.json>] [--seed-from-transcript] [--transcript-segment-group-size <n>] [--min-transcript-segment-duration-ms <n>] [--max-transcript-gap-ms <n>] [--beats <beats.json>] [--seed-from-beats] [--beat-group-size <n>] [--artifacts <artifacts.json>] [--template-params <template-params.json>] [--subtitle <path>] [--subtitle-mode <sidecar|burnIn|none>] [--bgm <path>] [--plugin-dir <path>] [--timeout-seconds <n>]");
     Console.WriteLine("  init-narrated-plan --manifest <narrated.json> --output <edit.json> [--template <id>] [--render-output <path>] [--vars <vars.json>] [--ffprobe <path>] [--timeout-seconds <n>] [--json-out <path>]");
     Console.WriteLine("  init-narrated-plan-batch --manifest <batch.json> [--ffprobe <path>] [--timeout-seconds <n>] [--json-out <path>]");
@@ -139,8 +141,8 @@ static void PrintUsage()
     Console.WriteLine("  bind-voice-track-batch --manifest <batch.json> [--plugin-dir <path>] [--json-out <path>]");
     Console.WriteLine("  validate-plan --plan <edit.json> [--check-files [true|false]] [--plugin-dir <path>] [--json-out <path>]");
     Console.WriteLine("  probe <input> [--ffprobe <path>] [--json-out <path>]");
-    Console.WriteLine("  plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]");
-    Console.WriteLine("  run <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite]");
+    Console.WriteLine("  plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--resolution <480p|720p|1080p|WIDTHxHEIGHT>] [--fit <9:16|1:1|16:9>] [--watermark <image>] [--watermark-position <nine-grid>] [--watermark-margin <px>] [--watermark-opacity <0..1>] [--subtitle <path>] [--subtitle-mode <sidecar|burnIn>] [--subtitle-font <name>] [--subtitle-size <n>] [--subtitle-color <ASS>] [--subtitle-outline-color <ASS>] [--subtitle-outline <n>] [--subtitle-margin-v <n>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]");
+    Console.WriteLine("  run <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--resolution <480p|720p|1080p|WIDTHxHEIGHT>] [--fit <9:16|1:1|16:9>] [--watermark <image>] [--watermark-position <nine-grid>] [--watermark-margin <px>] [--watermark-opacity <0..1>] [--subtitle <path>] [--subtitle-mode <sidecar|burnIn>] [--subtitle-font <name>] [--subtitle-size <n>] [--subtitle-color <ASS>] [--subtitle-outline-color <ASS>] [--subtitle-outline <n>] [--subtitle-margin-v <n>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite] [--allow-larger-output]");
     Console.WriteLine();
     Console.WriteLine("Built-in presets:");
     foreach (var preset in BuiltInPresetCatalog.GetAll())

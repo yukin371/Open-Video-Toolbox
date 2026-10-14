@@ -1,6 +1,6 @@
 # 命令速查
 
-最后更新：2026-04-26
+最后更新：2026-10-14
 
 ## 文档定位
 
@@ -18,11 +18,11 @@
 - 中间产物设计
 - 架构边界
 
-这些内容分别以 `FEATURES_AND_USAGE.md`、`CLI_MVP.md`、`ARCHITECTURE_GUARDRAILS.md` 为准。
+这些内容分别以 `FEATURES_AND_USAGE.md`、`reference/cli-mvp-design.md`、`ARCHITECTURE_GUARDRAILS.md` 为准。
 
 ## 说明
 
-- 以下签名按 2026-04-24 实际 CLI 顶层帮助输出整理。
+- 以下签名按 2026-10-14 实际 CLI 顶层帮助输出整理。
 - 命令默认优先输出结构化 JSON。
 - 传 `--json-out <path>` 时，会把 stdout 的同一份结果原样写到文件。
 - 本页只写命令尾部签名；如何选择源码运行或 release 二进制，见 `QUICK_START.md`。
@@ -52,7 +52,7 @@ probe <input> [--ffprobe <path>] [--json-out <path>]
 ### `plan`
 
 ```text
-plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]
+plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--resolution <480p|720p|1080p|WIDTHxHEIGHT>] [--fit <9:16|1:1|16:9>] [--watermark <image>] [--watermark-position <nine-grid>] [--watermark-margin <px>] [--watermark-opacity <0..1>] [--subtitle <path>] [--subtitle-mode <sidecar|burnIn>] [--subtitle-font <name>] [--subtitle-size <n>] [--subtitle-color <ASS>] [--subtitle-outline-color <ASS>] [--subtitle-outline <n>] [--subtitle-margin-v <n>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]
 ```
 
 - `<input>` 与 `--output-dir` 会按当前进程目录解析为绝对路径后写入 job / command plan。
@@ -66,7 +66,7 @@ plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--out
 ### `run`
 
 ```text
-run <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite]
+run <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--resolution <480p|720p|1080p|WIDTHxHEIGHT>] [--fit <9:16|1:1|16:9>] [--watermark <image>] [--watermark-position <nine-grid>] [--watermark-margin <px>] [--watermark-opacity <0..1>] [--subtitle <path>] [--subtitle-mode <sidecar|burnIn>] [--subtitle-font <name>] [--subtitle-size <n>] [--subtitle-color <ASS>] [--subtitle-outline-color <ASS>] [--subtitle-outline <n>] [--subtitle-margin-v <n>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite] [--allow-larger-output]
 ```
 
 - `<input>` 与 `--output-dir` 会按当前进程目录解析为绝对路径，确保 FFmpeg 工作目录与参数路径一致。
@@ -116,7 +116,7 @@ effects [list [--category <id>] | describe <type> | <type>] [--json-out <path>]
 ### `doctor`
 
 ```text
-doctor [--ffmpeg <path>] [--ffprobe <path>] [--whisper-cli <path>] [--whisper-model <path>] [--demucs <path>] [--json-out <path>] [--timeout-seconds <n>]
+doctor [--ffmpeg <path>] [--ffprobe <path>] [--whisper-cli <path>] [--whisper-model <path>] [--demucs <path>] [--test-hardware-encoder <name>] [--json-out <path>] [--timeout-seconds <n>]
 ```
 
 用途：
@@ -411,6 +411,17 @@ extract-audio <input> --track <n> --output <path> [--ffmpeg <path>] [--json-out 
 
 - 音轨提取
 
+### `extract-frame`
+
+```text
+extract-frame <input> (--at <time[,time...]> | --start <time> --interval <time> --count <n>) [--output <path>] [--output-dir <dir>] [--prefix <name>] [--ffmpeg <path>] [--json-out <path>] [--timeout-seconds <n>] [--overwrite]
+```
+
+用途：
+
+- 按一个或多个时间点，或按固定间隔批量抽取 PNG 帧
+- 默认在输入素材目录写出带 `_frame-###` 后缀的文件；可用 `--output`、`--output-dir` 和 `--prefix` 控制输出
+
 ### `subtitle`
 
 ```text
@@ -520,4 +531,4 @@ render-batch --manifest <batch.json> [--preview [true|false]] [--ffmpeg <path>] 
 - 看命令签名速查：
   - 本文档
 - 看中间产物和设计边界：
-  - [CLI_MVP.md](CLI_MVP.md)
+  - [CLI MVP design](reference/cli-mvp-design.md)

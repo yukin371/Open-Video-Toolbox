@@ -717,26 +717,45 @@ internal static class AudioCommandHandlers
             Directory.CreateDirectory(Path.GetDirectoryName(result.OutputPath)!);
             await File.WriteAllTextAsync(result.OutputPath, result.Content, Encoding.UTF8);
 
-            return WriteResult(new
-            {
-                source = new
+            return WriteCommandEnvelope(
+                "subtitle",
+                preview: false,
+                new
                 {
-                    inputPath,
-                    transcriptPath = Path.GetFullPath(transcriptPath!)
+                    source = new
+                    {
+                        inputPath,
+                        transcriptPath = Path.GetFullPath(transcriptPath!)
+                    },
+                    subtitle = new
+                    {
+                        result.OutputPath,
+                        result.Format,
+                        result.SegmentCount,
+                        result.MaxLineLength,
+                        transcript.Language
+                    }
                 },
-                subtitle = new
-                {
-                    result.OutputPath,
-                    result.Format,
-                    result.SegmentCount,
-                    result.MaxLineLength,
-                    transcript.Language
-                }
-            }, jsonOutPath);
+                jsonOutPath);
         }
         catch (Exception ex)
         {
-            return fail(ex.Message);
+            return FailWithCommandEnvelope(
+                "subtitle",
+                preview: false,
+                BuildFailedCommandPayload(
+                    "subtitle",
+                    new
+                    {
+                        inputPath,
+                        transcriptPath,
+                        format = rawFormat,
+                        outputPath,
+                        maxLineLength
+                    },
+                    ex.Message),
+                ex.Message,
+                jsonOutPath);
         }
     }
 

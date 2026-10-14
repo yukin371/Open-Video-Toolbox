@@ -16,6 +16,7 @@
 - `SubtitleDocument` / `SubtitleCue`
 - `SubtitleDocumentParser` / `SubtitleDocumentRenderer`
 - `SubtitleWorkflow`
+- `SubtitleStyle`：稳定的字体、字号、颜色、描边和底部边距模型；仅作为渲染参数数据，不持有 FFmpeg 字符串。
 
 ## Must Not Own
 

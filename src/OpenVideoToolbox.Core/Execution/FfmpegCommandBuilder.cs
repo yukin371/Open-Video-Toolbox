@@ -17,14 +17,70 @@ public sealed class FfmpegCommandBuilder
         arguments.Add("-i");
         arguments.Add(job.Source.InputPath);
 
-        ApplyPresetArguments(arguments, job.Preset);
+        if (job.Watermark is not null)
+        {
+            if (job.Preset.Video is null || string.Equals(job.Preset.Video.Encoder, "copy", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("A watermark requires a video re-encode preset.", nameof(job));
+            }
+
+            ArgumentException.ThrowIfNullOrWhiteSpace(job.Watermark.ImagePath);
+            if (job.Watermark.Margin < 0 || job.Watermark.Margin > 4096)
+            {
+                throw new ArgumentOutOfRangeException(nameof(job), "Watermark margin must be between 0 and 4096 pixels.");
+            }
+
+            if (!double.IsFinite(job.Watermark.Opacity) || job.Watermark.Opacity is < 0 or > 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(job), "Watermark opacity must be between 0 and 1.");
+            }
+
+            var watermarkPath = Path.GetFullPath(job.Watermark.ImagePath);
+            var outputPathFull = Path.GetFullPath(outputPath);
+            var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            if (string.Equals(watermarkPath, Path.GetFullPath(job.Source.InputPath), pathComparison)
+                || string.Equals(watermarkPath, outputPathFull, pathComparison))
+            {
+                throw new ArgumentException("The watermark image must be distinct from both input and output files.", nameof(job));
+            }
+
+            if (!Enum.IsDefined(job.Watermark.Position))
+            {
+                throw new ArgumentOutOfRangeException(nameof(job), "Watermark position is not supported.");
+            }
+
+            arguments.Add("-loop");
+            arguments.Add("1");
+            arguments.Add("-i");
+            arguments.Add(watermarkPath);
+        }
+
+        var filters = new List<string>();
+        ApplyPresetArguments(arguments, job.Preset, filters);
+        AppendSubtitleFilter(filters, job);
+        if (job.Watermark is not null)
+        {
+            arguments.Add("-filter_complex");
+            arguments.Add(BuildWatermarkFilterGraph(filters, job.Watermark));
+            arguments.Add("-map");
+            arguments.Add("[ovt_watermarked]");
+            arguments.Add("-map");
+            arguments.Add("0:a?");
+        }
+        else if (filters.Count > 0)
+        {
+            arguments.Add("-vf");
+            arguments.Add(string.Join(',', filters));
+        }
         arguments.Add(outputPath);
 
         return new CommandPlan
         {
             ToolName = "ffmpeg",
             ExecutablePath = executablePath,
-            WorkingDirectory = job.Output.OutputDirectory,
+            WorkingDirectory = string.IsNullOrWhiteSpace(job.Output.WorkingDirectory)
+                ? job.Output.OutputDirectory
+                : job.Output.WorkingDirectory,
             Arguments = arguments,
             CommandLine = BuildCommandLine(executablePath, arguments)
         };
@@ -38,7 +94,7 @@ public sealed class FfmpegCommandBuilder
         return Path.Combine(output.OutputDirectory, output.FileNameStem + extension);
     }
 
-    private static void ApplyPresetArguments(List<string> arguments, PresetDefinition preset)
+    private static void ApplyPresetArguments(List<string> arguments, PresetDefinition preset, List<string> filters)
     {
         ArgumentNullException.ThrowIfNull(arguments);
         ArgumentNullException.ThrowIfNull(preset);
@@ -70,7 +126,12 @@ public sealed class FfmpegCommandBuilder
                 arguments.Add(preset.Video.PixelFormat);
             }
 
-            AppendExtraArguments(arguments, preset.Video.ExtraArguments);
+            if (preset.Video.Sizing is not null)
+            {
+                filters.Add(BuildSizingFilter(preset.Video.Sizing));
+            }
+
+            AppendExtraArguments(arguments, preset.Video.ExtraArguments, filters);
         }
         else
         {
@@ -100,7 +161,7 @@ public sealed class FfmpegCommandBuilder
                 arguments.Add(preset.Audio.SampleRate.Value.ToString());
             }
 
-            AppendExtraArguments(arguments, preset.Audio.ExtraArguments);
+            AppendExtraArguments(arguments, preset.Audio.ExtraArguments, filters);
         }
         else
         {
@@ -113,13 +174,164 @@ public sealed class FfmpegCommandBuilder
             arguments.Add("+faststart");
         }
 
-        AppendExtraArguments(arguments, preset.ExtraArguments);
+        AppendExtraArguments(arguments, preset.ExtraArguments, filters);
     }
 
-    private static void AppendExtraArguments(List<string> arguments, IReadOnlyList<string> extraArguments)
+    private static void AppendSubtitleFilter(List<string> filters, JobDefinition job)
     {
-        foreach (var argument in extraArguments)
+        if (!string.Equals(job.SubtitleMode, "burnIn", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(job.SubtitlePath))
         {
+            return;
+        }
+
+        filters.Add($"subtitles='{EscapeFilterPath(Path.GetFullPath(job.SubtitlePath))}'{BuildForceStyle(job.SubtitleStyle)}");
+    }
+
+    private static string BuildForceStyle(OpenVideoToolbox.Core.Subtitles.SubtitleStyle? style)
+    {
+        if (style is null)
+        {
+            return string.Empty;
+        }
+
+        var values = new List<string>();
+        if (!string.IsNullOrWhiteSpace(style.FontName)) values.Add($"FontName={EscapeStyleValue(style.FontName)}");
+        if (style.FontSize is not null) values.Add($"FontSize={ValidateRange(style.FontSize.Value, 1, 200, "FontSize")}");
+        if (!string.IsNullOrWhiteSpace(style.PrimaryColor)) values.Add($"PrimaryColour={ValidateAssColor(style.PrimaryColor)}");
+        if (!string.IsNullOrWhiteSpace(style.OutlineColor)) values.Add($"OutlineColour={ValidateAssColor(style.OutlineColor)}");
+        if (style.Outline is not null) values.Add($"Outline={ValidateRange(style.Outline.Value, 0, 20, "Outline")}");
+        if (style.MarginV is not null) values.Add($"MarginV={ValidateRange(style.MarginV.Value, 0, 1000, "MarginV")}");
+        return values.Count == 0 ? string.Empty : $":force_style='{string.Join(',', values)}'";
+    }
+
+    private static string EscapeStyleValue(string value)
+    {
+        if (value.Any(character => !char.IsLetterOrDigit(character) && character is not ' ' and not '-' and not '_'))
+        {
+            throw new ArgumentException("Subtitle font name contains unsupported characters.", nameof(value));
+        }
+
+        return value;
+    }
+
+    private static string ValidateAssColor(string value)
+    {
+        var normalized = value.Trim();
+        if (!System.Text.RegularExpressions.Regex.IsMatch(normalized, "^&H[0-9A-Fa-f]{6,8}$"))
+        {
+            throw new ArgumentException("Subtitle colors must use ASS format like &H00FFFFFF.", nameof(value));
+        }
+
+        return normalized;
+    }
+
+    private static int ValidateRange(int value, int minimum, int maximum, string name)
+    {
+        if (value < minimum || value > maximum) throw new ArgumentOutOfRangeException(name);
+        return value;
+    }
+
+    private static string BuildWatermarkFilterGraph(
+        IReadOnlyList<string> filters,
+        VideoWatermarkSettings watermark)
+    {
+        var filterBuilder = new StringBuilder();
+        filterBuilder.Append("[0:v]");
+        if (filters.Count == 0)
+        {
+            filterBuilder.Append("null");
+        }
+        else
+        {
+            filterBuilder.Append(string.Join(',', filters));
+        }
+
+        filterBuilder.Append("[ovt_base];[1:v]format=rgba,colorchannelmixer=aa=");
+        filterBuilder.Append(watermark.Opacity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        filterBuilder.Append("[ovt_mark];[ovt_base][ovt_mark]overlay=");
+        filterBuilder.Append(GetWatermarkPositionExpression(watermark.Position, watermark.Margin));
+        filterBuilder.Append(":shortest=1[ovt_watermarked]");
+        return filterBuilder.ToString();
+    }
+
+    private static string GetWatermarkPositionExpression(WatermarkPosition position, int margin)
+    {
+        var vertical = position switch
+        {
+            WatermarkPosition.TopLeft or WatermarkPosition.TopCenter or WatermarkPosition.TopRight => margin.ToString(),
+            WatermarkPosition.MiddleLeft or WatermarkPosition.Center or WatermarkPosition.MiddleRight => "(main_h-overlay_h)/2",
+            _ => $"main_h-overlay_h-{margin}"
+        };
+        var horizontal = position switch
+        {
+            WatermarkPosition.TopLeft or WatermarkPosition.MiddleLeft or WatermarkPosition.BottomLeft => margin.ToString(),
+            WatermarkPosition.TopCenter or WatermarkPosition.Center or WatermarkPosition.BottomCenter => "(main_w-overlay_w)/2",
+            _ => $"main_w-overlay_w-{margin}"
+        };
+
+        return $"{horizontal}:{vertical}";
+    }
+
+    private static string BuildSizingFilter(VideoSizingSettings sizing)
+    {
+        if (sizing.Width is not > 0 && sizing.Height is not > 0)
+        {
+            throw new ArgumentException("Video sizing requires a positive width or height.", nameof(sizing));
+        }
+
+        if (!string.IsNullOrWhiteSpace(sizing.Fit))
+        {
+            if (sizing.Width is not > 0 || sizing.Height is not > 0)
+            {
+                throw new ArgumentException("Video sizing with fit requires both width and height.", nameof(sizing));
+            }
+
+            if (sizing.Fit is not ("9:16" or "1:1" or "16:9"))
+            {
+                throw new ArgumentException("Video sizing fit must be 9:16, 1:1, or 16:9.", nameof(sizing));
+            }
+
+            if (sizing.Width.Value % 2 != 0 || sizing.Height.Value % 2 != 0)
+            {
+                throw new ArgumentException("Video sizing width and height must be even numbers.", nameof(sizing));
+            }
+
+            if (string.IsNullOrWhiteSpace(sizing.PadColor)
+                || sizing.PadColor.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not '#' and not '@' and not '.'))
+            {
+                throw new ArgumentException("Video sizing pad color contains unsupported characters.", nameof(sizing));
+            }
+
+            return $"scale={sizing.Width}:{sizing.Height}:force_original_aspect_ratio=decrease,pad={sizing.Width}:{sizing.Height}:(ow-iw)/2:(oh-ih)/2:color={sizing.PadColor},setsar=1";
+        }
+
+        return sizing.Width is > 0 && sizing.Height is > 0
+            ? $"scale={sizing.Width}:{sizing.Height}:force_original_aspect_ratio=decrease:force_divisible_by=2"
+            : $"scale=-2:{sizing.Height}";
+    }
+
+    private static string EscapeFilterPath(string path) => path
+        .Replace("\\", "\\\\", StringComparison.Ordinal)
+        .Replace(":", "\\:", StringComparison.Ordinal)
+        .Replace("'", "\\'", StringComparison.Ordinal);
+
+    private static void AppendExtraArguments(List<string> arguments, IReadOnlyList<string> extraArguments, List<string> filters)
+    {
+        for (var index = 0; index < extraArguments.Count; index++)
+        {
+            var argument = extraArguments[index];
+            if (string.Equals(argument, "-vf", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(argument, "-filter:v", StringComparison.OrdinalIgnoreCase))
+            {
+                if (index + 1 < extraArguments.Count && !string.IsNullOrWhiteSpace(extraArguments[index + 1]))
+                {
+                    filters.Add(extraArguments[++index]);
+                }
+
+                continue;
+            }
+
             if (!string.IsNullOrWhiteSpace(argument))
             {
                 arguments.Add(argument);

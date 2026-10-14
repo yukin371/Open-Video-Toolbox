@@ -50,7 +50,8 @@
   },
   "subtitles": {
     "path": "subtitles.srt",
-    "mode": "sidecar"
+    "mode": "sidecar",
+    "style": null
   },
   "timeline": null,
   "output": {

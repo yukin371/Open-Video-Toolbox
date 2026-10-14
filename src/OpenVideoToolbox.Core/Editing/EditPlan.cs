@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using OpenVideoToolbox.Core;
+using OpenVideoToolbox.Core.Subtitles;
 
 namespace OpenVideoToolbox.Core.Editing;
 
@@ -129,6 +130,8 @@ public sealed record EditSubtitlePlan
     public required string Path { get; init; }
 
     public SubtitleMode Mode { get; init; } = SubtitleMode.Sidecar;
+
+    public SubtitleStyle? Style { get; init; }
 }
 
 public enum SubtitleMode

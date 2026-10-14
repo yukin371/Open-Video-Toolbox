@@ -24,7 +24,7 @@
 | 场景 | 命令 | 你会得到什么 | 当前状态 |
 | --- | --- | --- | --- |
 | 媒体探测 | `probe` | 规范化媒体信息 JSON | 已可用 |
-| 快速计划 / 执行 | `plan` / `run` | 命令预览或直接执行；默认同目录后缀输出并返回大小对比 | 已可用 |
+| 快速计划 / 执行 | `plan` / `run` | 命令预览或直接执行；默认同目录后缀输出并返回大小对比；较大结果默认拒绝，可显式允许 | 已可用 |
 | 模板筛选 | `templates` | 模板列表、过滤结果、单模板指南 | 已可用 |
 | 草稿生成 | `init-plan` / `scaffold-template` | 可编辑的 `edit.json` 与工作目录 | 已可用 |
 | 讲解型草稿生成 | `init-narrated-plan` | 从 section manifest 生成 narrated / slide-driven v2 `edit.json` | 已可用（首版 + `${var}` + 可选 BGM slot + 可选 visual slot placeholder） |
@@ -44,6 +44,10 @@
 | 成片渲染 | `render` | 最终视频或预览执行计划 | 已可用 |
 | 独立混音 | `mix-audio` | 单独导出混音结果 | 已可用 |
 | 裁切 / 拼接 / 提音轨 | `cut` / `concat` / `extract-audio` | 基础媒体处理产物 | 已可用 |
+| 抽帧 / 缩略图 | `extract-frame` | 按时间点或固定间隔输出 PNG 封面与预览图 | 已可用 |
+| 水印 | `plan` / `run --watermark` | 以九宫格位置、边距和透明度叠加品牌图片 | 已可用 |
+| 字幕样式 | `plan` / `run --subtitle-*` | 控制烧录字幕的字体、字号、颜色、描边和底部边距 | 已可用 |
+| 依赖与硬件探测 | `doctor` | 检查依赖并报告本机可发现的硬件编码器，不自动切换编码器 | 已可用 |
 | 响度处理 | `audio-analyze` / `audio-gain` / `audio-normalize` | 分析、增益、归一化 | 已可用 |
 | 节拍 / 静音信号 | `beat-track` / `detect-silence` / `auto-cut-silence` | `beats.json` / `silence.json` / 去静音 clips / v1 `edit.json` / 基于 v2 模板的 timeline `edit.json` 草稿 | 已可用 |
 | 转写 / 字幕 | `transcribe` / `subtitle` / `subtitle-import` / `subtitle-clip` / `merge-subtitles` | 本地转写、SRT/VTT 导入、字幕截取、双语字幕合并 | 已可用（翻译由外部工具提供） |
@@ -452,6 +456,7 @@ dotnet run --project ./src/OpenVideoToolbox.Cli/OpenVideoToolbox.Cli.csproj -- e
 
 ## 推荐阅读顺序
 
+- 想浏览仓库文档分类：`docs/README.md`
 - 想最快跑通：`docs/QUICK_START.md`
 - 想了解功能和排障：`docs/FEATURES_AND_USAGE.md`
 - 想查精确命令签名：`docs/COMMAND_REFERENCE.md`

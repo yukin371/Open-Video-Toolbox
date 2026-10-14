@@ -74,7 +74,8 @@ public static class BuiltInPresetCatalog
                     Encoder = "libx264",
                     Preset = "medium",
                     Crf = 24,
-                    PixelFormat = "yuv420p"
+                    PixelFormat = "yuv420p",
+                    Sizing = new VideoSizingSettings { Height = 720 }
                 },
                 Audio = new AudioEncoderSettings
                 {
@@ -90,7 +91,7 @@ public static class BuiltInPresetCatalog
                     OverwriteExisting = false
                 },
                 OutputNameSuffix = "_x264_720p",
-                ExtraArguments = ["-vf", "scale=-2:720", "-map_metadata", "-1"]
+                ExtraArguments = ["-map_metadata", "-1"]
             },
             ["h265-aac-mp4"] = new PresetDefinition
             {

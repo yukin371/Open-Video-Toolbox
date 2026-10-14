@@ -42,6 +42,10 @@
 ## 不变量
 
 - `FfmpegCommandBuilder` 必须保持可测试、可预览，不依赖 UI 状态
+- `extract-frame` 的多点抽帧命令、输出列表和进程日志由 `FfmpegFrameExtractCommandBuilder` / `FrameExtractRunner` 统一承接，CLI 不直接启动 FFmpeg
+- 传统转码水印使用 `filter_complex` 合并 sizing / subtitles / overlay，并显式映射 `[ovt_watermarked]` 与 `0:a?`；没有水印的命令仍使用普通 `-vf` 路径。
+- 字幕样式由 `SubtitleStyle` 映射为受限 `force_style` 字段；禁止从 CLI 或 plan 直接透传任意 FFmpeg filter 字符串。
+- sizing、旧 preset 的 `-vf` 与字幕烧录必须在同一滤镜列表中合并，不能让后续参数覆盖前一个 `-vf`
 - `mix-audio` 与 `render` 的音频图逻辑必须复用同一映射点，避免双份 filter 规则漂移
 - `render` 的 `edit.json` 消费逻辑必须集中在本模块，不能回流到 `Cli` 或未来 Desktop
 - `export` 的 v1/v2 兼容规则必须集中在本模块，不能在 CLI 维护第二套包装或主轨选择逻辑
@@ -56,6 +60,8 @@
 - `DefaultProcessRunner` 必须保留标准输出、标准错误、超时和取消上下文
 - `ExecutionResult` 是执行链路的统一结果模型，状态和原始输出都不能丢
 - `doctor` 的依赖探测必须复用本模块的进程执行器与文件存在性检查，不能在 CLI 再维护一套平行探测逻辑
+- `doctor` 的硬件编码器发现由 `ExternalDependencyInspector.InspectHardwareEncodersAsync` 承接，只读取 `ffmpeg -hide_banner -encoders`；发现结果不改变编码器选择，也不做静默回退。
+- `TryHardwareEncoderAsync` 只执行显式指定的 16x16、0.1 秒 null 输出试编码；试编码失败必须原样返回错误上下文。
 - 输出文件路径由计划阶段显式计算，不在执行后靠模糊扫描推断
 - `FfmpegCommandBuilder` 消费的 `JobDefinition` 路径必须与 `CommandPlan.WorkingDirectory` 语义一致；CLI foundation 命令在建 job 时统一落成绝对输入路径和输出目录，Core builder 不再对已规范化路径重复拼接
 - 外部命令调用必须通过 `ProcessStartInfo.ArgumentList` / `UseShellExecute = false` 进入统一执行器，不能回退到 shell 字符串拼接
@@ -63,6 +69,8 @@
 - overwrite 行为必须显式传入请求并映射到单一命令构建点，不能让命令默认静默覆盖已有文件
 - sidecar copy、preview 与 execute 必须复用同一份 `ProducedPaths` / side effect 规则，避免安全与审计语义漂移
 - 原始 stdout / stderr 日志必须保留到 `ExecutionResult`，不能只留下摘要错误消息
+- 传统 `run` 转码必须先写临时产物，再比较源文件与产物大小；默认拒绝提交更大的输出，只有 `JobOutput.AllowLargerOutput` 显式开启时才允许提交
+- 转码提交失败或大小检查失败时，必须清理临时产物并保护源文件、已有正式输出和 sidecar；大小诊断通过 `ExecutionResult.OutputSizeComparison` 返回
 
 ## 常见坑
 
@@ -75,6 +83,7 @@
 - `CommandPlan` 或 `ExecutionResult` schema 变化
 - 新增新的外部命令执行器或路径规则
 - 执行状态、日志采集或取消/超时语义变化
+- 转码临时产物、大小保护、输出提交或 `OutputSizeComparison` 语义变化
 - v1/v2 render 分发规则或 timeline builder 覆盖范围变化
 - still-image 输入适配或 built-in effect 到 FFmpeg filter 的映射语义变化
 - timeline placeholder video 的输入建模或 FFmpeg 映射语义变化

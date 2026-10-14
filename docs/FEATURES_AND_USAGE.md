@@ -19,13 +19,13 @@
 - 架构 owner 规则
 - MVP 设计历史
 
-这些内容分别以 `docs/roadmap.md`、`docs/ARCHITECTURE_GUARDRAILS.md`、`docs/CLI_MVP.md` 为准。
+这些内容分别以 `docs/roadmap.md`、`docs/ARCHITECTURE_GUARDRAILS.md`、`docs/reference/cli-mvp-design.md` 为准。
 
 与本文档配套的文档栈：
 
 - 最短上手路径：`docs/QUICK_START.md`
 - 精确命令签名速查：`docs/COMMAND_REFERENCE.md`
-- 设计边界与中间产物草案：`docs/CLI_MVP.md`
+- 设计边界与中间产物草案：`docs/reference/cli-mvp-design.md`
 
 ## 当前已交付能力
 
@@ -46,6 +46,14 @@
 - `h264-aac-mp4`：兼容性优先，默认后缀 `_x264`
 - `h264-aac-fast`：更快编码，默认后缀 `_x264_fast`
 - `h264-aac-720p`：缩放到 720p，默认后缀 `_x264_720p`
+
+`plan` / `run` 可用 `--resolution 480p|720p|1080p|WIDTHxHEIGHT` 覆盖输出尺寸；使用 `--fit 9:16|1:1|16:9` 时会等比缩放并补黑边，适合竖屏、方形和横屏发布。例如：`ovt plan input.mp4 --resolution 1080p --fit 9:16`。
+
+抽帧可用 `ovt extract-frame input.mp4 --at 00:00:03,00:00:08`，默认在原目录写出 `input_frame-001.png`、`input_frame-002.png`；也可用 `--start 00:00:02 --interval 00:00:03 --count 5` 按固定间隔批量生成，或用 `--output` / `--output-dir` 指定目标。`--resolution WIDTHxHEIGHT` 按原始宽高比缩放并限制在给定边界内，不拉伸画面；需要固定画布比例时配合 `--fit`。
+
+水印示例：`ovt run input.mp4 --watermark brand.png --watermark-position bottom-right --watermark-margin 24 --watermark-opacity 0.8`。水印会在视频重新编码时叠加，原始音轨继续保留；图片必须是独立文件。
+
+烧录字幕样式示例：`ovt plan input.mp4 --subtitle captions.srt --subtitle-mode burnIn --subtitle-font "Microsoft YaHei" --subtitle-size 32 --subtitle-color &H00FFFFFF --subtitle-outline-color &H00000000 --subtitle-outline 2 --subtitle-margin-v 48`。颜色使用 ASS `&H...` 格式；样式字段只映射到受限 `force_style` 参数。
 - `h265-aac-mp4`：更高压缩效率，默认后缀 `_x265`
 - `copy-aac-mkv`：复制视频并转 AAC，默认后缀 `_copy`
 
@@ -110,7 +118,7 @@ Windows 发布资产当前同时包含：
 
 说明：
 
-- `winget portable` 提交草稿已准备；仓库内许可证来源、`v0.1.0` release、Windows `portable` 资产与 readiness 检查都已到位，后续只剩 manifest 提交与目标环境复核。
+- `winget portable` 提交草稿已准备；历史 `v0.1.0` release 的许可证来源、Windows `portable` 资产与 readiness 检查已验证，当前 `1.0.0` 的 manifest 需等新 tag / Release 签发后再生成。
 - 当前最稳妥的安装方式仍是直接使用 GitHub Release 资产或源码运行。
 
 ### 必需依赖
@@ -340,6 +348,8 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
 
 - 统一检查 `ffmpeg`、`ffprobe`、`whisper-cli`、`demucs`、`whisper model`
 - 适合作为所有复杂工作流的第一步
+- 输出中的 `hardwareEncoders` 会列出 `ffmpeg -encoders` 中发现的 NVENC、QSV、AMF 或 VideoToolbox 编码器；这只是能力探测，不会静默改写预设。
+- 如需验证某个已发现编码器能否实际运行，可显式执行 `doctor --test-hardware-encoder h264_nvenc`；未被 `ffmpeg -encoders` 列出的名称会直接报错，不会盲试。
 
 示例：
 
@@ -1048,7 +1058,7 @@ yt-dlp -f "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080
 ## 相关文档
 
 - [README.md](../README.md)
-- [CLI_MVP.md](CLI_MVP.md)
+- [CLI MVP design](reference/cli-mvp-design.md)
 - [external-dependencies.md](external-dependencies.md)
 - [plugin-development-guide.md](plugin-development-guide.md)
 - [roadmap.md](roadmap.md)

@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>ovt</AssemblyName>
-    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionPrefix>1.0.0</VersionPrefix>
     <PackageId>OpenVideoToolbox.Cli</PackageId>
     <Description>A CLI media toolbox for external AI agents and scripted workflows.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

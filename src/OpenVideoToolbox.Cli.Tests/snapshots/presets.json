@@ -13,6 +13,7 @@
         "preset": null,
         "crf": null,
         "pixelFormat": null,
+        "sizing": null,
         "extraArguments": []
       },
       "audio": {
@@ -45,6 +46,12 @@
         "preset": "medium",
         "crf": 24,
         "pixelFormat": "yuv420p",
+        "sizing": {
+          "width": null,
+          "height": 720,
+          "fit": null,
+          "padColor": "black"
+        },
         "extraArguments": []
       },
       "audio": {
@@ -62,8 +69,6 @@
       "outputNameSuffix": "_x264_720p",
       "metadataTags": {},
       "extraArguments": [
-        "-vf",
-        "scale=-2:720",
         "-map_metadata",
         "-1"
       ]
@@ -79,6 +84,7 @@
         "preset": "veryfast",
         "crf": 24,
         "pixelFormat": "yuv420p",
+        "sizing": null,
         "extraArguments": []
       },
       "audio": {
@@ -111,6 +117,7 @@
         "preset": "medium",
         "crf": 23,
         "pixelFormat": "yuv420p",
+        "sizing": null,
         "extraArguments": []
       },
       "audio": {
@@ -143,6 +150,7 @@
         "preset": "medium",
         "crf": 26,
         "pixelFormat": "yuv420p",
+        "sizing": null,
         "extraArguments": []
       },
       "audio": {

@@ -23,4 +23,5 @@ CLI 只负责传入路径、选择 id 和呈现加载错误，不复制 JSON 加
 - 默认同目录输出和显式目录/名称覆盖由 CLI 组装为 `JobOutput`；最终路径由 `Core.Execution` 构建。
 - 编码器是否在本机可用由外部工具执行确认，catalog 不启动外部进程。
 - CRF 预设不保证文件一定缩小；`copy-aac-mkv` 复制视频，仅转换音频与容器。
+- `VideoEncoderSettings.Sizing` 是统一尺寸 owner；`Height` 支持 480p/720p/1080p 这类等比缩放，`Width + Height + Fit` 通过 `scale + pad + setsar=1` 输出 9:16、1:1 或 16:9 画幅。CLI 只负责把 `--resolution` / `--fit` 解析为该模型。
 - 参数、命名约定或加载语义变化时，同步命令说明、使用指南及相关测试。

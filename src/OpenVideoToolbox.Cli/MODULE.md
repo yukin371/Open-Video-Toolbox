@@ -8,7 +8,7 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 
 ## Owns
 
-- 命令分发：`presets`、`templates`、`effects`、`doctor`、`validate-plugin`、`init-plan`、`init-narrated-plan`、`init-narrated-plan-batch`、`scaffold-template`、`scaffold-template-batch`、`beat-track`、`audio-analyze`、`audio-gain`、`audio-normalize`、`transcribe`、`detect-silence`、`auto-cut-silence`、`separate-audio`、`probe`、`plan`、`run`、`cut`、`concat`、`extract-audio`、`subtitle`、`subtitle-import`、`subtitle-clip`、`merge-subtitles`、`validate-plan`、`inspect-plan`、`replace-plan-material`、`replace-plan-material-batch`、`attach-plan-material`、`attach-plan-material-batch`、`bind-voice-track`、`bind-voice-track-batch`、`export`、`mix-audio`、`render`、`render-batch`
+- 命令分发：`presets`、`templates`、`effects`、`doctor`、`validate-plugin`、`init-plan`、`init-narrated-plan`、`init-narrated-plan-batch`、`scaffold-template`、`scaffold-template-batch`、`beat-track`、`audio-analyze`、`audio-gain`、`audio-normalize`、`transcribe`、`detect-silence`、`auto-cut-silence`、`separate-audio`、`probe`、`plan`、`run`、`cut`、`concat`、`extract-audio`、`extract-frame`、`subtitle`、`subtitle-import`、`subtitle-clip`、`merge-subtitles`、`validate-plan`、`inspect-plan`、`replace-plan-material`、`replace-plan-material-batch`、`attach-plan-material`、`attach-plan-material-batch`、`bind-voice-track`、`bind-voice-track-batch`、`export`、`mix-audio`、`render`、`render-batch`
 - 参数解析、默认值选择、帮助输出
 - CLI 级错误提示和退出码语义
 - 稳定的结构化输出契约
@@ -48,7 +48,10 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 
 - CLI 只组合 `Core` 能力，不复制核心逻辑
 - `plan` 只能生成 `JobDefinition` 和 `CommandPlan` 预览，不直接执行任务
-- `run` 先探测再执行，并把结果序列化输出；`plan` / `run` 的输入路径和输出目录统一解析为绝对路径，默认原目录输出并追加预设后缀；显式输出名称会去掉重复扩展名，执行成功返回输入/输出大小对比。
+- `run` 先探测再执行，并把结果序列化输出；`plan` / `run` 的输入路径和输出目录统一解析为绝对路径，默认原目录输出并追加预设后缀；显式输出名称会去掉重复扩展名。`run` 默认拒绝提交比源文件更大的结果，可用 `--allow-larger-output` 显式覆盖；成功和拒绝结果都返回结构化输入/输出大小对比。
+- `plan` / `run` 的 `--resolution`（480p、720p、1080p 或 WIDTHxHEIGHT）与 `--fit`（9:16、1:1、16:9）只解析为 `Core.Presets.VideoSizingSettings`，不在 CLI 拼接 FFmpeg filter；两者同时提供时必须匹配画幅。
+- `plan` / `run` 的 `--watermark`、`--watermark-position`、`--watermark-margin`、`--watermark-opacity` 只解析为 `Core.Jobs.VideoWatermarkSettings`；位置使用九宫格名称，图片路径和输出路径不得相同。
+- `plan` / `run` 的字幕样式选项只在 `--subtitle-mode burnIn` 下生效，解析为 `Core.Subtitles.SubtitleStyle`；字体、字号、ASS 颜色、描边和底部边距均有范围校验。
 - `presets` / `plan` / `run` 通过 `--preset-file` 或 `--preset-dir` 复用 `Core.Presets.PresetCatalog`，CLI 不复制预设 JSON 加载逻辑。
 - `init-plan` 只负责消费模板目录、生成 `edit.json` skeleton，并把模板规则留在 `Core.Editing`
 - `init-narrated-plan` 只负责消费 narrated manifest、可选装载 `--vars <vars.json>` 变量文件、解析相对路径、在必要时通过 `ffprobe` 探测未显式声明的 section 时长，并把 narrated plan 生成与 `${var}` 解析规则留在 `Core.Editing`
@@ -65,6 +68,7 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 - `scaffold-template` 只负责组合 `templates --write-examples` 与 `init-plan` 的既有能力，把模板工作目录一次落盘，并可选附带 `validate-plan` 级别的校验结果；它不额外发明新的模板语义
 - `scaffold-template-batch` 只负责解析 batch manifest、把相对路径解析到 manifest 目录、为每个条目复用单项 `scaffold-template` 执行路径，并汇总 `results[]` / `summary.json` / `results/<id>.json` / 稳定退出码；单任务 plan 生成、guide/example 写盘与 validation 语义仍由既有 owner 组合持有
 - `doctor` 只负责解析依赖 override / 环境变量约定、调用 `Core.Execution` 的统一探测服务，并输出稳定 envelope；缺失 required 依赖时返回非零退出码，但不退回到非结构化错误文本
+- `doctor` 输出中的 `hardwareEncoders` 只用于展示本机已列出的 NVENC/QSV/AMF/VideoToolbox 编码器；CLI 不据此自动改写 preset。
 - `validate-plugin` 只负责显式加载插件目录、复用现有 manifest / template 解析和目录发现逻辑，并输出稳定校验结果；它不发明新的插件 schema，也不替代 `templates` / `init-plan` / `validate-plan` 的既有职责
 - `CliCommandOutput.cs` 负责共享 command envelope、failure envelope、JSON stdout / `--json-out` 写出 helper；`Program.cs` 和后续命令族文件应直接复用，不再在入口层保留一层纯转发 wrapper
 - `EffectsCommandHandlers.cs` 负责 `effects` discovery 命令 wrapper；CLI 只透传 `Core.Editing` 的 effect 描述符，不维护第二套 effect schema
@@ -78,6 +82,7 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 - `TemplateCommandPresentation.cs` 负责模板目录发现后的 guide / preview / commands / example 写盘组织；`TemplatePlanValidationSupport.cs` 负责 `validate-plan` 相关的模板校验 glue；两者都只组合 `Core.Editing` 与现有 CLI helper，不拥有模板 schema 或 plan 生成规则
 - `TemplatePlanBuildSupport.cs` 负责模板 plan build、transcript / beats 输入加载、artifact / template params string-map 解析；它只组合 `Core.Editing` 与现有 CLI parsing helper，不拥有模板 schema 或 plan 生成规则
 - `cut` / `concat` / `extract-audio` 只负责解析请求参数、组织输出路径并把执行委托给 `Core.Execution`；当请求已建立后的执行阶段失败时，也应继续输出统一 command envelope，并在可用时带回 `execution` 与错误消息，而不是退回纯 usage；传 `--json-out` 时只负责把同一份 envelope 落盘，不维护第二套输出结构
+- `extract-frame` 负责把单点 `--at` 或固定间隔 `--start` / `--interval` / `--count` 转成 `FrameExtractRequest`；多点输出默认写入输入同目录并使用 `_frame-001.png` 这类后缀，不覆盖输入文件，FFmpeg 参数和日志仍由 `Core.Execution` 承接
 - `beat-track` 只负责调用统一波形提取和节拍分析，不持有分析规则；传 `--json-out` 时只负责把同一份 command envelope 落盘；当波形提取阶段失败时，也应继续输出统一 command envelope，并在可用时带回 `extraction` 与错误消息，而不是退回纯 usage
 - `audio-analyze` 只负责调用统一响度分析服务并落盘 `audio.json`；传 `--json-out` 时只负责把同一份 command envelope 落盘；当分析阶段失败时，也应继续输出统一 command envelope 与错误消息，而不是退回纯 usage；不持有 `ffmpeg loudnorm` 解析规则
 - `audio-gain` 只负责解析增益参数、组织输出路径与返回执行结果；传 `--json-out` 时只负责把同一份 command envelope 落盘；当执行阶段失败时，也应继续输出统一 command envelope，并在可用时带回 `execution` 与错误消息，而不是退回纯 usage；不持有 `ffmpeg volume` 规则
@@ -133,6 +138,7 @@ CLI 是脚本化和调试入口，负责把命令行参数映射成对 `Core` �
 - 新增或删除 CLI 命令
 - CLI 参数约定、退出码语义或帮助输出结构变化
 - CLI 输出契约变化
+- `run` 的 `--allow-larger-output`、输出保护或大小对比语义变化
 - narrated-slides manifest 装载、失败 envelope 或探测 fallback 语义变化
 - `init-narrated-plan --vars` 的装载约定或 overlay 语义变化
 - narrated `bgm.slot` 的装载语义或错误路径变化

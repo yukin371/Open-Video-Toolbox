@@ -173,7 +173,7 @@ public sealed class FfmpegTimelineRenderCommandBuilder
         if (videoLabel is not null && plan.Subtitles?.Mode == SubtitleMode.BurnIn)
         {
             var burnLabel = "v_burn";
-            filters.Add($"{FormatLabel(videoLabel)}subtitles='{EscapeFilterPath(plan.Subtitles.Path)}'{FormatLabel(burnLabel)}");
+            filters.Add($"{FormatLabel(videoLabel)}subtitles='{EscapeFilterPath(plan.Subtitles.Path)}'{BuildForceStyle(plan.Subtitles.Style)}{FormatLabel(burnLabel)}");
             videoLabel = burnLabel;
         }
 
@@ -769,6 +769,19 @@ public sealed class FfmpegTimelineRenderCommandBuilder
             .Replace("]", "\\]", StringComparison.Ordinal)
             .Replace(",", "\\,", StringComparison.Ordinal)
             .Replace(";", "\\;", StringComparison.Ordinal);
+    }
+
+    private static string BuildForceStyle(OpenVideoToolbox.Core.Subtitles.SubtitleStyle? style)
+    {
+        if (style is null) return string.Empty;
+        var values = new List<string>();
+        if (!string.IsNullOrWhiteSpace(style.FontName)) values.Add($"FontName={style.FontName}");
+        if (style.FontSize is not null) values.Add($"FontSize={style.FontSize.Value}");
+        if (!string.IsNullOrWhiteSpace(style.PrimaryColor)) values.Add($"PrimaryColour={style.PrimaryColor}");
+        if (!string.IsNullOrWhiteSpace(style.OutlineColor)) values.Add($"OutlineColour={style.OutlineColor}");
+        if (style.Outline is not null) values.Add($"Outline={style.Outline.Value}");
+        if (style.MarginV is not null) values.Add($"MarginV={style.MarginV.Value}");
+        return values.Count == 0 ? string.Empty : $":force_style='{string.Join(',', values)}'";
     }
 
     private static void AppendPlaceholderInputArguments(

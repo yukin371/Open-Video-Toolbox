@@ -94,11 +94,28 @@ internal static class FoundationCommandHandlers
         {
             var inspector = new ExternalDependencyInspector(new DefaultProcessRunner());
             var report = await inspector.InspectAsync(FoundationCommandSupport.BuildDoctorDependencyDefinitions(options, timeout));
+            var hardwareEncoders = await inspector.InspectHardwareEncodersAsync(
+                GetOption(options, "--ffmpeg") ?? "ffmpeg",
+                timeout);
+            var requestedEncoder = GetOption(options, "--test-hardware-encoder");
+            HardwareEncoderTrialResult? hardwareTrial = null;
+            if (!string.IsNullOrWhiteSpace(requestedEncoder))
+            {
+                if (!hardwareEncoders.Encoders.Contains(requestedEncoder, StringComparer.Ordinal))
+                {
+                    throw new InvalidOperationException($"Hardware encoder '{requestedEncoder}' was not listed by ffmpeg -encoders; no trial was run.");
+                }
+
+                hardwareTrial = await inspector.TryHardwareEncoderAsync(
+                    GetOption(options, "--ffmpeg") ?? "ffmpeg",
+                    requestedEncoder,
+                    timeout);
+            }
 
             return WriteCommandEnvelope(
                 "doctor",
                 preview: false,
-                report,
+                new { report.IsHealthy, report.MissingRequiredCount, report.MissingOptionalCount, report.Dependencies, hardwareEncoders, hardwareTrial },
                 jsonOutPath,
                 exitCode: report.IsHealthy ? 0 : 1);
         }
@@ -224,6 +241,10 @@ internal static class FoundationCommandHandlers
         var jsonOutPath = GetOption(options, "--json-out");
         var ffprobePath = GetOption(options, "--ffprobe") ?? "ffprobe";
         var ffmpegPath = GetOption(options, "--ffmpeg") ?? "ffmpeg";
+        if (!TryGetBoolOption(options, "--allow-larger-output", out _, out error))
+        {
+            return fail(error!);
+        }
         TimeSpan? timeout = timeoutSeconds is null ? null : TimeSpan.FromSeconds(timeoutSeconds.Value);
 
         var processRunner = new DefaultProcessRunner();
@@ -241,17 +262,25 @@ internal static class FoundationCommandHandlers
             if (result.Status != ExecutionStatus.Succeeded)
             {
                 var message = BuildExecutionFailureMessage(result);
+                var failedPayload = BuildFailedCommandPayload("run", job, message, result);
+                if (result.OutputSizeComparison is not null)
+                {
+                    failedPayload["sizeComparison"] = JsonSerializer.SerializeToNode(result.OutputSizeComparison, OpenVideoToolboxJson.Default);
+                }
                 return FailWithCommandEnvelope(
                     "run",
                     preview: false,
-                    BuildFailedCommandPayload("run", job, message, result),
+                    failedPayload,
                     message,
                     jsonOutPath,
                     exitCode: 2);
             }
 
-            var outputPath = result.ProducedPaths.FirstOrDefault();
-            var sizeComparison = BuildSizeComparison(job.Source.InputPath, outputPath);
+            var sizeComparison = result.OutputSizeComparison;
+            foreach (var diagnostic in result.Diagnostics ?? [])
+            {
+                Console.Error.WriteLine($"{diagnostic.Severity}: {diagnostic.Message}");
+            }
 
             return WriteCommandEnvelope(
                 "run",
@@ -287,28 +316,6 @@ internal static class FoundationCommandHandlers
                 ex.Message,
                 jsonOutPath);
         }
-    }
-
-    private static object? BuildSizeComparison(string inputPath, string? outputPath)
-    {
-        if (string.IsNullOrWhiteSpace(outputPath) || !File.Exists(inputPath) || !File.Exists(outputPath))
-        {
-            return null;
-        }
-
-        var inputBytes = new FileInfo(inputPath).Length;
-        var outputBytes = new FileInfo(outputPath).Length;
-        var deltaBytes = outputBytes - inputBytes;
-        return new
-        {
-            inputPath,
-            outputPath,
-            inputBytes,
-            outputBytes,
-            deltaBytes,
-            outputToInputRatio = inputBytes == 0 ? (double?)null : Math.Round((double)outputBytes / inputBytes, 4),
-            changePercent = inputBytes == 0 ? (double?)null : Math.Round((double)deltaBytes / inputBytes * 100, 2)
-        };
     }
 
 }
