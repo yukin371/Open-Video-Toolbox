@@ -24,14 +24,14 @@ Desktop 在 `ui` 分支作为独立工作线保留，不属于 v1.0 发布资产
 | 8 | 水印 | 首版已完成 | `plan` / `run` 支持图片、九宫格位置、边距和透明度；命令构建和失败边界已测试。 |
 | 9 | 字幕样式 | 首版已完成 | `plan` / `run` 的烧录字幕支持受限 `force_style` 字段；样式模型和快照已同步。 |
 | 10 | doctor 硬件编码器探测 | 首版已完成 | `doctor` 报告 `hardwareEncoders`，不自动选择或回退；显式试编码会保留驱动错误上下文。 |
-| 11 | v1.0 发布验证 | 已完成（Conditional Go） | V1-V8 证据与 fresh single-file smoke 见 [技术债与发布验证卡](plans/v1.0/2026-10-13-v1-0-technical-debt-and-release-verification-card.md)；实际 tag / Release 仍待 maintainer 签发。 |
+| 11 | v1.0 发布验证 | 本地候选通过（Conditional Go） | 本地 `main` 候选 V1-V8 与 Windows single-file smoke 已通过；当前领先 `origin/main` 67 个提交。签发前先确认并同步候选，再由 tag workflow 检查三平台资产；证据见 [技术债与发布验证卡](plans/v1.0/2026-10-13-v1-0-technical-debt-and-release-verification-card.md)。 |
 | 12 | v1.1 目录批量压缩与安全替换 | 已规划 | 详见 [v1 到后续版本功能规划卡](plans/v1.0/2026-10-13-v1-feature-roadmap-and-capability-card.md)；当前仍使用单文件 `run`，未承诺递归遍历或原地替换。 |
 
 问题列表和逐项进展见 [当前问题记录](analysis/issue/current/261013问题.md)。
 
 ## v1.0 CLI 主线
 
-当前目标是完成发布前范围与验证收敛。V1-V8 验证证据以及 v1.0 尾部能力均已完成，项目版本已调整为 `1.0.0`；是否创建 `v1.0.0` tag 和 GitHub Release 由 maintainer 在签发步骤确认。已交付命令、功能矩阵和 v1.0 发布门槛以 [v1.0 到后续版本功能规划卡](plans/v1.0/2026-10-13-v1-feature-roadmap-and-capability-card.md) 为准。
+本地 `main` 候选的 V1-V8 验证和 v1.0 尾部能力均已完成，项目版本为 `1.0.0`；当前本地分支领先 `origin/main` 67 个提交，尚未形成远端发布候选。下一步先确认并同步这批提交，再复核 `CHANGELOG.md`，由 `v1.0.0` tag workflow 构建和检查三平台资产；是否正式签发由 maintainer 最后确认。已交付命令、功能矩阵和 v1.0 发布门槛以 [v1.0 到后续版本功能规划卡](plans/v1.0/2026-10-13-v1-feature-roadmap-and-capability-card.md) 为准。
 
 后续功能候选按该卡的 v1.1 区域推进：优先设计目录批量压缩与安全替换，再依据 `doctor` 探测结果评估硬件编码预设，并评估两遍目标大小、任务恢复和平台预设包。复杂时间线、专业调色等不纳入 v1.0 默认承诺。每项进入实现前仍需明确 owner、兼容性、失败行为和验收标准。
 
