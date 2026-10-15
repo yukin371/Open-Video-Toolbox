@@ -717,27 +717,118 @@ internal static class AudioCommandHandlers
             Directory.CreateDirectory(Path.GetDirectoryName(result.OutputPath)!);
             await File.WriteAllTextAsync(result.OutputPath, result.Content, Encoding.UTF8);
 
-            return WriteResult(new
-            {
-                source = new
+            return WriteCommandEnvelope(
+                "subtitle",
+                preview: false,
+                new
                 {
-                    inputPath,
-                    transcriptPath = Path.GetFullPath(transcriptPath!)
+                    source = new
+                    {
+                        inputPath,
+                        transcriptPath = Path.GetFullPath(transcriptPath!)
+                    },
+                    subtitle = new
+                    {
+                        result.OutputPath,
+                        result.Format,
+                        result.SegmentCount,
+                        result.MaxLineLength,
+                        transcript.Language
+                    }
                 },
-                subtitle = new
-                {
-                    result.OutputPath,
-                    result.Format,
-                    result.SegmentCount,
-                    result.MaxLineLength,
-                    transcript.Language
-                }
-            }, jsonOutPath);
+                jsonOutPath);
         }
         catch (Exception ex)
         {
-            return fail(ex.Message);
+            return FailWithCommandEnvelope(
+                "subtitle",
+                preview: false,
+                BuildFailedCommandPayload(
+                    "subtitle",
+                    new
+                    {
+                        inputPath,
+                        transcriptPath,
+                        format = rawFormat,
+                        outputPath,
+                        maxLineLength
+                    },
+                    ex.Message),
+                ex.Message,
+                jsonOutPath);
         }
+    }
+
+    public static async Task<int> RunSubtitleImportAsync(string[] args, Func<string, int> fail)
+    {
+        if (!TryParseFileCommand(args, out var inputPath, out var options, out var error)) return fail(error!);
+        if (!TryGetRequiredOption(options, "--output", out var outputPath, out error)) return fail(error!);
+        var jsonOutPath = GetOption(options, "--json-out");
+        try
+        {
+            var document = await LoadSubtitleDocumentAsync(inputPath!);
+            var fullOutputPath = Path.GetFullPath(outputPath!);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullOutputPath)!);
+            await File.WriteAllTextAsync(fullOutputPath, SubtitleDocumentRenderer.RenderSrt(document), Encoding.UTF8);
+            return WriteCommandEnvelope("subtitle-import", false, new { source = inputPath, outputPath = fullOutputPath, format = "srt", cueCount = document.Cues.Count }, jsonOutPath);
+        }
+        catch (Exception ex)
+        {
+            return FailWithCommandEnvelope("subtitle-import", false, BuildFailedCommandPayload("subtitleImport", new { inputPath, outputPath }, ex.Message), ex.Message, jsonOutPath);
+        }
+    }
+
+    public static async Task<int> RunSubtitleClipAsync(string[] args, Func<string, int> fail)
+    {
+        if (!TryParseFileCommand(args, out var inputPath, out var options, out var error)) return fail(error!);
+        if (!TryGetRequiredOption(options, "--from", out var fromText, out error)) return fail(error!);
+        if (!TryGetRequiredOption(options, "--to", out var toText, out error)) return fail(error!);
+        if (!TryGetRequiredOption(options, "--output", out var outputPath, out error)) return fail(error!);
+        if (!SubtitleDocumentParser.TryParseTimestamp(fromText!, out var start) || !SubtitleDocumentParser.TryParseTimestamp(toText!, out var end)) return fail("Options '--from' and '--to' must use hh:mm:ss[.fff] format.");
+        var jsonOutPath = GetOption(options, "--json-out");
+        try
+        {
+            var document = await LoadSubtitleDocumentAsync(inputPath!);
+            var clipped = SubtitleWorkflow.Clip(new SubtitleClipRequest { Document = document, Start = start, End = end });
+            var fullOutputPath = Path.GetFullPath(outputPath!);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullOutputPath)!);
+            await File.WriteAllTextAsync(fullOutputPath, SubtitleDocumentRenderer.RenderSrt(clipped), Encoding.UTF8);
+            return WriteCommandEnvelope("subtitle-clip", false, new { source = inputPath, outputPath = fullOutputPath, start, end, cueCount = clipped.Cues.Count }, jsonOutPath);
+        }
+        catch (Exception ex)
+        {
+            return FailWithCommandEnvelope("subtitle-clip", false, BuildFailedCommandPayload("subtitleClip", new { inputPath, outputPath, from = fromText, to = toText }, ex.Message), ex.Message, jsonOutPath);
+        }
+    }
+
+    public static async Task<int> RunMergeSubtitlesAsync(string[] args, Func<string, int> fail)
+    {
+        if (!TryParseFileCommand(args, out var primaryPath, out var options, out var error)) return fail(error!);
+        if (!TryGetRequiredOption(options, "--secondary", out var secondaryPath, out error)) return fail(error!);
+        if (!TryGetRequiredOption(options, "--output", out var outputPath, out error)) return fail(error!);
+        var jsonOutPath = GetOption(options, "--json-out");
+        var primaryFirst = GetOption(options, "--secondary-first") != "true";
+        try
+        {
+            var primary = await LoadSubtitleDocumentAsync(primaryPath!);
+            var secondary = await LoadSubtitleDocumentAsync(secondaryPath!);
+            var merged = SubtitleWorkflow.MergeBilingual(primary, secondary, primaryFirst);
+            var fullOutputPath = Path.GetFullPath(outputPath!);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullOutputPath)!);
+            await File.WriteAllTextAsync(fullOutputPath, SubtitleDocumentRenderer.RenderSrt(merged), Encoding.UTF8);
+            return WriteCommandEnvelope("merge-subtitles", false, new { primary = primaryPath, secondary = secondaryPath, outputPath = fullOutputPath, primaryFirst, cueCount = merged.Cues.Count }, jsonOutPath);
+        }
+        catch (Exception ex)
+        {
+            return FailWithCommandEnvelope("merge-subtitles", false, BuildFailedCommandPayload("mergeSubtitles", new { primaryPath, secondaryPath, outputPath }, ex.Message), ex.Message, jsonOutPath);
+        }
+    }
+
+    private static async Task<SubtitleDocument> LoadSubtitleDocumentAsync(string path)
+    {
+        var content = await File.ReadAllTextAsync(Path.GetFullPath(path));
+        var extension = Path.GetExtension(path).TrimStart('.');
+        return SubtitleDocumentParser.Parse(content, extension);
     }
 
     public static async Task<int> RunBeatTrackAsync(string[] args, Func<string, int> fail)

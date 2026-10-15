@@ -1421,7 +1421,8 @@ internal static class EditPlanCommandHandlers
         var validation = new EditPlanValidator().Validate(
             EditPlanPathResolver.ResolvePaths(attachment.UpdatedPlan, outputBaseDirectory),
             request.CheckFiles,
-            planContext.ValidationTemplates);
+            planContext.ValidationTemplates,
+            BuiltInEffectCatalog.CreateRegistry());
 
         var report = new
         {
@@ -1486,7 +1487,8 @@ internal static class EditPlanCommandHandlers
         var validation = new EditPlanValidator().Validate(
             EditPlanPathResolver.ResolvePaths(replacement.UpdatedPlan, outputBaseDirectory),
             request.CheckFiles,
-            planContext.ValidationTemplates);
+            planContext.ValidationTemplates,
+            BuiltInEffectCatalog.CreateRegistry());
 
         var report = new
         {
@@ -1557,7 +1559,8 @@ internal static class EditPlanCommandHandlers
         var validation = new EditPlanValidator().Validate(
             EditPlanPathResolver.ResolvePaths(attachment.UpdatedPlan, outputBaseDirectory),
             request.CheckFiles,
-            planContext.ValidationTemplates);
+            planContext.ValidationTemplates,
+            BuiltInEffectCatalog.CreateRegistry());
 
         var report = new
         {

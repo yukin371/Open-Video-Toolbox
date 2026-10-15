@@ -94,7 +94,8 @@
 3. 必须保留 stdout / stderr / exit code / timeout / cancellation 上下文
 4. 写盘产物必须在执行前通过 `ProducedPaths` 或等价显式规则声明
 5. 覆盖已有文件必须走显式 overwrite 语义，不允许默认静默覆盖
-6. CLI 与未来 Desktop 只能映射错误，不得吞掉底层执行线索
+6. 传统转码必须先提交临时产物并完成大小检查；较大结果默认拒绝，显式 override 才能提交，且失败时必须保护源文件和已有正式输出
+7. CLI 与未来 Desktop 只能映射错误，不得吞掉底层执行线索
 
 如果后续要扩展新的外部工具，至少也要满足这同一套基线，而不是为某个命令发明例外流程。
 
@@ -147,6 +148,16 @@
 3. 外部 AI 已能通过 CLI 完成多数基础剪辑任务。
 4. Desktop 明确定位为交互壳，而不是新的业务 owner。
 
+### Desktop 工作台边界
+
+首版 Desktop 可以承担小丸工具箱式的本地工作台体验，但能力必须映射到已有核心对象：
+
+- 任务队列只能编排 `JobDefinition` / `CommandPlan`，不能创建第二套任务模型。
+- 预设编辑只能修改版本化预设或 `edit.json` 支持的参数，不能在 UI 中拼接 FFmpeg 参数。
+- 进度、取消、重试和错误详情必须来自 `Core.Execution` 的统一执行结果与原始日志。
+- 字幕、转写、音频处理只能调用 Core 能力；翻译仍是外部文件协作，不在 Desktop 内接入 AI provider。
+- 首版允许批量转码和 supporting signal 工作流，不允许扩成完整 NLE、自由时间线或新的媒体数据库。
+
 ## 文档保鲜规则
 
 为避免文档腐化，本仓库默认采用“少数核心文档 + 事件触发更新”的方式维护文档。
@@ -157,8 +168,10 @@
   - 当前活跃工作面、阶段检查、下一步
 - `docs/ARCHITECTURE_GUARDRAILS.md`
   - 长期 owner、依赖方向、阶段门槛、更新规则
-- `docs/plans/*.md`
-  - 当前里程碑或专项计划
+- `docs/DOCUMENTATION_GUIDE.md` 与 `docs/README.md`
+  - 文档分类、命名规则与全仓导航
+- `docs/plans/`
+  - 当前里程碑或专项计划；新版本计划按版本目录归类，历史文档暂留原位
 - 模块 `MODULE.md`
   - 模块特有的边界、owner、不变量
 
@@ -171,7 +184,7 @@
 2. owner、依赖方向或启动门槛变化：
    - 更新本文档与相关 `MODULE.md`
 3. 启动新里程碑或专项：
-   - 新增或更新 `docs/plans/*.md`
+   - 新增或更新 `docs/plans/` 下的计划卡，并在 `docs/README.md` 登记入口
 4. 外部使用方式、验收标准或命令契约明显变化：
    - 更新 `README.md`、相关 `MODULE.md` 与当前计划文档
 

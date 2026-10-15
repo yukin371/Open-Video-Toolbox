@@ -2,6 +2,8 @@
 
 This directory keeps the repository-local draft for the `E2-A2` winget submission path.
 
+The `v0.1.0` commands and validation paths below are historical examples. The current project version is `1.0.0`; regenerate the package bundle with the default `Export-WinGetSubmissionBundle.ps1` parameter after the `v1.0.0` tag and GitHub Release exist.
+
 It is intentionally a staging area, not a second release pipeline:
 
 - GitHub Release remains the canonical asset source.

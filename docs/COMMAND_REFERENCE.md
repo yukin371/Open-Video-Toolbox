@@ -1,6 +1,6 @@
 # 命令速查
 
-最后更新：2026-04-25
+最后更新：2026-10-14
 
 ## 文档定位
 
@@ -18,11 +18,11 @@
 - 中间产物设计
 - 架构边界
 
-这些内容分别以 `FEATURES_AND_USAGE.md`、`CLI_MVP.md`、`ARCHITECTURE_GUARDRAILS.md` 为准。
+这些内容分别以 `FEATURES_AND_USAGE.md`、`reference/cli-mvp-design.md`、`ARCHITECTURE_GUARDRAILS.md` 为准。
 
 ## 说明
 
-- 以下签名按 2026-04-24 实际 CLI 顶层帮助输出整理。
+- 以下签名按 2026-10-14 实际 CLI 顶层帮助输出整理。
 - 命令默认优先输出结构化 JSON。
 - 传 `--json-out <path>` 时，会把 stdout 的同一份结果原样写到文件。
 - 本页只写命令尾部签名；如何选择源码运行或 release 二进制，见 `QUICK_START.md`。
@@ -32,12 +32,12 @@
 ### `presets`
 
 ```text
-presets [--json-out <path>]
+presets [--preset-dir <path>] [--preset-file <path>] [--json-out <path>]
 ```
 
 用途：
 
-- 列出内置转码预设
+- 列出内置预设以及通过显式目录或文件加载的自定义预设。
 
 ### `probe`
 
@@ -52,8 +52,12 @@ probe <input> [--ffprobe <path>] [--json-out <path>]
 ### `plan`
 
 ```text
-plan <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]
+plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--resolution <480p|720p|1080p|WIDTHxHEIGHT>] [--fit <9:16|1:1|16:9>] [--watermark <image>] [--watermark-position <nine-grid>] [--watermark-margin <px>] [--watermark-opacity <0..1>] [--subtitle <path>] [--subtitle-mode <sidecar|burnIn>] [--subtitle-font <name>] [--subtitle-size <n>] [--subtitle-color <ASS>] [--subtitle-outline-color <ASS>] [--subtitle-outline <n>] [--subtitle-margin-v <n>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--json-out <path>] [--overwrite]
 ```
+
+- `<input>` 与 `--output-dir` 会按当前进程目录解析为绝对路径后写入 job / command plan。
+- `--output-name` 可传文件名或不带扩展名的 stem；若扩展名与当前预设容器一致，只保留一个扩展名。
+- 未指定 `--output-dir` 时，输出默认写到输入素材所在目录；未指定 `--output-name` 时，使用输入 stem 加预设的 `outputNameSuffix`。
 
 用途：
 
@@ -62,12 +66,27 @@ plan <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffmp
 ### `run`
 
 ```text
-run <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite]
+run <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--resolution <480p|720p|1080p|WIDTHxHEIGHT>] [--fit <9:16|1:1|16:9>] [--watermark <image>] [--watermark-position <nine-grid>] [--watermark-margin <px>] [--watermark-opacity <0..1>] [--subtitle <path>] [--subtitle-mode <sidecar|burnIn>] [--subtitle-font <name>] [--subtitle-size <n>] [--subtitle-color <ASS>] [--subtitle-outline-color <ASS>] [--subtitle-outline <n>] [--subtitle-margin-v <n>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>] [--overwrite] [--allow-larger-output]
 ```
+
+- `<input>` 与 `--output-dir` 会按当前进程目录解析为绝对路径，确保 FFmpeg 工作目录与参数路径一致。
+- `--output-name` 可传文件名或不带扩展名的 stem；若扩展名与当前预设容器一致，只保留一个扩展名。
+- 未指定输出参数时，默认输出到原始素材目录并追加预设后缀；成功结果的 `payload.sizeComparison` 会给出输入/输出字节数、比例和变化百分比。
 
 用途：
 
 - 执行传统转码任务
+
+自定义预设使用与内置 `PresetDefinition` 相同的 JSON 结构，可传单个文件或目录（目录内读取 `*.json`）：
+
+- 文件根节点可以是预设对象或数组，id 大小写不敏感且不能重复；省略 `outputNameSuffix` 时使用 `_<presetId>`。
+- `schemaVersion` 为 1，编码器名称不能为空；扩展名只接受可选前导点和字母数字，后缀不能为空或包含文件名非法字符。
+- `changePercent = (outputBytes - inputBytes) / inputBytes * 100`；负值表示缩小，正值表示增大，CRF 预设不保证每个素材都能变小。
+
+```powershell
+<ovt> run input.mp4 --preset custom-h264 --preset-file .\presets\custom-h264.json
+<ovt> presets --preset-dir .\presets
+```
 
 ## 模板与计划工作流
 
@@ -91,12 +110,13 @@ effects [list [--category <id>] | describe <type> | <type>] [--json-out <path>]
 
 - 列出当前内置 v2 effect 描述符
 - 查看单个 effect 的参数 schema、模板模式与 FFmpeg 模板骨架
-- 当前只覆盖 built-in effect discovery，不负责插件 effect 加载或 render 执行
+- 当前 built-in motion effects 首版已打通 `discover -> validate -> render` 闭环，范围固定为 `move / orbit / zoompan`
+- 当前仍不负责插件 effect 加载
 
 ### `doctor`
 
 ```text
-doctor [--ffmpeg <path>] [--ffprobe <path>] [--whisper-cli <path>] [--whisper-model <path>] [--demucs <path>] [--json-out <path>] [--timeout-seconds <n>]
+doctor [--ffmpeg <path>] [--ffprobe <path>] [--whisper-cli <path>] [--whisper-model <path>] [--demucs <path>] [--test-hardware-encoder <name>] [--json-out <path>] [--timeout-seconds <n>]
 ```
 
 用途：
@@ -391,6 +411,17 @@ extract-audio <input> --track <n> --output <path> [--ffmpeg <path>] [--json-out 
 
 - 音轨提取
 
+### `extract-frame`
+
+```text
+extract-frame <input> (--at <time[,time...]> | --start <time> --interval <time> --count <n>) [--output <path>] [--output-dir <dir>] [--prefix <name>] [--ffmpeg <path>] [--json-out <path>] [--timeout-seconds <n>] [--overwrite]
+```
+
+用途：
+
+- 按一个或多个时间点，或按固定间隔批量抽取 PNG 帧
+- 默认在输入素材目录写出带 `_frame-###` 后缀的文件；可用 `--output`、`--output-dir` 和 `--prefix` 控制输出
+
 ### `subtitle`
 
 ```text
@@ -400,6 +431,32 @@ subtitle <input> --transcript <transcript.json> --format <srt|ass> --output <pat
 用途：
 
 - 渲染 sidecar 字幕
+
+### `subtitle-import`
+
+```text
+subtitle-import <input.srt|input.vtt> --output <output.srt> [--json-out <path>]
+```
+
+- 读取 SRT 或 WebVTT，规范化输出为 SRT
+- 不负责翻译；可把输出交给外部 AI 或其他翻译工具
+
+### `subtitle-clip`
+
+```text
+subtitle-clip <input.srt|input.vtt> --from <hh:mm:ss.fff> --to <hh:mm:ss.fff> --output <output.srt> [--json-out <path>]
+```
+
+- 截取时间范围内的字幕并将时间轴重置到片段起点
+
+### `merge-subtitles`
+
+```text
+merge-subtitles <primary.srt|primary.vtt> --secondary <secondary.srt|secondary.vtt> --output <bilingual.srt> [--secondary-first true|false] [--json-out <path>]
+```
+
+- 按字幕序号和时间轴合并原文与译文
+- 两份字幕的条数和时间轴必须对齐；翻译文件由外部工具生成
 
 ## 导出
 
@@ -441,10 +498,15 @@ render --plan <path> [--output <path>] [--preview [true|false]] [--json-out <pat
 - 当前 v2 范围：
   - 支持基础 timeline preview / execute dispatch
   - 支持内置模板型 effect 的 filter graph 构建
+  - 支持首个 executor-backed motion effects：
+    - `move`
+    - `orbit`
+    - `zoompan`
+    - 当前仅限 clip 级 video visual、显式 `clip.src`、非 placeholder 的第一期受限路径
   - 支持基础 transition / overlay / amix
 - 当前不负责：
   - 插件 effect 加载
-  - 复杂 executor effect 的正式执行保证
+  - 超出 `move / orbit / zoompan` 首期边界的复杂 executor effect 正式执行保证
 
 ### `render-batch`
 
@@ -469,4 +531,4 @@ render-batch --manifest <batch.json> [--preview [true|false]] [--ffmpeg <path>] 
 - 看命令签名速查：
   - 本文档
 - 看中间产物和设计边界：
-  - [CLI_MVP.md](CLI_MVP.md)
+  - [CLI MVP design](reference/cli-mvp-design.md)

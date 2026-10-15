@@ -3,6 +3,7 @@ using OpenVideoToolbox.Core.Execution;
 using OpenVideoToolbox.Core.Media;
 using OpenVideoToolbox.Core.AudioSeparation;
 using OpenVideoToolbox.Core.Speech;
+using System.Buffers.Binary;
 using Xunit;
 
 namespace OpenVideoToolbox.Core.Tests;
@@ -177,6 +178,177 @@ public sealed class RealMediaSmokeTests
         {
             Directory.Delete(tempDirectory, recursive: true);
         }
+    }
+
+    [Fact]
+    public async Task RenderRunner_MixesBoundVoiceTrackIntoOutputAudio_WhenFfmpegAvailable()
+    {
+        if (!await IsFfmpegAvailableAsync())
+        {
+            return;
+        }
+
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"ovt-real-render-voice-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+
+        try
+        {
+            var inputPath = Path.Combine(tempDirectory, "input.mp4");
+            var voicePath = Path.Combine(tempDirectory, "voice.wav");
+            var baselinePath = Path.Combine(tempDirectory, "baseline.mp4");
+            var mixedPath = Path.Combine(tempDirectory, "with-voice.mp4");
+            var baselinePcmPath = Path.Combine(tempDirectory, "baseline.pcm");
+            var mixedPcmPath = Path.Combine(tempDirectory, "with-voice.pcm");
+
+            await RealMediaSmokeTestHelper.CreateSampleVideoAsync(inputPath, TimeSpan.FromSeconds(2));
+            await RealMediaSmokeTestHelper.CreateSampleAudioAsync(voicePath, TimeSpan.FromSeconds(2));
+
+            await RunRenderCommandAsync(BuildRequest(inputPath, baselinePath));
+            await RunRenderCommandAsync(
+                BuildRequest(
+                    inputPath,
+                    mixedPath,
+                    [new AudioTrackMix
+                    {
+                        Id = "voice-main",
+                        Role = AudioTrackRole.Voice,
+                        Path = voicePath,
+                        Start = TimeSpan.Zero,
+                        GainDb = 6
+                    }]));
+            Assert.True(File.Exists(baselinePath));
+            Assert.True(File.Exists(mixedPath));
+
+            await DecodeAudioToPcmAsync(baselinePath, baselinePcmPath);
+            await DecodeAudioToPcmAsync(mixedPath, mixedPcmPath);
+
+            var baselineRms = await ReadPcmRmsAsync(baselinePcmPath);
+            var mixedRms = await ReadPcmRmsAsync(mixedPcmPath);
+
+            Assert.True(
+                mixedRms > baselineRms * 1.7,
+                $"Expected the bound voice track to raise output RMS. Baseline={baselineRms:F4}, mixed={mixedRms:F4}.");
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    private static EditPlanRenderRequest BuildRequest(
+        string inputPath,
+        string outputPath,
+        IReadOnlyList<AudioTrackMix>? audioTracks = null)
+    {
+        return new EditPlanRenderRequest
+        {
+            Plan = new EditPlan
+            {
+                Source = new EditPlanSource { InputPath = inputPath },
+                Clips =
+                [
+                    new EditClip
+                    {
+                        Id = "clip-001",
+                        InPoint = TimeSpan.Zero,
+                        OutPoint = TimeSpan.FromSeconds(1.5)
+                    }
+                ],
+                AudioTracks = audioTracks ?? [],
+                Output = new EditOutputPlan { Path = outputPath, Container = "mp4" }
+            },
+            OverwriteExisting = true
+        };
+    }
+
+    private static async Task DecodeAudioToPcmAsync(string inputPath, string outputPath)
+    {
+        var command = new CommandPlan
+        {
+            ToolName = "ffmpeg",
+            ExecutablePath = "ffmpeg",
+            Arguments = ["-y", "-i", inputPath, "-map", "0:a:0", "-f", "s16le", "-ac", "1", "-ar", "48000", outputPath],
+            CommandLine = $"ffmpeg -y -i \"{inputPath}\" -map 0:a:0 -f s16le -ac 1 -ar 48000 \"{outputPath}\""
+        };
+        await RunCommandAsync(command);
+    }
+
+    private static async Task RunRenderCommandAsync(EditPlanRenderRequest request)
+    {
+        var plan = new FfmpegEditPlanRenderCommandBuilder().Build(request);
+        await RunCommandAsync(plan);
+    }
+
+    private static async Task<bool> IsFfmpegAvailableAsync()
+    {
+        try
+        {
+            using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                ArgumentList = { "-version" },
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            if (process is null)
+            {
+                return false;
+            }
+
+            await Task.WhenAll(
+                process.StandardOutput.ReadToEndAsync(),
+                process.StandardError.ReadToEndAsync(),
+                process.WaitForExitAsync()).WaitAsync(TimeSpan.FromSeconds(10));
+            return process.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static async Task RunCommandAsync(CommandPlan command)
+    {
+        var startInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = command.ExecutablePath,
+            WorkingDirectory = command.WorkingDirectory ?? Environment.CurrentDirectory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        foreach (var argument in command.Arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        using var process = System.Diagnostics.Process.Start(startInfo)
+            ?? throw new InvalidOperationException($"Failed to start '{command.ExecutablePath}'.");
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        await Task.WhenAll(stdoutTask, stderrTask, process.WaitForExitAsync()).WaitAsync(TimeSpan.FromSeconds(30));
+        Assert.True(process.ExitCode == 0, $"FFmpeg failed with exit code {process.ExitCode}: {stderrTask.Result}");
+    }
+
+    private static async Task<double> ReadPcmRmsAsync(string path)
+    {
+        var samples = await File.ReadAllBytesAsync(path);
+        var firstSample = 9_600 * sizeof(short);
+        var sampleCount = (samples.Length - firstSample) / sizeof(short);
+        Assert.True(sampleCount > 0);
+
+        double sumSquares = 0;
+        for (var index = 0; index < sampleCount; index++)
+        {
+            var sample = BinaryPrimitives.ReadInt16LittleEndian(samples.AsSpan(firstSample + index * sizeof(short), sizeof(short)));
+            var normalized = sample / (double)short.MaxValue;
+            sumSquares += normalized * normalized;
+        }
+
+        return Math.Sqrt(sumSquares / sampleCount);
     }
 
     [Fact]

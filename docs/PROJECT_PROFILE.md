@@ -1,6 +1,6 @@
 # Project Profile
 
-最后更新：2026-04-26
+最后更新：2026-10-13
 
 ## 项目类型
 
@@ -20,7 +20,7 @@
 
 - CLI 入口：`src/OpenVideoToolbox.Cli/Program.cs`
 - Desktop 入口：`src/OpenVideoToolbox.Desktop/Program.cs`
-  - 当前状态：占位入口，只输出 `Desktop bootstrap placeholder`
+  - 当前状态：仍是占位入口；`D1-0` 已完成需求、技术评估、启动评估、实施规划与交互设计文档
 
 ## 用户文档入口
 
@@ -34,10 +34,13 @@
 - 运行测试：`dotnet test OpenVideoToolbox.sln`
 - 运行 CLI：`dotnet run --project ./src/OpenVideoToolbox.Cli/OpenVideoToolbox.Cli.csproj -- <command>`
 - 运行 Desktop 占位入口：`dotnet run --project ./src/OpenVideoToolbox.Desktop/OpenVideoToolbox.Desktop.csproj`
+- 启用仓库级 Git hooks：`powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1`
+- 校验仓库级 Git hooks：`powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1 -VerifyOnly`
+- 自检 Git hooks 完整性：`powershell -ExecutionPolicy Bypass -File .\scripts\Test-GitHooksSetup.ps1`
 
 ## CLI 已确认命令面
 
-- `presets`
+- `presets [--preset-dir <path>] [--preset-file <path>] [--json-out <path>]`
 - `templates [<template-id>] [--template <id>] [--category <id>] [--seed-mode <manual|transcript|beats>] [--output-container <ext>] [--artifact-kind <kind>] [--has-artifacts [true|false]] [--has-subtitles [true|false]] [--summary [true|false]] [--plugin-dir <path>] [--json-out <path>] [--write-examples <dir>]`
 - `effects [list [--category <id>] | describe <type> | <type>] [--json-out <path>]`
 - `doctor [--ffmpeg <path>] [--ffprobe <path>] [--whisper-cli <path>] [--whisper-model <path>] [--demucs <path>] [--json-out <path>] [--timeout-seconds <n>]`
@@ -71,8 +74,8 @@
 - `render --plan <path> [--output <path>] [--preview [true|false]] [--json-out <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--overwrite]`
 - `render-batch --manifest <batch.json> [--preview [true|false]] [--ffmpeg <path>] [--timeout-seconds <n>] [--json-out <path>]`
 - `probe <input> [--ffprobe <path>]`
-- `plan <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--overwrite]`
-- `run <input> [--preset <id>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--overwrite]`
+- `plan <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffmpeg <path>] [--overwrite]`
+- `run <input> [--preset <id>] [--preset-dir <path>] [--preset-file <path>] [--output-dir <dir>] [--output-name <name>] [--ffprobe <path>] [--ffmpeg <path>] [--timeout-seconds <n>] [--overwrite]`
 
 说明：
 - 上述命令均已实现；当前 `Project Profile` 只记录仓库已落地命令面，不再混写未来规划命令。
@@ -87,7 +90,7 @@
 - `bind-voice-track` 已实现，用于把外部配音、TTS 或 voice conversion 结果按默认 `voice-main` / `voice` 约定接回 plan；底层仍复用 `audioTracks` attach/upsert 语义，不引入第二套模型。
 - `bind-voice-track-batch` 已实现，用于从 manifest 批量读取多条配音接回任务，统一解析相对路径、复用单项 voice bind 流程，并在 manifest 同目录固定写出 `summary.json` 与 `results/<id>.json`。
 - `validate-plan` 已实现，用于在真正执行前校验外部 AI 或人工修改后的 `edit.json` 是否仍满足当前 schema v1，或当前 `schemaVersion = 2` 的 timeline 基础语义约束；当 plan 来自插件模板时，可通过 `--plugin-dir` 把插件模板目录显式接回校验链。
-- `effects` 已实现，用于发现当前内置 v2 effect 描述符，并输出单 effect 的参数 schema、模板模式与 FFmpeg 模板骨架；当前不负责插件 effect 加载，也不代表 render 已进入 effect 执行阶段。
+- `effects` 已实现，用于发现当前内置 v2 effect 描述符，并输出单 effect 的参数 schema、模板模式与 FFmpeg 模板骨架；当前 built-in motion effects 首版已打通 `discover -> validate -> render preview / execute` 闭环，范围固定为 `move / orbit / zoompan`；仍不负责插件 effect 加载，也不扩成角色动画器或关键帧工作台。
 - `mix-audio --preview` 与 `render --preview` 已实现，用于在真实执行前输出稳定的 `executionPreview`；传 `--json-out` 时会把统一 envelope 原样写到文件。
 - `mix-audio` / `render` 的 preview 与执行 envelope 现会额外透出 `templateSource`，直接复用 plan 中已有的 `template.source` 元数据，便于后续执行阶段继续审计插件来源。
 - 当 `mix-audio` / `render` 已成功加载 plan、但在 preview 构建或执行阶段失败时，无论是抛错还是底层执行返回 failed status，CLI 现都会输出结构化 failure envelope，继续保留 `templateSource`、局部操作上下文、可用时的 `executionPreview` / `execution` 与错误消息，并返回非零退出码，而不退回纯 usage 文本。
@@ -124,7 +127,7 @@
 - 可选的重依赖 real smoke 现已同时接入 `src/OpenVideoToolbox.Core.Tests/RealMediaSmokeTests.cs` 与 `src/OpenVideoToolbox.Cli.Tests/CliRealMediaSmokeTests.cs`；默认环境缺依赖时会自动跳过。
 - 推荐先跑 `doctor` 确认依赖解析状态，再跑上述 real smoke；否则很容易把环境缺失误判成命令实现故障。
 - 契约冻结与模板稳定收口后，当前阶段已推进到：`H1 -> H2+T1 -> T2 -> P1 -> E1` 完成；下一候选阶段为 `D1` 或 `E2`。
-- 当前测试基线：`OpenVideoToolbox.Core.Tests` 172，`OpenVideoToolbox.Cli.Tests` 186，总计 358。
+- 测试基线以当前完整测试运行结果为准；合并后的报告见本轮版本方向与验证文档。
 - 发布链现状：`src/OpenVideoToolbox.Cli/OpenVideoToolbox.Cli.csproj` 已明确程序集名 `ovt` 与版本 `0.1.0`，`.github/workflows/release.yml` 已支持 tag 触发的跨平台 single-file 发布。
 - Windows 常用环境变量：
   - `OVT_WHISPER_CLI_PATH`
@@ -199,8 +202,8 @@
   - `pr-validation.yml` 会在 `pull_request` 与 `workflow_dispatch` 下校验 PR 标题 / 正文约束；手动触发时通过 `pr_number` 反查真实 PR 元数据，作为自动 PR 事件偶发缺失时的维护 fallback
   - 另有 `.github/workflows/release.yml` 承接 tag 触发的 release 发布
   - 当前未纳入：依赖 `whisper.cpp` / `demucs` 的可选 smoke
-- Desktop 实际 UI 框架接入状态：`TBD`
-  - 确认路径：当 `OpenVideoToolbox.Desktop` 引入 Avalonia 或其他桌面框架时更新
+- Desktop 实际 UI 框架接入状态：`TBD`，Avalonia 为首选候选
+  - 确认路径：完成 `D1-0` 框架与发布评估后，再引入 UI 依赖并更新本文件
 - 打包 / 发布流程：已落地核心发布链
   - 当前已有 tag 触发的 GitHub Release 和跨平台 single-file 发布
   - 尚未落地：包管理器渠道；如继续推进，转入 `E2`

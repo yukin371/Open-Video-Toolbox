@@ -104,8 +104,52 @@ public sealed partial class CommandArtifactsIntegrationTests
             var stdout = JsonNode.Parse(result.StdOut)!.AsObject();
             var file = JsonNode.Parse(await File.ReadAllTextAsync(jsonOutPath))!.AsObject();
             Assert.True(JsonNode.DeepEquals(stdout, file));
-            Assert.Equal(Path.GetFullPath(outputPath), stdout["subtitle"]!["outputPath"]!.GetValue<string>());
-            Assert.Equal("srt", stdout["subtitle"]!["format"]!.GetValue<string>());
+            Assert.Equal("subtitle", stdout["command"]!.GetValue<string>());
+            Assert.Equal(Path.GetFullPath(outputPath), stdout["payload"]!["subtitle"]!["outputPath"]!.GetValue<string>());
+            Assert.Equal("srt", stdout["payload"]!["subtitle"]!["format"]!.GetValue<string>());
+        }
+        finally
+        {
+            if (Directory.Exists(outputDirectory))
+            {
+                Directory.Delete(outputDirectory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Subtitle_ReturnsFailureEnvelopeWhenTranscriptCannotBeLoaded()
+    {
+        var outputDirectory = Path.Combine(Path.GetTempPath(), $"ovt-subtitle-failure-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(outputDirectory);
+        var transcriptPath = Path.Combine(outputDirectory, "missing-transcript.json");
+        var outputPath = Path.Combine(outputDirectory, "subs.srt");
+        var jsonOutPath = Path.Combine(outputDirectory, "subtitle-failure.json");
+
+        try
+        {
+            var result = await RunCliAsync(
+                "subtitle",
+                "input.mp4",
+                "--transcript",
+                transcriptPath,
+                "--format",
+                "srt",
+                "--output",
+                outputPath,
+                "--json-out",
+                jsonOutPath);
+
+            Assert.Equal(1, result.ExitCode);
+            Assert.Contains("subtitle", result.StdErr, StringComparison.OrdinalIgnoreCase);
+            var stdout = JsonNode.Parse(result.StdOut)!.AsObject();
+            var file = JsonNode.Parse(await File.ReadAllTextAsync(jsonOutPath))!.AsObject();
+            Assert.True(JsonNode.DeepEquals(stdout, file));
+            Assert.Equal("subtitle", stdout["command"]!.GetValue<string>());
+            Assert.False(stdout["preview"]!.GetValue<bool>());
+            Assert.NotNull(stdout["payload"]!["subtitle"]);
+            Assert.NotNull(stdout["payload"]!["error"]!["message"]);
+            Assert.False(File.Exists(outputPath));
         }
         finally
         {

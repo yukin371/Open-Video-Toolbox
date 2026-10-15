@@ -102,8 +102,11 @@ internal static class CliTestProcessHelper
             using var process = Process.Start(new ProcessStartInfo
             {
                 FileName = toolName,
+                ArgumentList = { "-version" },
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
             });
 
             if (process is null)
@@ -111,7 +114,14 @@ internal static class CliTestProcessHelper
                 return false;
             }
 
-            process.WaitForExit(5000);
+            var stdoutTask = process.StandardOutput.ReadToEndAsync();
+            var stderrTask = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(5000) || !Task.WhenAll(stdoutTask, stderrTask).Wait(5000))
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                return false;
+            }
+
             return process.ExitCode == 0;
         }
         catch
@@ -185,7 +195,9 @@ internal static class CliTestProcessHelper
         {
             FileName = fileName,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
         };
 
         foreach (var argument in arguments)
@@ -195,9 +207,11 @@ internal static class CliTestProcessHelper
 
         using var process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"Failed to start process '{fileName}'.");
-        var stdOut = await process.StandardOutput.ReadToEndAsync();
-        var stdErr = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync();
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+        await Task.WhenAll(stdoutTask, stderrTask, process.WaitForExitAsync()).WaitAsync(TimeSpan.FromSeconds(30));
+        var stdOut = await stdoutTask;
+        var stdErr = await stderrTask;
 
         if (process.ExitCode != 0)
         {

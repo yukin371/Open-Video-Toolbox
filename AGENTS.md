@@ -85,6 +85,9 @@
 
 ## 文档同步
 
+- 文档分类、命名、生命周期与迁移规则遵循 `docs/DOCUMENTATION_GUIDE.md`。
+- 新增面向仓库读者的文档时，在 `docs/README.md` 注册导航；不为每个目录机械创建 README。
+
 以下内容有变化时，必须同步文档：
 
 - 产品边界变化：更新 `docs/PRD.md`

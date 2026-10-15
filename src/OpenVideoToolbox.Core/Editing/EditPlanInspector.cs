@@ -12,7 +12,11 @@ public sealed class EditPlanInspector
         ArgumentException.ThrowIfNullOrWhiteSpace(baseDirectory);
 
         var resolvedPlan = EditPlanPathResolver.ResolvePaths(plan, baseDirectory);
-        var validation = new EditPlanValidator().Validate(resolvedPlan, checkReferencedFiles, availableTemplates);
+        var validation = new EditPlanValidator().Validate(
+            resolvedPlan,
+            checkReferencedFiles,
+            availableTemplates,
+            BuiltInEffectCatalog.CreateRegistry());
         var template = EditPlanTemplateResolution.ResolveTemplate(plan, availableTemplates);
         var templateSlots = template?.ArtifactSlots.ToDictionary(slot => slot.Id, StringComparer.OrdinalIgnoreCase);
         var materials = BuildMaterials(plan, resolvedPlan, templateSlots);

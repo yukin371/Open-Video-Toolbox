@@ -7,8 +7,8 @@
 把当前产品想法收敛成第一批真正可实施、可验证、可追踪的命令与模型范围。
 
 配套图：
-- `docs/wave1-cli-flow.drawio`
-- `docs/code-module-map.drawio`
+- `docs/diagrams/wave1-cli-flow.drawio`
+- `docs/diagrams/code-module-map.drawio`
 
 ## 基本原则
 

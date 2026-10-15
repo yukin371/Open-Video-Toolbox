@@ -130,6 +130,95 @@ public sealed class FfmpegCommandBuilderTests
         Assert.Equal(1, plan.Arguments.Count(argument => argument == "-movflags"));
     }
 
+    [Fact]
+    public void Build_AddsBurnInSubtitleFilter_WhenRequested()
+    {
+        var plan = new FfmpegCommandBuilder().Build(BuildJob() with
+        {
+            SubtitlePath = Path.Combine("samples", "captions", "episode.srt"),
+            SubtitleMode = "burnIn"
+        });
+
+        var filterIndex = Array.IndexOf(plan.Arguments.ToArray(), "-vf");
+        Assert.True(filterIndex >= 0);
+        Assert.Equal("subtitles='" + Path.GetFullPath(Path.Combine("samples", "captions", "episode.srt")).Replace("\\", "\\\\").Replace(":", "\\:") + "'", plan.Arguments[filterIndex + 1]);
+    }
+
+    [Fact]
+    public void Build_ComposesSizingAndSubtitleFilters()
+    {
+        var plan = new FfmpegCommandBuilder().Build(BuildJob() with
+        {
+            Preset = BuildJob().Preset with
+            {
+                Video = BuildJob().Preset.Video! with
+                {
+                    Sizing = new VideoSizingSettings { Width = 1080, Height = 1920, Fit = "9:16" }
+                }
+            },
+            SubtitlePath = Path.Combine("samples", "captions", "episode.srt"),
+            SubtitleMode = "burnIn"
+        });
+
+        var filterIndex = Array.IndexOf(plan.Arguments.ToArray(), "-vf");
+        Assert.Equal("scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,subtitles='" + Path.GetFullPath(Path.Combine("samples", "captions", "episode.srt")).Replace("\\", "\\\\").Replace(":", "\\:") + "'", plan.Arguments[filterIndex + 1]);
+    }
+
+    [Fact]
+    public void Build_AddsWatermarkFilterGraphAndMapsOriginalAudio()
+    {
+        var plan = new FfmpegCommandBuilder().Build(BuildJob() with
+        {
+            Watermark = new VideoWatermarkSettings
+            {
+                ImagePath = Path.Combine("samples", "brand.png"),
+                Position = WatermarkPosition.BottomRight,
+                Margin = 32,
+                Opacity = 0.65
+            }
+        });
+
+        Assert.Contains("-filter_complex", plan.Arguments);
+        var graph = plan.Arguments[Array.IndexOf(plan.Arguments.ToArray(), "-filter_complex") + 1];
+        Assert.Contains("[1:v]format=rgba,colorchannelmixer=aa=0.65", graph, StringComparison.Ordinal);
+        Assert.Contains("overlay=main_w-overlay_w-32:main_h-overlay_h-32:shortest=1[ovt_watermarked]", graph, StringComparison.Ordinal);
+        Assert.Equal("[ovt_watermarked]", plan.Arguments[Array.IndexOf(plan.Arguments.ToArray(), "-map") + 1]);
+        Assert.Contains("0:a?", plan.Arguments);
+    }
+
+    [Fact]
+    public void Build_AddsSubtitleForceStyle()
+    {
+        var plan = new FfmpegCommandBuilder().Build(BuildJob() with
+        {
+            SubtitlePath = "captions.srt",
+            SubtitleMode = "burnIn",
+            SubtitleStyle = new OpenVideoToolbox.Core.Subtitles.SubtitleStyle
+            {
+                FontName = "Arial",
+                FontSize = 28,
+                PrimaryColor = "&H00FFFFFF",
+                Outline = 2,
+                MarginV = 40
+            }
+        });
+
+        var filterIndex = Array.IndexOf(plan.Arguments.ToArray(), "-vf");
+        Assert.Contains("force_style='FontName=Arial,FontSize=28,PrimaryColour=&H00FFFFFF,Outline=2,MarginV=40'", plan.Arguments[filterIndex + 1]);
+    }
+
+    [Fact]
+    public void Build_UsesDedicatedWorkingDirectory_WhenConfigured()
+    {
+        var plan = new FfmpegCommandBuilder().Build(BuildJob() with
+        {
+            Output = BuildJob().Output with { WorkingDirectory = "output/.ovt-work/job-1" }
+        });
+
+        Assert.Equal("output/.ovt-work/job-1", plan.WorkingDirectory);
+        Assert.StartsWith("output", plan.Arguments[^1], StringComparison.Ordinal);
+    }
+
     private static JobDefinition BuildJob()
     {
         return new JobDefinition

@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FrameForge / 视频工具箱</title>
+  <style>
+    /* OD-LAYOUT-PRIMITIVES v1 — structure only: display, flex/grid, overflow, wrapping, ratio. */
+    @layer od-layout {
+      :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+      .od-stack { display:flex; flex-direction:column; gap:var(--od-gap,8px); }
+      .od-row { display:flex; align-items:center; gap:var(--od-gap,8px); }
+      .od-row-top { display:flex; align-items:flex-start; gap:var(--od-gap,8px); }
+      .od-cluster { display:flex; flex-wrap:wrap; align-items:center; gap:var(--od-gap,8px); }
+      .od-fill { flex:1 1 0; min-width:0; }
+      .od-fixed { flex:none; }
+      .od-grid { display:grid; gap:var(--od-gap,12px); grid-template-columns:repeat(var(--od-cols,3),minmax(0,1fr)); }
+      .od-stat,.od-field,.od-cell { display:grid; gap:var(--od-gap,2px); }
+      :where(.od-stat,.od-field,.od-cell) > :where(*) { display:block; }
+      .od-tile { display:grid; grid-template-rows:auto 1fr; }
+      :where(.od-tile) > :where(*) { display:block; }
+      .od-media { display:block; width:100%; height:auto; aspect-ratio:var(--od-ratio,auto); }
+      .od-truncate { display:block; max-width:100%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+      .od-clamp-2 { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+      .od-nowrap { white-space:nowrap; }
+      .od-screen { display:grid; grid-template-rows:auto minmax(0,1fr) auto; height:100%; }
+      .od-scroll { overflow-y:auto; min-height:0; }
+      .od-touch { min-width:44px; min-height:44px; }
+    }
+    :root {
+      --bg:#090c0f; --panel:#10151a; --panel-2:#151c22; --panel-3:#1b252c;
+      --line:#28333a; --line-soft:#1e282e; --ink:#f0f6f3; --muted:#86959e; --muted-2:#5d6b73;
+      --mint:#78f2d1; --mint-dim:#2b7466; --orange:#ff9d5b; --orange-dim:#6d432b; --red:#ff6f79;
+      --shadow:0 18px 50px rgba(0,0,0,.28); --radius:12px; --ease:180ms ease-out;
+    }
+    body[data-theme="light"] {
+      --bg:#f1f5f3; --panel:#ffffff; --panel-2:#f5f8f7; --panel-3:#e8efec;
+      --line:#d5e0dc; --line-soft:#e4ebe8; --ink:#15221f; --muted:#5e706c; --muted-2:#83918d;
+      --mint:#087d67; --mint-dim:#b8e8dd; --orange:#bd5a24; --orange-dim:#f5dccd; --red:#c83c48;
+      --shadow:0 18px 50px rgba(27,58,48,.12);
+    }
+    * { box-sizing:border-box; }
+    html,body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); }
+    body { font-family:"Noto Sans SC","Avenir Next",system-ui,sans-serif; font-size:14px; line-height:1.55; letter-spacing:.01em; }
+    button,input,select { font:inherit; }
+    button { border:0; cursor:pointer; }
+    button:focus-visible,input:focus-visible,select:focus-visible { outline:2px solid var(--mint); outline-offset:3px; }
+    .app-shell { height:100vh; display:grid; grid-template-columns:232px minmax(0,1fr); background:radial-gradient(circle at 80% -10%,#183a3d 0,transparent 32%),var(--bg); }
+    body[data-theme="light"] .app-shell { background:radial-gradient(circle at 85% -20%,#d1eee6 0,transparent 34%),var(--bg); }
+    .sidebar { position:sticky; top:0; height:100vh; overflow-y:auto; border-right:1px solid var(--line-soft); background:rgba(10,14,17,.94); padding:24px 16px 18px; display:flex; flex-direction:column; }
+    body[data-theme="light"] .sidebar { background:rgba(255,255,255,.9); }
+    body[data-theme="light"] .panel { background:var(--panel); }
+    body[data-theme="light"] .stat-card.hero-stat { background:linear-gradient(135deg,#d8f1ea,#edf8f5 70%); border-color:#a8d8cc; }
+    body[data-theme="light"] .progress { background:#d7e4df; }
+    body[data-theme="light"] .drop-zone { border-color:#8dc8bb; background:linear-gradient(110deg,rgba(8,125,103,.12),rgba(8,125,103,.035)); }
+    body[data-theme="light"] .drop-zone.is-dragging { background:rgba(8,125,103,.16); }
+    body[data-theme="light"] .drop-button { border-color:#74b7a9; }
+    body[data-theme="light"] .switch { background:#ccd7d4; }
+    body[data-theme="light"] .switch i { background:#ffffff; }
+    .brand { display:flex; align-items:center; gap:10px; padding:4px 10px 30px; }
+    .brand-mark { width:29px; height:29px; border-radius:8px; background:var(--mint); color:#09211d; display:grid; place-items:center; font-weight:900; font-size:12px; letter-spacing:-.08em; }
+    .brand-name { font-size:15px; font-weight:800; letter-spacing:.06em; }
+    .brand-name span { color:var(--muted); font-weight:500; }
+    .nav-label { color:var(--muted-2); font-size:10px; letter-spacing:.14em; text-transform:uppercase; padding:0 12px 8px; }
+    .nav { display:grid; gap:4px; }
+    .nav-btn { width:100%; display:flex; align-items:center; gap:11px; padding:10px 12px; background:transparent; border-radius:8px; color:var(--muted); text-align:left; transition:background var(--ease),color var(--ease); }
+    .nav-btn:hover,.nav-btn.is-active { background:var(--panel-2); color:var(--ink); }
+    .nav-btn.is-active { box-shadow:inset 2px 0 var(--mint); }
+    .nav-btn.is-active svg { color:var(--mint); }
+    .nav-btn svg { width:17px; height:17px; color:var(--muted-2); flex:none; }
+    .sidebar-bottom { margin-top:auto; display:grid; gap:16px; }
+    .storage { padding:13px; background:var(--panel); border:1px solid var(--line-soft); border-radius:10px; }
+    .storage-top { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:9px; }
+    .storage-top strong { color:var(--ink); font-weight:650; }
+    .progress { height:5px; background:#273036; border-radius:99px; overflow:hidden; }
+    .progress i { display:block; height:100%; width:42%; background:var(--mint); border-radius:inherit; }
+    .user { display:flex; align-items:center; gap:10px; padding:0 8px; }
+    .avatar { width:28px; height:28px; display:grid; place-items:center; border-radius:50%; background:#b7a091; color:#271e19; font-size:11px; font-weight:800; }
+    .user-info { display:grid; line-height:1.2; }
+    .user-info strong { font-size:12px; }
+    .user-info span { color:var(--muted); font-size:11px; margin-top:3px; }
+    .main { height:100vh; min-width:0; overflow-y:auto; padding:25px clamp(20px,3vw,44px) 82px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:28px; }
+    .eyebrow { color:var(--mint); font-size:11px; font-weight:750; letter-spacing:.14em; text-transform:uppercase; }
+    h1 { margin:4px 0 0; font-family:"Sora","Avenir Next",sans-serif; font-size:clamp(25px,3vw,37px); line-height:1.1; letter-spacing:-.06em; }
+    .top-actions { display:flex; align-items:center; gap:10px; }
+    .icon-btn,.outline-btn,.primary-btn { min-height:40px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:transform var(--ease),background var(--ease),border-color var(--ease); }
+    .icon-btn { width:40px; border:1px solid var(--line); background:var(--panel); color:var(--muted); }
+    .icon-btn:hover,.outline-btn:hover { border-color:var(--muted-2); color:var(--ink); background:var(--panel-2); }
+    .icon-btn svg,.outline-btn svg,.primary-btn svg { width:16px; height:16px; }
+    .primary-btn { padding:0 15px; background:var(--mint); color:#07201b; font-weight:800; }
+    .primary-btn:hover { background:#a0ffe5; transform:translateY(-1px); }
+    .outline-btn { padding:0 13px; background:transparent; color:var(--ink); border:1px solid var(--line); }
+    .overview { display:grid; grid-template-columns:1.4fr repeat(3,1fr); gap:12px; margin-bottom:22px; }
+    .stat-card { min-height:112px; padding:17px 18px; border:1px solid var(--line-soft); background:var(--panel); border-radius:var(--radius); position:relative; overflow:hidden; }
+    .stat-card.hero-stat { background:linear-gradient(135deg,#133633,#15221f 70%); border-color:#24564e; }
+    .stat-card.hero-stat:after { content:""; position:absolute; right:-30px; top:-40px; width:130px; height:130px; border:1px solid rgba(120,242,209,.22); border-radius:50%; box-shadow:0 0 0 18px rgba(120,242,209,.03),0 0 0 38px rgba(120,242,209,.025); }
+    .stat-label { color:var(--muted); font-size:12px; }
+    .stat-number { margin-top:12px; font-family:"Sora",sans-serif; font-size:27px; letter-spacing:-.05em; }
+    .stat-number small { color:var(--muted); font-family:inherit; font-size:13px; letter-spacing:0; }
+    .stat-change { color:var(--mint); font-size:11px; margin-top:6px; }
+    .stat-card:not(.hero-stat) .stat-change { color:var(--muted); }
+    .work-grid { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(310px,.75fr); gap:14px; align-items:start; }
+    .panel { border:1px solid var(--line-soft); background:rgba(16,21,26,.92); border-radius:var(--radius); overflow:hidden; }
+    .panel-head { display:flex; justify-content:space-between; align-items:center; gap:14px; padding:17px 18px; border-bottom:1px solid var(--line-soft); }
+    .panel-title { font-size:13px; font-weight:800; letter-spacing:.02em; }
+    .panel-meta { color:var(--muted); font-size:11px; }
+    .drop-zone { margin:17px 18px 16px; padding:22px 18px; min-height:126px; border:1px dashed #3b554f; border-radius:10px; background:linear-gradient(110deg,rgba(120,242,209,.08),rgba(120,242,209,.015)); display:flex; align-items:center; gap:15px; transition:border-color var(--ease),background var(--ease); }
+    .drop-zone.is-dragging { border-color:var(--mint); background:rgba(120,242,209,.14); }
+    .drop-icon { width:42px; height:42px; border-radius:10px; display:grid; place-items:center; flex:none; background:var(--mint); color:#08231e; }
+    .drop-icon svg { width:21px; height:21px; }
+    .drop-copy { flex:1; min-width:0; }
+    .drop-copy strong { display:block; font-size:14px; }
+    .drop-copy span { display:block; color:var(--muted); font-size:11px; margin-top:4px; }
+    .drop-copy em { color:var(--mint); font-style:normal; }
+    .drop-button { border:1px solid #42766b; padding:9px 12px; min-height:38px; border-radius:7px; background:transparent; color:var(--mint); white-space:nowrap; }
+    .drop-button:hover { background:rgba(120,242,209,.12); }
+    .queue-tabs { display:flex; align-items:center; gap:4px; padding:0 18px 12px; border-bottom:1px solid var(--line-soft); }
+    .tab { padding:7px 10px; background:transparent; color:var(--muted); border-radius:6px; font-size:11px; }
+    .tab:hover { color:var(--ink); }
+    .tab.is-active { background:var(--panel-3); color:var(--ink); }
+    .tab b { color:var(--muted-2); font-weight:500; margin-left:4px; }
+    .tab.is-active b { color:var(--mint); }
+    .queue { padding:4px 18px 8px; }
+    .queue-row { display:grid; grid-template-columns:42px minmax(0,1fr) auto auto; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line-soft); }
+    .queue-row:last-child { border-bottom:0; }
+    .thumb { width:42px; height:42px; border-radius:7px; position:relative; overflow:hidden; display:grid; place-items:center; color:rgba(255,255,255,.72); }
+    .thumb:after { content:""; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.17),transparent 45%); }
+    .thumb svg { position:relative; z-index:1; width:17px; height:17px; }
+    .thumb.purple { background:#624f79; }.thumb.blue { background:#345a79; }.thumb.orange { background:#955332; }.thumb.green { background:#2f7164; }
+    .file-name { font-size:12px; font-weight:700; }
+    .file-meta { color:var(--muted); font-size:11px; margin-top:2px; }
+    .status { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:11px; white-space:nowrap; }
+    .status:before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .status.done { color:var(--mint); }.status.running { color:var(--orange); }.status.paused { color:var(--muted); }.status.error { color:var(--red); }
+    .row-menu { width:28px; height:28px; display:grid; place-items:center; color:var(--muted-2); background:transparent; border-radius:6px; }
+    .row-menu:hover { color:var(--ink); background:var(--panel-3); }
+    .row-menu svg { width:15px; height:15px; }
+    .empty-row { display:none; padding:30px 0; text-align:center; color:var(--muted); font-size:12px; }
+    .empty-row.show { display:block; }
+    .right-stack { display:grid; gap:14px; }
+    .quick-card { padding:18px; }
+    .quick-title { font-size:13px; font-weight:800; margin-bottom:15px; }
+    .preset-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+    .preset { min-height:72px; padding:11px; text-align:left; border:1px solid var(--line); background:var(--panel-2); border-radius:8px; color:var(--ink); transition:border-color var(--ease),transform var(--ease); }
+    .preset:hover { border-color:#4a7068; transform:translateY(-1px); }
+    .preset.selected { border-color:var(--mint); background:rgba(120,242,209,.08); }
+    .preset strong { display:block; font-size:12px; }.preset span { display:block; color:var(--muted); font-size:10px; margin-top:5px; }
+    .preset b { color:var(--mint); font-size:10px; font-weight:600; }
+    .activity { display:none; padding:18px; }
+    .activity.reveal { display:block; }
+    .activity-list { display:grid; gap:15px; }
+    .activity-item { display:grid; grid-template-columns:23px 1fr; gap:10px; position:relative; }
+    .activity-item:not(:last-child):after { content:""; position:absolute; left:10px; top:22px; width:1px; height:27px; background:var(--line); }
+    .activity-dot { width:21px; height:21px; display:grid; place-items:center; border-radius:50%; background:var(--panel-3); color:var(--mint); }
+    .activity-dot.error { background:color-mix(in srgb,var(--red) 16%,var(--panel-3)); color:var(--red); }
+    .activity-dot svg { width:11px; height:11px; }
+    .activity-copy strong { display:block; font-size:11px; line-height:1.35; }.activity-copy span { display:block; color:var(--muted); font-size:10px; margin-top:3px; }
+    .activity-copy .error-copy { color:var(--red); }
+    .toast { position:fixed; right:24px; bottom:24px; transform:translateY(18px); opacity:0; pointer-events:none; display:flex; align-items:center; gap:9px; padding:12px 14px; background:#d3fff2; color:#0b2923; border-radius:8px; font-size:12px; font-weight:750; box-shadow:var(--shadow); transition:opacity var(--ease),transform var(--ease); z-index:5; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .toast svg { width:16px; height:16px; }
+    .status-bar { position:fixed; left:232px; right:0; bottom:0; z-index:3; min-height:48px; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 24px; border-top:1px solid var(--line-soft); background:color-mix(in srgb,var(--panel) 92%,transparent); backdrop-filter:blur(14px); color:var(--muted); font-size:11px; }
+    .status-group { display:flex; align-items:center; gap:14px; min-width:0; }
+    .status-item { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
+    .status-item strong { color:var(--ink); font-weight:700; }
+    .status-dot { width:6px; height:6px; border-radius:50%; background:var(--mint); box-shadow:0 0 0 3px color-mix(in srgb,var(--mint) 18%,transparent); }
+    .status-dot.error { background:var(--red); box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 18%,transparent); }
+    .status-link { min-height:34px; display:inline-flex; align-items:center; gap:7px; padding:0 9px; color:var(--muted); background:transparent; border-radius:6px; }
+    .status-link:hover { color:var(--ink); background:var(--panel-3); }
+    .status-link svg { width:15px; height:15px; }
+    .notice-count { min-width:17px; height:17px; display:grid; place-items:center; padding:0 4px; border-radius:99px; background:var(--panel-3); color:var(--muted); font-size:10px; }
+    .notice-count.has-error { background:var(--red); color:#fff; }
+    .modal-backdrop { position:fixed; inset:0; z-index:4; display:none; place-items:center; padding:20px; background:rgba(4,7,9,.72); backdrop-filter:blur(5px); }
+    .modal-backdrop.open { display:grid; }
+    .modal { width:min(510px,100%); background:var(--panel); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); animation:modal-in 220ms ease-out; }
+    @keyframes modal-in { from { opacity:0; transform:translateY(9px) scale(.98); } to { opacity:1; transform:none; } }
+    .modal-head { display:flex; justify-content:space-between; align-items:flex-start; padding:20px; border-bottom:1px solid var(--line-soft); }.modal-head h2 { margin:0; font-size:18px; letter-spacing:-.03em; }.modal-head p { color:var(--muted); font-size:11px; margin:4px 0 0; }
+    .modal-body { padding:20px; display:grid; gap:17px; }.field { display:grid; gap:7px; }.field label { color:var(--muted); font-size:11px; }.field select { width:100%; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:10px 11px; }
+    .switch-line { display:flex; align-items:center; justify-content:space-between; gap:16px; }.switch-copy strong { display:block; font-size:12px; }.switch-copy span { color:var(--muted); font-size:11px; }.switch { width:39px; height:22px; padding:2px; flex:none; background:#37434a; border-radius:99px; }.switch i { display:block; width:18px; height:18px; border-radius:50%; background:#a2b0b6; transition:transform var(--ease),background var(--ease); }.switch.on { background:var(--mint-dim); }.switch.on i { transform:translateX(17px); background:var(--mint); }.modal-foot { display:flex; justify-content:flex-end; gap:9px; padding:16px 20px; border-top:1px solid var(--line-soft); }
+    @media (max-width:1100px) { .status-bar { left:74px; }.app-shell { grid-template-columns:74px minmax(0,1fr); }.sidebar { padding-inline:12px; }.brand { padding-inline:8px; }.brand-name,.nav-label,.nav-btn span,.storage,.user-info { display:none; }.nav-btn { justify-content:center; padding:11px; }.user { justify-content:center; padding:0; }.overview { grid-template-columns:repeat(2,1fr); }.stat-card.hero-stat { grid-column:span 2; } }
+    @media (max-width:760px) { .app-shell { height:auto; min-height:100vh; display:block; }.sidebar { position:sticky; top:0; z-index:3; height:60px; padding:0 16px; border-right:0; border-bottom:1px solid var(--line-soft); flex-direction:row; align-items:center; justify-content:space-between; }.brand { padding:0; }.nav { display:flex; gap:2px; }.nav-btn { width:42px; }.nav-btn.is-active { box-shadow:inset 0 -2px var(--mint); }.sidebar-bottom { margin:0; }.user { display:none; }.main { height:auto; min-height:calc(100vh - 60px); overflow:visible; padding:22px 16px 76px; }.topbar { align-items:flex-end; }.top-actions .icon-btn { display:none; }.overview { gap:8px; }.stat-card { min-height:100px; padding:14px; }.stat-number { font-size:23px; }.work-grid { grid-template-columns:1fr; }.queue-row { grid-template-columns:40px minmax(0,1fr) auto; }.queue-row .status { grid-column:2; }.queue-row .row-menu { grid-column:3; grid-row:1 / span 2; }.drop-zone { align-items:flex-start; flex-wrap:wrap; }.drop-button { margin-left:57px; }.drop-copy { min-width:calc(100% - 57px); }.toast { left:16px; right:16px; bottom:60px; }.status-bar { left:0; min-height:52px; padding:0 14px; }.status-group:first-child .status-item:nth-child(2) { display:none; }.status-link span { display:none; } }
+    @media (max-width:430px) { .topbar { display:block; }.top-actions { margin-top:16px; }.top-actions .primary-btn { width:100%; }.overview { grid-template-columns:1fr 1fr; }.stat-card.hero-stat { grid-column:span 2; }.stat-label { font-size:11px; }.queue-tabs { overflow-x:auto; }.drop-zone { margin-inline:12px; padding:18px 14px; }.queue { padding-inline:12px; }.panel-head { padding-inline:14px; } }
+    @media (prefers-reduced-motion:reduce) { *,*:before,*:after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand"><div class="brand-mark">FF</div><div class="brand-name">FRAME<span>FORGE</span></div></div>
+      <div class="nav-label">工作区</div>
+      <nav class="nav">
+        <button class="nav-btn is-active" data-view="工作台" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg><span>工作台</span></button>
+        <button class="nav-btn" data-view="任务队列"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"></path><circle cx="18" cy="18" r="2"></circle></svg><span>任务队列</span></button>
+        <button class="nav-btn" data-view="素材库"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 16 4.5-5 3.2 3 3.2-4 5.1 6"></path><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8" cy="8" r="1.2"></circle></svg><span>素材库</span></button>
+        <button class="nav-btn" data-view="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"></path><circle cx="12" cy="12" r="4"></circle></svg><span>设置</span></button>
+      </nav>
+      <div class="sidebar-bottom"><div class="storage"><div class="storage-top"><span>本地空间</span><strong>42%</strong></div><div class="progress"><i></i></div><div style="font-size:10px;color:var(--muted);margin-top:7px">42.6 GB / 100 GB</div></div><div class="user"><div class="avatar">YK</div><div class="user-info"><strong>Yuki Kim</strong><span>Pro workspace</span></div></div></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div><div class="eyebrow">Workspace / 01</div><h1>视频工作台</h1></div><div class="top-actions"><button class="icon-btn" aria-label="搜索"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg></button><button class="icon-btn" aria-label="通知"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path></svg></button><button class="primary-btn" id="openBatch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>新建处理</button></div></header>
+      <section class="overview" aria-label="工作区概览">
+        <article class="stat-card hero-stat"><div class="stat-label">今日已处理</div><div class="stat-number">128 <small>个文件</small></div><div class="stat-change">↑ 18% <span style="color:var(--muted)">较昨日</span></div></article>
+        <article class="stat-card"><div class="stat-label">队列中</div><div class="stat-number">07</div><div class="stat-change">2 个处理中</div></article>
+        <article class="stat-card"><div class="stat-label">节省空间</div><div class="stat-number">4.8 <small>GB</small></div><div class="stat-change">压缩率 36%</div></article>
+        <article class="stat-card"><div class="stat-label">本月用时</div><div class="stat-number">12.4 <small>h</small></div><div class="stat-change">GPU 加速开启</div></article>
+      </section>
+      <div class="work-grid">
+        <section class="panel" id="queuePanel">
+          <div class="panel-head"><div><div class="panel-title">处理队列</div><div class="panel-meta" id="queueMeta">按添加时间排序 · 自动运行</div></div><button class="outline-btn" id="clearDone">清除已完成</button></div>
+          <div class="drop-zone" id="dropZone"><div class="drop-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0L7 9m5-5 5 5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg></div><div class="drop-copy"><strong>拖入视频文件，开始处理</strong><span>支持 MP4、MOV、AVI、MKV，单个文件最大 4GB · <em>本地处理更安全</em></span></div><button class="drop-button" id="browseBtn">浏览文件</button><input id="fileInput" type="file" accept="video/*" multiple="" hidden=""></div>
+          <div class="queue-tabs" role="tablist"><button class="tab is-active" data-filter="all" role="tab">全部 <b>7</b></button><button class="tab" data-filter="running" role="tab">处理中 <b>2</b></button><button class="tab" data-filter="done" role="tab">已完成 <b>4</b></button><button class="tab" data-filter="paused" role="tab">已暂停 <b>1</b></button></div>
+          <div class="queue" id="queueList">
+            <div class="queue-row" data-status="running"><div class="thumb purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 10 7-10 7V5Z"></path></svg></div><div><div class="file-name od-truncate">产品发布会_横版_v03.mp4</div><div class="file-meta">3840 × 2160 · 1.2 GB · H.265</div></div><div class="status running">处理中 68%</div><button class="row-menu" aria-label="更多操作"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button></div>
+            <div class="queue-row" data-status="running"><div class="thumb blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 5 10 7-10 7V5Z"></path></svg></div><div><div class="file-name od-truncate">campaign_cut_15s.mov</div><div class="file-meta">1920 × 1080 · 248 MB · ProRes</div></div><div class="status running">处理中 24%</div><button class="row-menu" aria-label="更多操作"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button></div>
+            <div class="queue-row" data-status="done"><div class="thumb orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"></path></svg></div><div><div class="file-name od-truncate">采访花絮_B-roll.mp4</div><div class="file-meta">2560 × 1440 · 820 MB · H.264</div></div><div class="status done">已完成 · 2分钟前</div><button class="row-menu" aria-label="更多操作"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button></div>
+            <div class="queue-row" data-status="done"><div class="thumb green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"></path></svg></div><div><div class="file-name od-truncate">studio-tour-final.mp4</div><div class="file-meta">3840 × 2160 · 2.1 GB · H.265</div></div><div class="status done">已完成 · 18分钟前</div><button class="row-menu" aria-label="更多操作"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button></div>
+            <div class="queue-row" data-status="paused"><div class="thumb blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 5v14M16 5v14"></path></svg></div><div><div class="file-name od-truncate">social_teaser_02.mp4</div><div class="file-meta">1080 × 1920 · 96 MB · H.264</div></div><div class="status paused">已暂停 · 等待中</div><button class="row-menu" aria-label="更多操作"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button></div>
+            <div class="queue-row" data-status="done"><div class="thumb purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"></path></svg></div><div><div class="file-name od-truncate">品牌故事_字幕版.mp4</div><div class="file-meta">1920 × 1080 · 420 MB · H.264</div></div><div class="status done">已完成 · 34分钟前</div><button class="row-menu" aria-label="更多操作"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button></div>
+            <div class="queue-row" data-status="done"><div class="thumb orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"></path></svg></div><div><div class="file-name od-truncate">launch-countdown.mp4</div><div class="file-meta">1920 × 1080 · 165 MB · H.264</div></div><div class="status done">已完成 · 1小时前</div><button class="row-menu" aria-label="更多操作"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button></div>
+            <div class="empty-row" id="emptyRow">这个筛选下还没有任务</div>
+          </div>
+        </section>
+        <div class="right-stack">
+          <section class="panel quick-card"><div class="quick-title">快速预设</div><div class="preset-grid"><button class="preset selected" data-preset="web"><strong>网页压缩</strong><span>H.264 · 1080p</span><b>推荐</b></button><button class="preset" data-preset="social"><strong>社交媒体</strong><span>竖屏 · 15 Mbps</span><b>9:16</b></button><button class="preset" data-preset="audio"><strong>提取音频</strong><span>MP3 · 320 kbps</span><b>仅音频</b></button><button class="preset" data-preset="gif"><strong>转 GIF</strong><span>循环 · 720p</span><b>动图</b></button></div><button class="outline-btn" style="width:100%;margin-top:12px" id="customPreset">自定义处理参数 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M3 12h18"></path></svg></button></section>
+          <section class="panel activity" id="activityPanel"><div class="panel-head" style="padding:0 0 15px;border-bottom:0"><div><div class="panel-title">通知中心</div><div class="panel-meta">默认隐藏低频动态，仅在需要时查看</div></div><button class="row-menu" id="hideActivity" aria-label="隐藏通知"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></div><div class="activity-list"><div class="activity-item"><div class="activity-dot error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5m0 3h.01"></path><path d="M10.3 4.3 3.8 16a2 2 0 0 0 1.7 3h13a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"></path></svg></div><div class="activity-copy"><strong class="error-copy">采访花絮_B-roll.mp4 处理失败</strong><span>音频轨道读取失败 · 点击队列行查看详情</span></div></div><div class="activity-item"><div class="activity-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"></path></svg></div><div class="activity-copy"><strong>采访花絮_B-roll.mp4 已处理完成</strong><span>刚刚 · 节省 312 MB</span></div></div><div class="activity-item"><div class="activity-dot" style="color:var(--orange)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v6l4 2"></path><circle cx="12" cy="12" r="8"></circle></svg></div><div class="activity-copy"><strong>批处理任务已开始</strong><span>8分钟前 · 共 3 个文件</span></div></div><div class="activity-item"><div class="activity-dot" style="color:#a8a1ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16 8 8l4-4 5 7"></path></svg></div><div class="activity-copy"><strong>GPU 加速已启用</strong><span>今天 09:42 · 性能提升 2.4×</span></div></div></div></section>
+        </div>
+      </div>
+    </main>
+  </div>
+  <footer class="status-bar" aria-label="底部状态栏"><div class="status-group"><span class="status-item"><i class="status-dot"></i><strong>系统就绪</strong></span><span class="status-item">处理中 <strong>2</strong> 个任务</span><span class="status-item">队列预计 <strong>18 分钟</strong></span></div><div class="status-group"><span class="status-item">GPU 加速 <strong>已启用</strong></span><button class="status-link" id="themeToggle" aria-label="切换浅色主题" title="切换浅色主题"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><span>浅色主题</span></button><button class="status-link" id="notifyToggle" aria-expanded="false" aria-controls="activityPanel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path></svg><span>通知</span><b class="notice-count has-error">1</b></button></div></footer>
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"></path></svg><span id="toastText">已添加到处理队列</span></div>
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><div class="modal-head"><div><h2 id="modalTitle">新建处理任务</h2><p>选择一个预设，马上开始处理视频</p></div><button class="icon-btn" id="closeModal" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"></path></svg></button></div><div class="modal-body"><div class="field"><label for="format">输出格式</label><select id="format"><option>MP4 / H.264（推荐）</option><option>MP4 / H.265</option><option>WebM / VP9</option><option>仅提取音频 / MP3</option></select></div><div class="field"><label for="quality">画质与体积</label><select id="quality"><option>平衡 · 1080p · 适合网页</option><option>高质量 · 原始分辨率</option><option>轻量 · 720p · 快速分享</option></select></div><div class="switch-line"><div class="switch-copy"><strong>自动清理原文件</strong><span>处理完成后移入回收站</span></div><button class="switch" aria-label="切换自动清理" aria-pressed="false"><i></i></button></div><div class="switch-line"><div class="switch-copy"><strong>启用 GPU 加速</strong><span>使用本机硬件提升处理速度</span></div><button class="switch on" aria-label="切换 GPU 加速" aria-pressed="true"><i></i></button></div></div><div class="modal-foot"><button class="outline-btn" id="cancelModal">取消</button><button class="primary-btn" id="confirmBatch">选择文件并继续 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-6-6 6 6-6 6"></path></svg></button></div></div></div>
+  <script>
+    const $ = (s, root=document) => root.querySelector(s);
+    const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+    const savedTheme = (() => { try { return localStorage.getItem('frameforge-theme'); } catch { return null; } })();
+    if (savedTheme === 'light') document.body.dataset.theme = 'light';
+    const toast = (message) => { $('#toastText').textContent = message; $('#toast').classList.add('show'); clearTimeout(window.toastTimer); window.toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2600); };
+    const modal = $('#modalBackdrop');
+    const openModal = () => { modal.classList.add('open'); $('#format').focus(); };
+    const closeModal = () => modal.classList.remove('open');
+    $('#openBatch').addEventListener('click', openModal); $('#customPreset').addEventListener('click', openModal); $('#closeModal').addEventListener('click', closeModal); $('#cancelModal').addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    $$('.switch').forEach(sw => sw.addEventListener('click', () => { const on = sw.classList.toggle('on'); sw.setAttribute('aria-pressed', String(on)); }));
+    $$('.preset').forEach(btn => btn.addEventListener('click', () => { $$('.preset').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); toast(`${btn.querySelector('strong').textContent}预设已选择`); }));
+    $$('.nav-btn').forEach(btn => btn.addEventListener('click', () => { $$('.nav-btn').forEach(b => { b.classList.remove('is-active'); b.removeAttribute('aria-current'); }); btn.classList.add('is-active'); btn.setAttribute('aria-current','page'); if (btn.dataset.view !== '工作台') toast(`${btn.dataset.view}模块即将开放`); }));
+    const fileInput = $('#fileInput'); $('#browseBtn').addEventListener('click', () => fileInput.click()); $('#confirmBatch').addEventListener('click', () => { closeModal(); fileInput.click(); });
+    const dropZone = $('#dropZone'); ['dragenter','dragover'].forEach(type => dropZone.addEventListener(type, e => { e.preventDefault(); dropZone.classList.add('is-dragging'); })); ['dragleave','drop'].forEach(type => dropZone.addEventListener(type, e => { e.preventDefault(); dropZone.classList.remove('is-dragging'); })); dropZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files)); fileInput.addEventListener('change', e => handleFiles(e.target.files));
+    function handleFiles(files) { if (!files || !files.length) return; toast(`${files.length} 个视频已添加到处理队列`); $('#queueMeta').textContent = `刚刚添加 ${files.length} 个文件 · 自动运行`; }
+    $$('.tab').forEach(tab => tab.addEventListener('click', () => { $$('.tab').forEach(t => t.classList.remove('is-active')); tab.classList.add('is-active'); const filter = tab.dataset.filter; let visible = 0; $$('.queue-row').forEach(row => { const show = filter === 'all' || row.dataset.status === filter; row.style.display = show ? '' : 'none'; if (show) visible++; }); $('#emptyRow').classList.toggle('show', visible === 0); }));
+    $('#clearDone').addEventListener('click', () => { $$('.queue-row[data-status="done"]').forEach(row => row.remove()); toast('已清除完成任务'); });
+    $$('.row-menu').forEach(btn => btn.addEventListener('click', () => {
+      const row = btn.closest('.queue-row');
+      if (!row) { toast('更多操作已准备就绪'); return; }
+      const status = row.dataset.status;
+      const statusEl = row.querySelector('.status');
+      if (status === 'running') { row.dataset.status = 'paused'; statusEl.className = 'status paused'; statusEl.textContent = '已暂停 · 等待继续'; toast('任务已暂停'); }
+      else if (status === 'paused') { row.dataset.status = 'running'; statusEl.className = 'status running'; statusEl.textContent = '处理中 · 已恢复'; toast('任务已继续'); }
+      else if (status === 'done') toast('已打开完成文件信息');
+      else toast('已打开错误详情');
+    }));
+    const activityPanel = $('#activityPanel');
+    const notifyToggle = $('#notifyToggle');
+    $('#hideActivity').addEventListener('click', () => { activityPanel.classList.remove('reveal'); notifyToggle.setAttribute('aria-expanded','false'); });
+    notifyToggle.addEventListener('click', () => { const reveal = activityPanel.classList.toggle('reveal'); notifyToggle.setAttribute('aria-expanded', String(reveal)); if (reveal) activityPanel.scrollIntoView({behavior:'smooth',block:'nearest'}); });
+    const themeToggle = $('#themeToggle');
+    const setTheme = (light, announce = true) => { document.body.dataset.theme = light ? 'light' : 'dark'; themeToggle.setAttribute('aria-label', light ? '切换深色主题' : '切换浅色主题'); themeToggle.querySelector('span').textContent = light ? '深色主题' : '浅色主题'; try { localStorage.setItem('frameforge-theme', light ? 'light' : 'dark'); } catch {} if (announce) toast(light ? '已切换到浅色主题' : '已切换到深色主题'); };
+    setTheme(savedTheme === 'light', false);
+    themeToggle.addEventListener('click', () => setTheme(document.body.dataset.theme !== 'light'));
+  </script>
+
+
+</body></html>

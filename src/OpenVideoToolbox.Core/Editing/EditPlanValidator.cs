@@ -400,7 +400,7 @@ public sealed class EditPlanValidator
                     "Timeline track id is required."));
             }
 
-            ValidateTimelineEffects(track.Effects, $"{trackPath}.effects", trackIds, effectRegistry, issues);
+            ValidateTimelineEffects(track.Effects, $"{trackPath}.effects", trackIds, effectRegistry, issues, track, clip: null);
 
             for (var clipIndex = 0; clipIndex < track.Clips.Count; clipIndex++)
             {
@@ -447,10 +447,13 @@ public sealed class EditPlanValidator
                     }
                     else if (clip.InPoint is null || clip.OutPoint is null)
                     {
-                        issues.Add(Error(
-                            clipPath,
-                            "timeline.clip.video.range.required",
-                            "Video timeline clips must specify both in and out."));
+                        if (!TimelineVisualAssetRules.AllowsDurationOnlyVideoClip(clip))
+                        {
+                            issues.Add(Error(
+                                clipPath,
+                                "timeline.clip.video.range.required",
+                                "Video timeline clips must specify both in and out, unless they are explicit still-image clips with duration."));
+                        }
                     }
                     else if (clip.OutPoint <= clip.InPoint)
                     {
@@ -462,7 +465,7 @@ public sealed class EditPlanValidator
                 }
 
                 ValidateTransitions(clip, clipPath, issues);
-                ValidateTimelineEffects(clip.Effects, $"{clipPath}.effects", trackIds, effectRegistry, issues);
+                ValidateTimelineEffects(clip.Effects, $"{clipPath}.effects", trackIds, effectRegistry, issues, track, clip);
             }
         }
     }
@@ -565,7 +568,9 @@ public sealed class EditPlanValidator
         string effectsPath,
         IReadOnlySet<string> trackIds,
         EffectRegistry? effectRegistry,
-        ICollection<EditPlanValidationIssue> issues)
+        ICollection<EditPlanValidationIssue> issues,
+        TimelineTrack track,
+        TimelineClip? clip)
     {
         for (var effectIndex = 0; effectIndex < effects.Count; effectIndex++)
         {
@@ -581,13 +586,22 @@ public sealed class EditPlanValidator
                 continue;
             }
 
-            if (effectRegistry is not null && effectRegistry.Get(effect.Type) is null)
+            var definition = effectRegistry?.Get(effect.Type);
+            if (effectRegistry is not null && definition is null)
             {
                 issues.Add(Warning(
                     $"{effectPath}.type",
                     "timeline.effect.type.unknown",
                     $"Timeline effect type '{effect.Type}' is not registered."));
+                continue;
             }
+
+            if (definition is not null)
+            {
+                ValidateEffectParameters(effect, effectPath, definition, issues);
+            }
+
+            ValidateMotionEffectUsage(effect, effectPath, track, clip, issues);
 
             if (!string.Equals(effect.Type, "auto_ducking", StringComparison.OrdinalIgnoreCase))
             {
@@ -603,6 +617,118 @@ public sealed class EditPlanValidator
                     "timeline.effect.reference.track.missing",
                     "auto_ducking effect reference must point to an existing timeline track id."));
             }
+        }
+    }
+
+    private static void ValidateEffectParameters(
+        TimelineEffect effect,
+        string effectPath,
+        IEffectDefinition definition,
+        ICollection<EditPlanValidationIssue> issues)
+    {
+        foreach (var parameter in definition.Parameters.Items)
+        {
+            var parameterName = parameter.Key;
+            var descriptor = parameter.Value;
+            if (!TryGetExtensionValue(effect.Extensions, parameterName, out var value))
+            {
+                if (descriptor.Required && descriptor.DefaultValue is null)
+                {
+                    issues.Add(Error(
+                        $"{effectPath}.{parameterName}",
+                        "timeline.effect.parameter.required",
+                        $"Timeline effect '{effect.Type}' requires parameter '{parameterName}'."));
+                }
+
+                continue;
+            }
+
+            if (!IsSupportedParameterType(descriptor.Type, value))
+            {
+                issues.Add(Error(
+                    $"{effectPath}.{parameterName}",
+                    "timeline.effect.parameter.type.invalid",
+                    $"Timeline effect '{effect.Type}' parameter '{parameterName}' must be of type '{descriptor.Type}'."));
+                continue;
+            }
+
+            if (descriptor.EnumValues.Count > 0
+                && value.ValueKind == JsonValueKind.String
+                && !descriptor.EnumValues.Contains(value.GetString() ?? string.Empty, StringComparer.OrdinalIgnoreCase))
+            {
+                issues.Add(Error(
+                    $"{effectPath}.{parameterName}",
+                    "timeline.effect.parameter.enum.invalid",
+                    $"Timeline effect '{effect.Type}' parameter '{parameterName}' must be one of: {string.Join(", ", descriptor.EnumValues)}."));
+                continue;
+            }
+
+            if ((descriptor.Type is "int" or "float")
+                && value.ValueKind == JsonValueKind.Number
+                && value.TryGetDouble(out var number))
+            {
+                if (descriptor.Min is { } min && number < min)
+                {
+                    issues.Add(Error(
+                        $"{effectPath}.{parameterName}",
+                        "timeline.effect.parameter.range.invalid",
+                        $"Timeline effect '{effect.Type}' parameter '{parameterName}' must be greater than or equal to {min}."));
+                }
+
+                if (descriptor.Max is { } max && number > max)
+                {
+                    issues.Add(Error(
+                        $"{effectPath}.{parameterName}",
+                        "timeline.effect.parameter.range.invalid",
+                        $"Timeline effect '{effect.Type}' parameter '{parameterName}' must be less than or equal to {max}."));
+                }
+            }
+        }
+    }
+
+    private static void ValidateMotionEffectUsage(
+        TimelineEffect effect,
+        string effectPath,
+        TimelineTrack track,
+        TimelineClip? clip,
+        ICollection<EditPlanValidationIssue> issues)
+    {
+        if (!IsMotionEffect(effect.Type))
+        {
+            return;
+        }
+
+        if (clip is null)
+        {
+            issues.Add(Error(
+                effectPath,
+                "timeline.effect.motion.track.unsupported",
+                $"Motion effect '{effect.Type}' is only supported on timeline clips, not on track-level effects."));
+            return;
+        }
+
+        if (track.Kind != TrackKind.Video)
+        {
+            issues.Add(Error(
+                effectPath,
+                "timeline.effect.motion.video.only",
+                $"Motion effect '{effect.Type}' is only supported on video clips."));
+        }
+
+        if (clip.Placeholder is not null)
+        {
+            issues.Add(Error(
+                effectPath,
+                "timeline.effect.motion.placeholder.unsupported",
+                $"Motion effect '{effect.Type}' is not supported on placeholder clips."));
+        }
+
+        if (string.IsNullOrWhiteSpace(clip.Src))
+        {
+            issues.Add(Error(
+                effectPath,
+                "timeline.effect.motion.src.required",
+                $"Motion effect '{effect.Type}' requires clip.src to be explicitly set in the first implementation."));
         }
     }
 
@@ -624,6 +750,41 @@ public sealed class EditPlanValidator
 
         value = element.GetString();
         return true;
+    }
+
+    private static bool TryGetExtensionValue(
+        IDictionary<string, JsonElement>? extensions,
+        string key,
+        out JsonElement value)
+    {
+        if (extensions is not null && extensions.TryGetValue(key, out value))
+        {
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
+    private static bool IsSupportedParameterType(string declaredType, JsonElement value)
+    {
+        return declaredType.ToLowerInvariant() switch
+        {
+            "int" => value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out _),
+            "float" => value.ValueKind == JsonValueKind.Number,
+            "string" => value.ValueKind == JsonValueKind.String,
+            "bool" => value.ValueKind is JsonValueKind.True or JsonValueKind.False,
+            "array" => value.ValueKind == JsonValueKind.Array,
+            "object" => value.ValueKind == JsonValueKind.Object,
+            _ => true
+        };
+    }
+
+    private static bool IsMotionEffect(string effectType)
+    {
+        return effectType.Equals("move", StringComparison.OrdinalIgnoreCase)
+            || effectType.Equals("orbit", StringComparison.OrdinalIgnoreCase)
+            || effectType.Equals("zoompan", StringComparison.OrdinalIgnoreCase);
     }
 
     private static TimeSpan? GetTimelineClipDuration(TimelineClip clip)
@@ -852,13 +1013,21 @@ internal static class EditPlanValidationIssueMetadata
             "timeline.clip.id.duplicate" => "Rename duplicated timeline clip ids so each clip id is unique across the whole timeline.",
             "timeline.clip.start.invalid" => "Set timeline clip start to zero or a positive value.",
             "timeline.clip.duration.invalid" => "Set timeline clip duration to a value greater than zero, or omit it.",
-            "timeline.clip.video.range.required" => "Video timeline clips must provide both in and out.",
+            "timeline.clip.video.range.required" => "Video timeline clips must provide both in and out, unless they are explicit still-image clips with duration.",
             "timeline.clip.video.range.invalid" => "Adjust timeline clip out so it is greater than clip in.",
             "timeline.transition.duration.invalid" => "Set transition duration to a value greater than zero.",
             "timeline.transition.duration.exceedsClip" => "Reduce transition duration so it does not exceed the clip duration.",
             "timeline.effect.type.required" => "Set each timeline effect type to a registered effect name.",
             "timeline.effect.type.unknown" => "Register the effect type before using it, or change it to a known effect name.",
+            "timeline.effect.parameter.required" => "Provide the required effect parameter, or use an effect definition with a default value.",
+            "timeline.effect.parameter.type.invalid" => "Change the effect parameter to the type declared by the effect schema.",
+            "timeline.effect.parameter.enum.invalid" => "Change the effect parameter to one of the values declared by the effect schema.",
+            "timeline.effect.parameter.range.invalid" => "Keep the effect parameter value within the range declared by the effect schema.",
             "timeline.effect.reference.track.missing" => "Set auto_ducking.reference to an existing timeline track id.",
+            "timeline.effect.motion.track.unsupported" => "Move the motion effect from the track to a concrete video clip.",
+            "timeline.effect.motion.video.only" => "Use motion effects only on video timeline clips.",
+            "timeline.effect.motion.placeholder.unsupported" => "Remove the motion effect from placeholder clips, or replace the placeholder with a concrete visual asset.",
+            "timeline.effect.motion.src.required" => "Set clip.src explicitly for the clip that uses move/orbit/zoompan in the first implementation.",
             _ => null
         };
 }

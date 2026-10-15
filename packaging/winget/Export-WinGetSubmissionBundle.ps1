@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$PackageVersion = "0.1.0",
+    [string]$PackageVersion = "1.0.0",
 
     [string]$ReleaseTag,
 

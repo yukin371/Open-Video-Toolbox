@@ -35,6 +35,99 @@ public sealed class ExternalDependencyInspector
         };
     }
 
+    public async Task<HardwareEncoderInspectionReport> InspectHardwareEncodersAsync(
+        string ffmpegPath,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(ffmpegPath);
+        var commandPlan = new CommandPlan
+        {
+            ToolName = "ffmpeg",
+            ExecutablePath = ffmpegPath,
+            Arguments = ["-hide_banner", "-encoders"],
+            CommandLine = BuildCommandLine(ffmpegPath, ["-hide_banner", "-encoders"])
+        };
+
+        try
+        {
+            var execution = await _processRunner.ExecuteAsync(new ProcessExecutionRequest
+            {
+                CommandPlan = commandPlan,
+                Timeout = timeout
+            }, cancellationToken).ConfigureAwait(false);
+            var text = string.Join(Environment.NewLine, execution.OutputLines.Select(line => line.Text));
+            var encoders = ParseHardwareEncoders(text);
+            return new HardwareEncoderInspectionReport
+            {
+                FfmpegPath = ffmpegPath,
+                IsAvailable = execution.Status == ExecutionStatus.Succeeded && execution.ExitCode == 0,
+                ProbeSucceeded = execution.Status == ExecutionStatus.Succeeded && execution.ExitCode == 0,
+                ExitCode = execution.ExitCode,
+                Encoders = encoders,
+                Detail = BuildExecutionDetail(execution)
+            };
+        }
+        catch (Exception ex)
+        {
+            return new HardwareEncoderInspectionReport
+            {
+                FfmpegPath = ffmpegPath,
+                IsAvailable = false,
+                ProbeSucceeded = false,
+                Encoders = [],
+                Detail = ex.Message
+            };
+        }
+    }
+
+    public async Task<HardwareEncoderTrialResult> TryHardwareEncoderAsync(
+        string ffmpegPath,
+        string encoder,
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(ffmpegPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(encoder);
+        var commandPlan = new CommandPlan
+        {
+            ToolName = "ffmpeg",
+            ExecutablePath = ffmpegPath,
+            Arguments = ["-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "color=size=16x16:rate=1", "-t", "0.1", "-an", "-c:v", encoder, "-f", "null", "-"],
+            CommandLine = BuildCommandLine(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "color=size=16x16:rate=1", "-t", "0.1", "-an", "-c:v", encoder, "-f", "null", "-"])
+        };
+
+        try
+        {
+            var execution = await _processRunner.ExecuteAsync(new ProcessExecutionRequest
+            {
+                CommandPlan = commandPlan,
+                Timeout = timeout
+            }, cancellationToken).ConfigureAwait(false);
+            return new HardwareEncoderTrialResult
+            {
+                Encoder = encoder,
+                IsAvailable = execution.Status == ExecutionStatus.Succeeded && execution.ExitCode == 0,
+                ProbeSucceeded = execution.Status == ExecutionStatus.Succeeded && execution.ExitCode == 0,
+                ExitCode = execution.ExitCode,
+                Detail = BuildExecutionDetail(execution)
+            };
+        }
+        catch (Exception ex)
+        {
+            return new HardwareEncoderTrialResult { Encoder = encoder, IsAvailable = false, ProbeSucceeded = false, Detail = ex.Message };
+        }
+    }
+
+    private static IReadOnlyList<string> ParseHardwareEncoders(string text)
+    {
+        var known = new[] { "h264_nvenc", "hevc_nvenc", "av1_nvenc", "h264_qsv", "hevc_qsv", "av1_qsv", "h264_amf", "hevc_amf", "h264_videotoolbox", "hevc_videotoolbox" };
+        return text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .SelectMany(line => known.Where(encoder => line.Contains($" {encoder} ", StringComparison.Ordinal)))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
+
     private async Task<DependencyProbeResult> InspectDependencyAsync(
         DependencyProbeDefinition definition,
         CancellationToken cancellationToken)
@@ -204,6 +297,36 @@ public sealed record DependencyInspectionReport
     public int MissingOptionalCount { get; init; }
 
     public IReadOnlyList<DependencyProbeResult> Dependencies { get; init; } = [];
+}
+
+public sealed record HardwareEncoderInspectionReport
+{
+    public int SchemaVersion { get; init; } = SchemaVersions.V1;
+
+    public required string FfmpegPath { get; init; }
+
+    public bool IsAvailable { get; init; }
+
+    public bool ProbeSucceeded { get; init; }
+
+    public int? ExitCode { get; init; }
+
+    public IReadOnlyList<string> Encoders { get; init; } = [];
+
+    public string? Detail { get; init; }
+}
+
+public sealed record HardwareEncoderTrialResult
+{
+    public required string Encoder { get; init; }
+
+    public bool IsAvailable { get; init; }
+
+    public bool ProbeSucceeded { get; init; }
+
+    public int? ExitCode { get; init; }
+
+    public string? Detail { get; init; }
 }
 
 public sealed record DependencyProbeDefinition

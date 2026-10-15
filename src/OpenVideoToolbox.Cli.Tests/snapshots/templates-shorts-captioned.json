@@ -195,7 +195,8 @@
           "beats": null,
           "subtitles": {
             "path": "subtitles.srt",
-            "mode": "sidecar"
+            "mode": "sidecar",
+            "style": null
           },
           "timeline": null,
           "output": {
@@ -265,7 +266,8 @@
           "beats": null,
           "subtitles": {
             "path": "subtitles.srt",
-            "mode": "sidecar"
+            "mode": "sidecar",
+            "style": null
           },
           "timeline": null,
           "output": {
@@ -337,7 +339,8 @@
               "beats": null,
               "subtitles": {
                 "path": "subtitles.srt",
-                "mode": "sidecar"
+                "mode": "sidecar",
+                "style": null
               },
               "timeline": null,
               "output": {
@@ -409,7 +412,8 @@
               "beats": null,
               "subtitles": {
                 "path": "subtitles.srt",
-                "mode": "sidecar"
+                "mode": "sidecar",
+                "style": null
               },
               "timeline": null,
               "output": {
@@ -475,7 +479,8 @@
               "beats": null,
               "subtitles": {
                 "path": "subtitles.srt",
-                "mode": "sidecar"
+                "mode": "sidecar",
+                "style": null
               },
               "timeline": null,
               "output": {
@@ -539,7 +544,8 @@
           },
           "subtitles": {
             "path": "subtitles.srt",
-            "mode": "sidecar"
+            "mode": "sidecar",
+            "style": null
           },
           "timeline": null,
           "output": {

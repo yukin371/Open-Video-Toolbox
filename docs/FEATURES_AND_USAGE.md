@@ -1,6 +1,6 @@
 # 功能与使用总览
 
-最后更新：2026-04-24
+最后更新：2026-04-29
 
 ## 文档定位
 
@@ -19,13 +19,13 @@
 - 架构 owner 规则
 - MVP 设计历史
 
-这些内容分别以 `docs/roadmap.md`、`docs/ARCHITECTURE_GUARDRAILS.md`、`docs/CLI_MVP.md` 为准。
+这些内容分别以 `docs/roadmap.md`、`docs/ARCHITECTURE_GUARDRAILS.md`、`docs/reference/cli-mvp-design.md` 为准。
 
 与本文档配套的文档栈：
 
 - 最短上手路径：`docs/QUICK_START.md`
 - 精确命令签名速查：`docs/COMMAND_REFERENCE.md`
-- 设计边界与中间产物草案：`docs/CLI_MVP.md`
+- 设计边界与中间产物草案：`docs/reference/cli-mvp-design.md`
 
 ## 当前已交付能力
 
@@ -38,6 +38,43 @@
 - 编辑基元：`cut`、`concat`、`extract-audio`、`subtitle`
 - 执行导出：`mix-audio`、`render`
 - 查询：`presets`
+
+### 压缩预设与输出命名
+
+`presets`、`plan`、`run` 共用同一套预设目录。当前内置预设包括：
+
+- `h264-aac-mp4`：兼容性优先，默认后缀 `_x264`
+- `h264-aac-fast`：更快编码，默认后缀 `_x264_fast`
+- `h264-aac-720p`：缩放到 720p，默认后缀 `_x264_720p`
+
+`plan` / `run` 可用 `--resolution 480p|720p|1080p|WIDTHxHEIGHT` 覆盖输出尺寸；使用 `--fit 9:16|1:1|16:9` 时会等比缩放并补黑边，适合竖屏、方形和横屏发布。例如：`ovt plan input.mp4 --resolution 1080p --fit 9:16`。
+
+抽帧可用 `ovt extract-frame input.mp4 --at 00:00:03,00:00:08`，默认在原目录写出 `input_frame-001.png`、`input_frame-002.png`；也可用 `--start 00:00:02 --interval 00:00:03 --count 5` 按固定间隔批量生成，或用 `--output` / `--output-dir` 指定目标。`--resolution WIDTHxHEIGHT` 按原始宽高比缩放并限制在给定边界内，不拉伸画面；需要固定画布比例时配合 `--fit`。
+
+水印示例：`ovt run input.mp4 --watermark brand.png --watermark-position bottom-right --watermark-margin 24 --watermark-opacity 0.8`。水印会在视频重新编码时叠加，原始音轨继续保留；图片必须是独立文件。
+
+烧录字幕样式示例：`ovt plan input.mp4 --subtitle captions.srt --subtitle-mode burnIn --subtitle-font "Microsoft YaHei" --subtitle-size 32 --subtitle-color &H00FFFFFF --subtitle-outline-color &H00000000 --subtitle-outline 2 --subtitle-margin-v 48`。颜色使用 ASS `&H...` 格式；样式字段只映射到受限 `force_style` 参数。
+- `h265-aac-mp4`：更高压缩效率，默认后缀 `_x265`
+- `copy-aac-mkv`：复制视频并转 AAC，默认后缀 `_copy`
+
+未指定输出选项时，CLI 会把结果写到原始素材所在目录。例如 `video01.mp4` 使用默认预设后生成 `video01_x264.mp4`。需要集中管理文件时，可以继续指定 `--output-dir` 和 `--output-name`。
+
+自定义预设采用与内置预设相同的 JSON 结构：
+
+```json
+{
+  "id": "custom-h264",
+  "displayName": "Custom H.264",
+  "video": { "encoder": "libx264", "preset": "fast", "crf": 28, "pixelFormat": "yuv420p" },
+  "audio": { "encoder": "aac", "bitrateKbps": 128, "channels": 2, "sampleRate": 48000 },
+  "output": { "containerExtension": ".mp4", "fastStart": true },
+  "outputNameSuffix": "_custom"
+}
+```
+
+用 `--preset-file <path>` 加载单个文件，或用 `--preset-dir <path>` 加载目录中的全部 JSON 文件。`run` 成功后会在 `payload.sizeComparison` 返回压缩前后字节数、输出/输入比例和变化百分比。
+
+预设文件支持单对象或数组，id 不得与内置预设或其他自定义预设重复。`schemaVersion` 为 1；扩展名只接受可选前导点和字母数字，后缀不能为空或包含文件名非法字符。CRF 压缩不保证一定变小，已高度压缩的素材可能变大；`changePercent` 为负值表示缩小，为正值表示增大。
 
 这些命令现在都满足：
 
@@ -81,7 +118,7 @@ Windows 发布资产当前同时包含：
 
 说明：
 
-- `winget portable` 提交草稿已准备；仓库内许可证来源、`v0.1.0` release、Windows `portable` 资产与 readiness 检查都已到位，后续只剩 manifest 提交与目标环境复核。
+- `winget portable` 提交草稿已准备；历史 `v0.1.0` release 的许可证来源、Windows `portable` 资产与 readiness 检查已验证，当前 `1.0.0` 的 manifest 需等新 tag / Release 签发后再生成。
 - 当前最稳妥的安装方式仍是直接使用 GitHub Release 资产或源码运行。
 
 ### 必需依赖
@@ -168,6 +205,8 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
 | 想快速找模板 | 本文档 + `COMMAND_REFERENCE.md` | `<ovt> templates --summary` |
 | 想直接做传统转码 | 本文档“传统转码”工作流 | `<ovt> probe input.mp4 --json-out probe.json` |
 | 想生成 `edit.json` 再导出 | 本文档“模板生成到最终导出”工作流 | `<ovt> init-plan input.mp4 --template shorts-captioned --output edit.json --render-output final.mp4` |
+| 想处理 YouTube 等外部来源 | 本文档“外部视频导入到短视频工作流” | 先用外部工具下载到本地，再 `<ovt> probe input.mp4 --json-out probe.json` |
+| 想让外部 AI 按章节剪短视频 | 本文档“外部 AI 章节驱动剪辑工作流” | 先生成章节清单，再用 `<ovt> cut` 或 `init-plan` / `render` |
 | 想查某条命令的精确签名 | `COMMAND_REFERENCE.md` | 按命令名查对应条目 |
 
 ## 命令矩阵
@@ -207,6 +246,8 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
 | 导出 | `mix-audio` | 音频混合预览 / 执行 | `mixed.wav` / preview JSON |
 | 导出 | `render` | 最终视频导出预览 / 执行 | `final.mp4` / preview JSON |
 | 导出 | `render-batch` | 从 manifest 批量预览或执行多份 plan | stdout / `summary.json` |
+| 外部 AI 工作流 | 外部下载器 + OVT CLI | YouTube / 网页视频先落本地，再进入 `probe` / `scaffold-template` / `render` | 本地素材、字幕、`edit.json`、成片 |
+| 外部 AI 工作流 | 外部 AI + OVT CLI | 由外部 AI 读取 transcript / 字幕并写回章节、翻译或文案，OVT 只消费结构化文件 | 章节清单、字幕文件、文案、成片 |
 
 ## 标准输出约定
 
@@ -307,6 +348,8 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
 
 - 统一检查 `ffmpeg`、`ffprobe`、`whisper-cli`、`demucs`、`whisper model`
 - 适合作为所有复杂工作流的第一步
+- 输出中的 `hardwareEncoders` 会列出 `ffmpeg -encoders` 中发现的 NVENC、QSV、AMF 或 VideoToolbox 编码器；这只是能力探测，不会静默改写预设。
+- 如需验证某个已发现编码器能否实际运行，可显式执行 `doctor --test-hardware-encoder h264_nvenc`；未被 `ffmpeg -encoders` 列出的名称会直接报错，不会盲试。
 
 示例：
 
@@ -869,6 +912,53 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
 <ovt> validate-plan --plan edit.json --plugin-dir .plugins\community-pack
 ```
 
+### 工作流 6：外部视频导入到短视频流程
+
+适合 YouTube、网页视频、会议录屏等外部来源。OVT 当前不内置下载器；外部下载步骤必须先把有权处理的素材落成本地文件，再进入 OVT。
+
+```powershell
+# 1. 外部工具下载，示例仅表示边界，不属于 OVT 内置命令
+yt-dlp -f "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]" --write-subs --write-auto-subs --sub-langs en --sub-format vtt -o "source.%(ext)s" "<video-url>"
+
+# 2. 进入 OVT 可审计流程
+<ovt> probe source.mp4 --json-out probe.json
+<ovt> scaffold-template source.mp4 --template shorts-captioned --dir .workspace --validate
+<ovt> render --plan .workspace\edit.json --output final.mp4 --preview --json-out render-preview.json
+```
+
+如果下载器同时产出了字幕文件，可以让外部 AI 或脚本先转换为 OVT 当前可消费的字幕 / transcript 形态，再用 `attach-plan-material` 接回 plan。
+
+### 工作流 7：外部 AI 章节驱动剪辑
+
+适合参考 YouTube Clipper 类工作流：外部 AI 读取字幕或 transcript，输出章节选择；OVT 负责确定性剪辑、计划校验和渲染。
+
+当前推荐的结构是：
+
+1. 用 `transcribe` 或外部字幕文件获得可读文本。
+2. 让外部 AI 生成章节清单，至少包含 `id`、`title`、`start`、`end`、`summary`。
+3. 对少量章节，用 `cut` 直接产出 clips；对需要字幕、BGM、配音或批量渲染的章节，用模板工作目录和 `edit.json` 承接。
+
+直接 clips：
+
+```powershell
+<ovt> cut source.mp4 --from 00:02:40.000 --to 00:04:40.000 --output clips\chapter-02.mp4 --json-out clips\chapter-02.cut.json
+```
+
+模板成片：
+
+```powershell
+<ovt> scaffold-template source.mp4 --template shorts-captioned --dir tasks\chapter-02 --validate --check-files
+<ovt> inspect-plan --plan tasks\chapter-02\edit.json --check-files --json-out tasks\chapter-02\inspect.json
+<ovt> render --plan tasks\chapter-02\edit.json --output exports\chapter-02.mp4 --preview --json-out tasks\chapter-02\render-preview.json
+<ovt> render --plan tasks\chapter-02\edit.json --output exports\chapter-02.mp4
+```
+
+重要边界：
+
+- AI 章节分析、翻译和文案生成发生在仓库外。
+- OVT 只消费本地文件、结构化输入和 `edit.json`。
+- 不要让外部 AI 直接拼 FFmpeg 命令；需要剪辑时优先调用 `cut`、`render` 或 `render-batch`。
+
 ## 关键文件与中间产物
 
 常见文件包括：
@@ -891,6 +981,10 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
   - 模板 artifact slot 绑定
 - `template-params.json`
   - 模板参数覆盖
+- `chapters.json`
+  - 外部 AI 生成的章节清单；当前是工作流约定文件，还不是正式 CLI schema
+- `copy.md`
+  - 外部 AI 生成的发布文案；OVT 不解析它，只作为工作目录产物保留
 - `edit.json`
   - 核心剪辑计划
 
@@ -957,12 +1051,14 @@ $env:OVT_DEMUCS_PATH = "C:\Users\<you>\AppData\Local\Programs\Python\Python311\S
   - 静态 manifest
   - 复用现有 template schema
 - 仓库当前没有内置 AI provider。
+- YouTube / 网页视频下载当前不是 OVT 内置能力；如需处理，先用外部工具获得本地视频，并确认你有权处理该内容。
+- 外部 AI 可以生成章节、翻译字幕和文案，但应通过结构化文件与 CLI 协作，不应要求仓库内接入 AI SDK。
 - Desktop 仍未进入正式实施阶段；当前正式入口仍是 CLI。
 
 ## 相关文档
 
 - [README.md](../README.md)
-- [CLI_MVP.md](CLI_MVP.md)
+- [CLI MVP design](reference/cli-mvp-design.md)
 - [external-dependencies.md](external-dependencies.md)
 - [plugin-development-guide.md](plugin-development-guide.md)
 - [roadmap.md](roadmap.md)

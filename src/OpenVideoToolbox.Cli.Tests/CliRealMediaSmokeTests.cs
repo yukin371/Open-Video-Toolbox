@@ -35,6 +35,7 @@ public sealed class CliRealMediaSmokeTests
         File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(plan, OpenVideoToolboxJson.Default));
     }
 
+
     [Fact]
     public async Task TranscribeCommand_ProducesStructuredEnvelope_WhenConfigured()
     {
@@ -312,6 +313,7 @@ public sealed class CliRealMediaSmokeTests
         }
     }
 
+
     [Fact]
     public async Task AudioAnalyzeCommand_ProducesStructuredEnvelope()
     {
@@ -514,7 +516,7 @@ public sealed class CliRealMediaSmokeTests
                   "language": "en",
                   "segments": [
                     {
-                      "id": 0,
+                      "id": "0",
                       "start": "00:00:00",
                       "end": "00:00:01",
                       "text": "Hello world"

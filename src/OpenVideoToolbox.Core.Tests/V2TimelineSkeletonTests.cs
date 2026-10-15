@@ -354,6 +354,254 @@ public sealed class V2TimelineSkeletonTests
     }
 
     [Fact]
+    public void Validate_ReturnsValidForSupportedMotionEffectClip()
+    {
+        var validator = new EditPlanValidator();
+        var basePlan = CreateSchemaV2Plan();
+        var baseTimeline = Assert.IsType<EditPlanTimeline>(basePlan.Timeline);
+        var baseTrack = baseTimeline.Tracks[0];
+        var plan = basePlan with
+        {
+            Timeline = baseTimeline with
+            {
+                Tracks =
+                [
+                    baseTrack with
+                    {
+                        Clips =
+                        [
+                            baseTrack.Clips[0] with
+                            {
+                                Src = "logo.png",
+                                Effects =
+                                [
+                                    new TimelineEffect
+                                    {
+                                        Type = "move",
+                                        Extensions = new Dictionary<string, JsonElement>
+                                        {
+                                            ["fromX"] = Json("0"),
+                                            ["fromY"] = Json("0"),
+                                            ["toX"] = Json("960"),
+                                            ["toY"] = Json("540"),
+                                            ["durationSeconds"] = Json(2.0),
+                                            ["easing"] = Json("ease_out")
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var result = validator.Validate(plan, effectRegistry: BuiltInEffectCatalog.CreateRegistry());
+
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Issues);
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidForStillImageVideoClipWithDurationOnly()
+    {
+        var validator = new EditPlanValidator();
+        var basePlan = CreateSchemaV2Plan();
+        var baseTimeline = Assert.IsType<EditPlanTimeline>(basePlan.Timeline);
+        var baseTrack = baseTimeline.Tracks[0];
+        var plan = basePlan with
+        {
+            Timeline = baseTimeline with
+            {
+                Tracks =
+                [
+                    baseTrack with
+                    {
+                        Clips =
+                        [
+                            baseTrack.Clips[0] with
+                            {
+                                Src = "poster.png",
+                                InPoint = null,
+                                OutPoint = null,
+                                Duration = TimeSpan.FromSeconds(4)
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var result = validator.Validate(plan);
+
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Issues);
+    }
+
+    [Fact]
+    public void Validate_ReturnsErrorForNonStillImageVideoClipWithDurationOnly()
+    {
+        var validator = new EditPlanValidator();
+        var basePlan = CreateSchemaV2Plan();
+        var baseTimeline = Assert.IsType<EditPlanTimeline>(basePlan.Timeline);
+        var baseTrack = baseTimeline.Tracks[0];
+        var plan = basePlan with
+        {
+            Timeline = baseTimeline with
+            {
+                Tracks =
+                [
+                    baseTrack with
+                    {
+                        Clips =
+                        [
+                            baseTrack.Clips[0] with
+                            {
+                                Src = "overlay.mp4",
+                                InPoint = null,
+                                OutPoint = null,
+                                Duration = TimeSpan.FromSeconds(4)
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var result = validator.Validate(plan);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, issue => issue.Code == "timeline.clip.video.range.required");
+    }
+
+    [Fact]
+    public void Validate_ReturnsErrorsForInvalidMotionEffectParameters()
+    {
+        var validator = new EditPlanValidator();
+        var basePlan = CreateSchemaV2Plan();
+        var baseTimeline = Assert.IsType<EditPlanTimeline>(basePlan.Timeline);
+        var baseTrack = baseTimeline.Tracks[0];
+        var plan = basePlan with
+        {
+            Timeline = baseTimeline with
+            {
+                Tracks =
+                [
+                    baseTrack with
+                    {
+                        Clips =
+                        [
+                            baseTrack.Clips[0] with
+                            {
+                                Src = "logo.png",
+                                Effects =
+                                [
+                                    new TimelineEffect
+                                    {
+                                        Type = "move",
+                                        Extensions = new Dictionary<string, JsonElement>
+                                        {
+                                            ["fromX"] = Json("0"),
+                                            ["fromY"] = Json("0"),
+                                            ["toX"] = Json("960"),
+                                            ["toY"] = Json("540"),
+                                            ["easing"] = Json("bounce")
+                                        }
+                                    },
+                                    new TimelineEffect
+                                    {
+                                        Type = "zoompan",
+                                        Extensions = new Dictionary<string, JsonElement>
+                                        {
+                                            ["fromScale"] = Json(0.05),
+                                            ["toScale"] = Json(1.2),
+                                            ["fromX"] = Json("0"),
+                                            ["fromY"] = Json("0"),
+                                            ["toX"] = Json("100"),
+                                            ["toY"] = Json("100"),
+                                            ["durationSeconds"] = Json(2.0)
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var result = validator.Validate(plan, effectRegistry: BuiltInEffectCatalog.CreateRegistry());
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, issue => issue.Code == "timeline.effect.parameter.required");
+        Assert.Contains(result.Issues, issue => issue.Code == "timeline.effect.parameter.enum.invalid");
+        Assert.Contains(result.Issues, issue => issue.Code == "timeline.effect.parameter.range.invalid");
+    }
+
+    [Fact]
+    public void Validate_ReturnsErrorsForUnsupportedMotionEffectUsage()
+    {
+        var validator = new EditPlanValidator();
+        var basePlan = CreateSchemaV2Plan();
+        var baseTimeline = Assert.IsType<EditPlanTimeline>(basePlan.Timeline);
+        var baseTrack = baseTimeline.Tracks[0];
+        var plan = basePlan with
+        {
+            Timeline = baseTimeline with
+            {
+                Tracks =
+                [
+                    baseTrack with
+                    {
+                        Effects =
+                        [
+                            new TimelineEffect
+                            {
+                                Type = "orbit",
+                                Extensions = new Dictionary<string, JsonElement>
+                                {
+                                    ["centerX"] = Json("960"),
+                                    ["centerY"] = Json("540"),
+                                    ["radiusX"] = Json(120.0),
+                                    ["radiusY"] = Json(60.0),
+                                    ["durationSeconds"] = Json(3.0)
+                                }
+                            }
+                        ],
+                        Clips =
+                        [
+                            baseTrack.Clips[0] with
+                            {
+                                Effects =
+                                [
+                                    new TimelineEffect
+                                    {
+                                        Type = "move",
+                                        Extensions = new Dictionary<string, JsonElement>
+                                        {
+                                            ["fromX"] = Json("0"),
+                                            ["fromY"] = Json("0"),
+                                            ["toX"] = Json("960"),
+                                            ["toY"] = Json("540"),
+                                            ["durationSeconds"] = Json(2.0)
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        var result = validator.Validate(plan, effectRegistry: BuiltInEffectCatalog.CreateRegistry());
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, issue => issue.Code == "timeline.effect.motion.track.unsupported");
+        Assert.Contains(result.Issues, issue => issue.Code == "timeline.effect.motion.src.required");
+    }
+
+    [Fact]
     public void Validate_ReturnsErrorsForSchemaVersionAndTimelineMismatch()
     {
         var validator = new EditPlanValidator();
@@ -430,5 +678,10 @@ public sealed class V2TimelineSkeletonTests
                 Container = "mp4"
             }
         };
+    }
+
+    private static JsonElement Json<T>(T value)
+    {
+        return JsonSerializer.SerializeToElement(value);
     }
 }

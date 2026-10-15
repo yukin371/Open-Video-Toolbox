@@ -101,5 +101,5 @@ dotnet run --project E:\Github\open-video-toolbox\src\OpenVideoToolbox.Cli\OpenV
 ## 下一步读什么
 
 - 完整功能与使用：[FEATURES_AND_USAGE.md](FEATURES_AND_USAGE.md)
-- 命令边界与中间产物设计：[CLI_MVP.md](CLI_MVP.md)
+- 命令边界与中间产物设计：[CLI MVP design](reference/cli-mvp-design.md)
 - 外部依赖安装：[external-dependencies.md](external-dependencies.md)

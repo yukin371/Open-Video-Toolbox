@@ -400,7 +400,48 @@ V2-P6 数据驱动批量 / resolve-assets / 图表能力
 | `2026-04-24-export-interop-design.md` | `V2-P1` / `V2-P5` | 允许先做 feasibility，正式交付放后 |
 | `2026-04-24-ai-intelligent-workflows-design.md` | `V2-P1` / `V2-P6` | validate / auto-cut 可拆，resolve-assets 延后 |
 | `2026-04-24-batch-production-design.md` | `V2-P6` | 当前整包延后 |
-| `2026-04-25-narrated-slides-video-spec.md` | `V2-P6` | 已完成 `C1 ~ C5` 首轮实现，当前待 `C6` 人工反馈 |
+| `2026-04-25-narrated-slides-video-spec.md` | `V2-P6` | 已完成当前受控增量并回到 stop-point；后续只允许按新明确卡片重开 |
+| `2026-04-26-v2-motion-effects-boundary.md` | `V2-P5` 之后的候选窄卡 | 边界定义仍有效；当前不并入 `E2` 主线，也不并入 `V2-P6 narrated-slides` |
+| `2026-04-26-v2-motion-effects-spec.md` | `V2-P5` 之后的候选窄卡 | 第一期 effect 规格已冻结，范围固定为 `move / orbit / zoompan` |
+| `2026-04-26-v2-motion-effects-plan.md` | `V2-P5` 之后的候选窄卡 | 第一期实现顺序、文件落点与测试面已冻结 |
+| `2026-04-26-v2-motion-effects-implementation.md` | `V2-P5` 之后的候选窄卡 | 第一期最小闭环已落地到 `Core.Editing` / `Core.Execution` / `Cli` |
+| `2026-04-26-v2-motion-effects-phase-check.md` | `V2-P5` 之后的候选窄卡 | 第一轮阶段检查与人工验收已完成，当前状态为 `accepted` |
+| `2026-04-26-v2-motion-effects-acceptance-checklist.md` | `V2-P5` 之后的候选窄卡 | 首期 motion effects 的独立人工验收清单已执行，结论为 `accepted` |
+
+## motion effects 候选顺序
+
+`motion effects` 当前是一条已完成首期实现、阶段检查与人工验收、但仍未并入正式主线的候选子线。
+
+它的默认约束是：
+
+1. 不把它命名成 `live2d`
+2. 不把它扩成角色动画器、关键帧工作台或第二套专业动画系统
+3. 只承接可由现有 `v2 timeline + effects + render` 路径消费的简易 deterministic 2D motion effect
+
+如果未来要正式重开，默认顺序固定为：
+
+1. 边界卡
+   - 已完成：`2026-04-26-v2-motion-effects-boundary.md`
+2. `motion effects spec`
+   - 已完成：`2026-04-26-v2-motion-effects-spec.md`
+   - 结果：第一期 effect 名单、参数方向、非目标和停止线已冻结
+3. `motion effects plan`
+   - 已完成：`2026-04-26-v2-motion-effects-plan.md`
+   - 结果：owner、实现顺序、测试面、文档同步点与回滚路径已冻结
+4. `motion effects implementation`
+   - 已完成：`2026-04-26-v2-motion-effects-implementation.md`
+   - 结果：第一期最小 effect 已实现，并补齐 preview / validator / command snapshot 测试
+5. `motion effects phase-check`
+   - 已完成：`2026-04-26-v2-motion-effects-phase-check.md`
+   - 结果：已确认本轮没有把 scope 拉向角色动画、图形后端或第二套模板平台；人工阶段验收已完成，当前状态为 `accepted`
+
+第一期 effect 范围默认只允许：
+
+1. `move`
+2. `orbit`
+3. `zoompan`
+
+如需补 `fade_in` / `fade_out` / `crossfade`，也只能作为第一期样例工作流配套，而不是把卡片重心从 motion primitive 漂到过渡库扩面。
 
 ## 当前可执行清单
 

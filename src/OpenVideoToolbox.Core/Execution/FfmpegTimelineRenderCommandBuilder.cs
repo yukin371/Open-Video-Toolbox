@@ -32,22 +32,18 @@ public sealed record FilterBuildError
 public sealed class FfmpegTimelineRenderCommandBuilder
 {
     private static readonly Regex PlaceholderRegex = new(@"\{(?<name>[A-Za-z0-9_]+)\}", RegexOptions.Compiled);
-    private static readonly HashSet<string> StillImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".webp",
-        ".bmp",
-        ".tif",
-        ".tiff"
-    };
-
     private readonly EffectRegistry _effectRegistry;
+    private readonly IReadOnlyDictionary<string, IEffectExecutor> _effectExecutors;
 
     public FfmpegTimelineRenderCommandBuilder(EffectRegistry? effectRegistry = null)
     {
         _effectRegistry = effectRegistry ?? BuiltInEffectCatalog.CreateRegistry();
+        _effectExecutors = new Dictionary<string, IEffectExecutor>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["move"] = new MoveEffectExecutor(),
+            ["orbit"] = new OrbitEffectExecutor(),
+            ["zoompan"] = new ZoomPanEffectExecutor()
+        };
     }
 
     public CommandPlan Build(EditPlanRenderRequest request, string executablePath = "ffmpeg")
@@ -177,7 +173,7 @@ public sealed class FfmpegTimelineRenderCommandBuilder
         if (videoLabel is not null && plan.Subtitles?.Mode == SubtitleMode.BurnIn)
         {
             var burnLabel = "v_burn";
-            filters.Add($"{FormatLabel(videoLabel)}subtitles='{EscapeFilterPath(plan.Subtitles.Path)}'{FormatLabel(burnLabel)}");
+            filters.Add($"{FormatLabel(videoLabel)}subtitles='{EscapeFilterPath(plan.Subtitles.Path)}'{BuildForceStyle(plan.Subtitles.Style)}{FormatLabel(burnLabel)}");
             videoLabel = burnLabel;
         }
 
@@ -232,7 +228,8 @@ public sealed class FfmpegTimelineRenderCommandBuilder
         var inputIndex = inputIndices[inputKey];
         var isVideo = track.Kind == TrackKind.Video;
         var inputLabel = isVideo ? $"{inputIndex}:v" : $"{inputIndex}:a";
-        var outputLabel = BuildClipLabel(track, clip, isVideo);
+        var clipLabel = BuildClipLabel(track, clip, isVideo);
+        var baseLabel = $"{clipLabel}_base";
         var filterParts = new List<string>();
 
         if (clip.Placeholder is not null)
@@ -253,10 +250,9 @@ public sealed class FfmpegTimelineRenderCommandBuilder
         }
 
         filterParts.Add(isVideo ? "setpts=PTS-STARTPTS" : "asetpts=PTS-STARTPTS");
-        filterParts.AddRange(GenerateEffectFilters(track, timeline, clip, clip.Effects));
+        filters.Add($"{FormatLabel(inputLabel)}{string.Join(",", filterParts)}{FormatLabel(baseLabel)}");
 
-        filters.Add($"{FormatLabel(inputLabel)}{string.Join(",", filterParts)}{FormatLabel(outputLabel)}");
-        return outputLabel;
+        return ApplyEffects(track, timeline, clip, clip.Effects, baseLabel, clipLabel, filters);
     }
 
     private string ApplyTrackEffects(
@@ -271,15 +267,8 @@ public sealed class FfmpegTimelineRenderCommandBuilder
         }
 
         var syntheticClip = track.Clips[0];
-        var effectFilters = GenerateEffectFilters(track, timeline, syntheticClip, track.Effects);
-        if (effectFilters.Count == 0)
-        {
-            return currentLabel;
-        }
-
         var outputLabel = $"{BuildTrackLabel(track, track.Kind == TrackKind.Video)}_fx";
-        filters.Add($"{FormatLabel(currentLabel)}{string.Join(",", effectFilters)}{FormatLabel(outputLabel)}");
-        return outputLabel;
+        return ApplyEffects(track, timeline, syntheticClip, track.Effects, currentLabel, outputLabel, filters);
     }
 
     private string ConcatLabels(
@@ -357,34 +346,94 @@ public sealed class FfmpegTimelineRenderCommandBuilder
         return outputLabel;
     }
 
-    private List<string> GenerateEffectFilters(
+    private string ApplyEffects(
         TimelineTrack track,
         EditPlanTimeline timeline,
         TimelineClip clip,
-        IReadOnlyList<TimelineEffect> effects)
+        IReadOnlyList<TimelineEffect> effects,
+        string inputLabel,
+        string finalOutputLabel,
+        ICollection<string> filters)
     {
-        var filters = new List<string>();
-
-        foreach (var effect in effects)
+        if (effects.Count == 0)
         {
+            return inputLabel;
+        }
+
+        var currentLabel = inputLabel;
+        var appliedCount = 0;
+        var context = new EffectRenderContext
+        {
+            Clip = clip,
+            Track = track,
+            Timeline = timeline
+        };
+
+        for (var effectIndex = 0; effectIndex < effects.Count; effectIndex++)
+        {
+            var effect = effects[effectIndex];
             var definition = _effectRegistry.Get(effect.Type);
-            if (definition?.FfmpegTemplates?.Filters is not { Count: > 0 } templateFilters)
+            if (definition?.FfmpegTemplates?.Filters is { Count: > 0 } templateFilters)
             {
+                var nextLabel = BuildEffectOutputLabel(finalOutputLabel, appliedCount, effects.Count, effectIndex);
+                var renderedFilters = new List<string>();
+                foreach (var template in templateFilters)
+                {
+                    renderedFilters.Add(ApplyTemplate(effect, definition, template, context));
+                }
+
+                filters.Add($"{FormatLabel(currentLabel)}{string.Join(",", renderedFilters)}{FormatLabel(nextLabel)}");
+                currentLabel = nextLabel;
+                appliedCount++;
                 continue;
             }
 
-            foreach (var template in templateFilters)
+            if (_effectExecutors.TryGetValue(effect.Type, out var executor))
             {
-                filters.Add(ApplyTemplate(effect, definition, template, new EffectRenderContext
-                {
-                    Clip = clip,
-                    Track = track,
-                    Timeline = timeline
-                }));
+                var nextLabel = BuildEffectOutputLabel(finalOutputLabel, appliedCount, effects.Count, effectIndex);
+                executor.AppendFilterGraph(
+                    ToReadOnlyParameters(effect.Extensions),
+                    context,
+                    currentLabel,
+                    nextLabel,
+                    filters);
+                currentLabel = nextLabel;
+                appliedCount++;
+                continue;
+            }
+
+            if (definition is not null && definition.FfmpegTemplates is null)
+            {
+                throw new ArgumentException(
+                    $"Timeline effect '{effect.Type}' is registered as executor-backed, but no executor is registered in the timeline render builder.");
             }
         }
 
-        return filters;
+        return currentLabel;
+    }
+
+    private static readonly IReadOnlyDictionary<string, JsonElement> EmptyExtensions =
+        new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
+
+    private static IReadOnlyDictionary<string, JsonElement> ToReadOnlyParameters(IDictionary<string, JsonElement>? extensions)
+    {
+        return extensions is null
+            ? EmptyExtensions
+            : new Dictionary<string, JsonElement>(extensions, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static string BuildEffectOutputLabel(
+        string finalOutputLabel,
+        int appliedCount,
+        int totalEffects,
+        int effectIndex)
+    {
+        var remainingEffects = totalEffects - effectIndex - 1;
+        return appliedCount == 0 && remainingEffects == 0
+            ? finalOutputLabel
+            : remainingEffects == 0
+                ? finalOutputLabel
+                : $"{finalOutputLabel}_{appliedCount}";
     }
 
     private static string ApplyTemplate(
@@ -495,7 +544,7 @@ public sealed class FfmpegTimelineRenderCommandBuilder
                     inputs.Add(existing);
                 }
 
-                if (track.Kind == TrackKind.Video && existing.Path is { } path && IsStillImagePath(path))
+                if (track.Kind == TrackKind.Video && existing.Path is { } path && TimelineVisualAssetRules.IsStillImagePath(path))
                 {
                     existing.LoopStillImage = true;
                     existing.FrameRate ??= timeline.FrameRate;
@@ -722,10 +771,17 @@ public sealed class FfmpegTimelineRenderCommandBuilder
             .Replace(";", "\\;", StringComparison.Ordinal);
     }
 
-    private static bool IsStillImagePath(string path)
+    private static string BuildForceStyle(OpenVideoToolbox.Core.Subtitles.SubtitleStyle? style)
     {
-        var extension = Path.GetExtension(path);
-        return !string.IsNullOrWhiteSpace(extension) && StillImageExtensions.Contains(extension);
+        if (style is null) return string.Empty;
+        var values = new List<string>();
+        if (!string.IsNullOrWhiteSpace(style.FontName)) values.Add($"FontName={style.FontName}");
+        if (style.FontSize is not null) values.Add($"FontSize={style.FontSize.Value}");
+        if (!string.IsNullOrWhiteSpace(style.PrimaryColor)) values.Add($"PrimaryColour={style.PrimaryColor}");
+        if (!string.IsNullOrWhiteSpace(style.OutlineColor)) values.Add($"OutlineColour={style.OutlineColor}");
+        if (style.Outline is not null) values.Add($"Outline={style.Outline.Value}");
+        if (style.MarginV is not null) values.Add($"MarginV={style.MarginV.Value}");
+        return values.Count == 0 ? string.Empty : $":force_style='{string.Join(',', values)}'";
     }
 
     private static void AppendPlaceholderInputArguments(

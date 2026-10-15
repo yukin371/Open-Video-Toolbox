@@ -194,6 +194,54 @@ public sealed class ExternalDependencyInspectorTests
         }
     }
 
+    [Fact]
+    public async Task InspectHardwareEncodersAsync_ParsesKnownHardwareEncoders()
+    {
+        var runner = new FakeProcessRunner(request => Task.FromResult(CreateExecutionResult(
+            request.CommandPlan,
+            ExecutionStatus.Succeeded,
+            exitCode: 0,
+            output: " V..... h264_nvenc           NVIDIA NVENC H.264 encoder\n V..... hevc_qsv             Intel Quick Sync HEVC")));
+
+        var report = await new ExternalDependencyInspector(runner)
+            .InspectHardwareEncodersAsync("ffmpeg", TimeSpan.FromSeconds(5));
+
+        Assert.True(report.IsAvailable);
+        Assert.True(report.ProbeSucceeded);
+        Assert.Equal(["h264_nvenc", "hevc_qsv"], report.Encoders);
+        Assert.Equal(["-hide_banner", "-encoders"], runner.LastRequest!.CommandPlan.Arguments);
+    }
+
+    [Fact]
+    public async Task InspectHardwareEncodersAsync_PreservesUnavailableReason()
+    {
+        var report = await new ExternalDependencyInspector(new FakeProcessRunner(_ => throw new InvalidOperationException("ffmpeg missing")))
+            .InspectHardwareEncodersAsync("missing-ffmpeg");
+
+        Assert.False(report.IsAvailable);
+        Assert.False(report.ProbeSucceeded);
+        Assert.Contains("ffmpeg missing", report.Detail, StringComparison.Ordinal);
+        Assert.Empty(report.Encoders);
+    }
+
+    [Fact]
+    public async Task TryHardwareEncoderAsync_UsesExplicitTrialCommand()
+    {
+        var runner = new FakeProcessRunner(request => Task.FromResult(CreateExecutionResult(
+            request.CommandPlan,
+            ExecutionStatus.Succeeded,
+            exitCode: 0,
+            output: string.Empty)));
+
+        var result = await new ExternalDependencyInspector(runner)
+            .TryHardwareEncoderAsync("ffmpeg", "h264_nvenc");
+
+        Assert.True(result.IsAvailable);
+        Assert.Equal("h264_nvenc", result.Encoder);
+        Assert.Contains("-c:v", runner.LastRequest!.CommandPlan.Arguments);
+        Assert.Contains("h264_nvenc", runner.LastRequest.CommandPlan.Arguments);
+    }
+
     private static ExecutionResult CreateExecutionResult(
         CommandPlan commandPlan,
         ExecutionStatus status,

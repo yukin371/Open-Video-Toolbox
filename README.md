@@ -24,7 +24,7 @@
 | 场景 | 命令 | 你会得到什么 | 当前状态 |
 | --- | --- | --- | --- |
 | 媒体探测 | `probe` | 规范化媒体信息 JSON | 已可用 |
-| 快速计划 / 执行 | `plan` / `run` | 命令预览或直接执行 | 已可用 |
+| 快速计划 / 执行 | `plan` / `run` | 命令预览或直接执行；默认同目录后缀输出并返回大小对比；较大结果默认拒绝，可显式允许 | 已可用 |
 | 模板筛选 | `templates` | 模板列表、过滤结果、单模板指南 | 已可用 |
 | 草稿生成 | `init-plan` / `scaffold-template` | 可编辑的 `edit.json` 与工作目录 | 已可用 |
 | 讲解型草稿生成 | `init-narrated-plan` | 从 section manifest 生成 narrated / slide-driven v2 `edit.json` | 已可用（首版 + `${var}` + 可选 BGM slot + 可选 visual slot placeholder） |
@@ -44,12 +44,19 @@
 | 成片渲染 | `render` | 最终视频或预览执行计划 | 已可用 |
 | 独立混音 | `mix-audio` | 单独导出混音结果 | 已可用 |
 | 裁切 / 拼接 / 提音轨 | `cut` / `concat` / `extract-audio` | 基础媒体处理产物 | 已可用 |
+| 抽帧 / 缩略图 | `extract-frame` | 按时间点或固定间隔输出 PNG 封面与预览图 | 已可用 |
+| 水印 | `plan` / `run --watermark` | 以九宫格位置、边距和透明度叠加品牌图片 | 已可用 |
+| 字幕样式 | `plan` / `run --subtitle-*` | 控制烧录字幕的字体、字号、颜色、描边和底部边距 | 已可用 |
+| 依赖与硬件探测 | `doctor` | 检查依赖并报告本机可发现的硬件编码器，不自动切换编码器 | 已可用 |
 | 响度处理 | `audio-analyze` / `audio-gain` / `audio-normalize` | 分析、增益、归一化 | 已可用 |
 | 节拍 / 静音信号 | `beat-track` / `detect-silence` / `auto-cut-silence` | `beats.json` / `silence.json` / 去静音 clips / v1 `edit.json` / 基于 v2 模板的 timeline `edit.json` 草稿 | 已可用 |
-| 转写 / 字幕 | `transcribe` / `subtitle` | `transcript.json`、`srt`、`ass` | 已可用 |
+| 转写 / 字幕 | `transcribe` / `subtitle` / `subtitle-import` / `subtitle-clip` / `merge-subtitles` | 本地转写、SRT/VTT 导入、字幕截取、双语字幕合并 | 已可用（翻译由外部工具提供） |
 | 音频分离 | `separate-audio` | 人声 / 伴奏 stem 输出 | 已可用 |
 | 插件模板 | `validate-plugin`、`templates --plugin-dir` | 静态模板插件发现与校验 | 已可用 |
-| Desktop 交互壳 | `OpenVideoToolbox.Desktop` | 图形界面入口 | 规划中 |
+| 外部视频导入工作流 | 外部 `yt-dlp` / 浏览器下载 + `probe` / `scaffold-template` | 把 YouTube 等外部来源先落成本地视频与字幕，再进入 OVT 可审计流程 | 已文档化（不内置下载器） |
+| 语义章节剪辑工作流 | 外部 AI 生成章节 + `cut` / `init-plan` / `render` | 从字幕或 transcript 生成章节选择，再批量产出 clips 或 `edit.json` | 已文档化（AI 在仓库外） |
+| 双语字幕与发布文案工作流 | 外部 AI 翻译 / 文案 + `subtitle` / `attach-plan-material` / `render` | 双语字幕 sidecar / burn-in 成片与社媒文案文件 | 已文档化（不内置翻译 provider） |
+| Desktop 交互壳 | `OpenVideoToolbox.Desktop` | 小丸工具箱式本地转码、批量队列、字幕/音频处理和日志工作台 | D1-0 文档与框架冻结 |
 
 ## 快速开始
 
@@ -449,6 +456,7 @@ dotnet run --project ./src/OpenVideoToolbox.Cli/OpenVideoToolbox.Cli.csproj -- e
 
 ## 推荐阅读顺序
 
+- 想浏览仓库文档分类：`docs/README.md`
 - 想最快跑通：`docs/QUICK_START.md`
 - 想了解功能和排障：`docs/FEATURES_AND_USAGE.md`
 - 想查精确命令签名：`docs/COMMAND_REFERENCE.md`
@@ -469,16 +477,25 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\Enable-GitHooks.ps1 -VerifyOnly
 ```
 
+自检命令：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Test-GitHooksSetup.ps1
+```
+
 说明：
 
 - 仓库内 hook 脚本位于 `.githooks/`
+- `.githooks/_shared.sh` 持有共享输出与基础 shell helper，避免各 hook 入口重复维护
 - 这一步会把本地仓库的 `core.hooksPath` 指向 `.githooks`
+- `Enable-GitHooks.ps1` 会同时校验必需 hook 文件是否齐全，并打印当前仓库状态
+- `Test-GitHooksSetup.ps1` 适合在重装环境或排查本地 hook 失效时做快速自检
 - 如果不做这一步，`pre-commit`、`commit-msg` 与 `pre-push` 检查不会生效
 - `pre-push` 会校验待推送 commit；如果本机已安装 `gh` 且当前分支已有打开中的 PR，还会额外校验 PR 标题与描述是否满足模板要求
 
 ## 当前定位
 
-当前仓库的重心仍然是 CLI 能力，而不是桌面 GUI。你可以把它理解成：
+当前仓库的核心能力仍由 CLI/Core 提供，Desktop 已进入 D1-0 工作台规划阶段。你可以把它理解成：
 
 - 一个适合外部 AI 和脚本调用的视频生产内核
 - 一个更关注“草稿生成、模板化产出、可审计流程”的工具箱

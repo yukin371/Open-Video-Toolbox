@@ -1,4 +1,5 @@
 using OpenVideoToolbox.Core;
+using System.Text.Json.Serialization;
 
 namespace OpenVideoToolbox.Core.Execution;
 
@@ -22,7 +23,43 @@ public sealed record ExecutionResult
 
     public string? ErrorMessage { get; init; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public OutputSizeComparison? OutputSizeComparison { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<ExecutionDiagnostic>? Diagnostics { get; init; }
+
     public IReadOnlyList<string> ProducedPaths { get; init; } = [];
+}
+
+public sealed record ExecutionDiagnostic
+{
+    public required string Code { get; init; }
+
+    public required string Severity { get; init; }
+
+    public required string Message { get; init; }
+
+    public string? Path { get; init; }
+}
+
+public sealed record OutputSizeComparison
+{
+    public required string InputPath { get; init; }
+
+    public required string OutputPath { get; init; }
+
+    public long InputBytes { get; init; }
+
+    public long OutputBytes { get; init; }
+
+    public long DeltaBytes { get; init; }
+
+    public double? OutputToInputRatio { get; init; }
+
+    public double? ChangePercent { get; init; }
+
+    public bool IsLarger { get; init; }
 }
 
 public enum ExecutionStatus
